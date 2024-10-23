@@ -1,1 +1,1 @@
-# Cyborg-worker-node
+# Cyborg Worker Node

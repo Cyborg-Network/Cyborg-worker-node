@@ -1,0 +1,94 @@
+[package]
+name = "cyborg-node"
+description = "A parachain node template built with Substrate and Cumulus, part of Polkadot Sdk. (polkadot v1.13.0)"
+version = "0.1.0"
+license = "Unlicense"
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+edition.workspace = true
+publish = false
+build = "build.rs"
+
+# [[bin]]
+# name = "cyborg-node"
+
+[dependencies]
+clap = { workspace = true, features = ["derive"]}
+codec = { workspace = true }
+color-print = { workspace = true }
+cumulus-client-cli = { workspace = true }
+cumulus-client-collator = { workspace = true }
+cumulus-client-consensus-aura = { workspace = true }
+cumulus-client-consensus-common = { workspace = true }
+cumulus-client-consensus-proposer = { workspace = true }
+cumulus-client-service = { workspace = true }
+cumulus-primitives-core = { workspace = true }
+cumulus-primitives-parachain-inherent = { workspace = true }
+cumulus-relay-chain-interface = { workspace = true }
+cyborg-runtime = { version = "0.1.0", path = "../runtime" }
+docify = { workspace = true }
+frame-benchmarking = { workspace = true }
+frame-benchmarking-cli = { workspace = true }
+futures = { workspace = true }
+hex = { workspace = true }
+ipfs-api-backend-hyper = { workspace = true }
+jsonrpsee = { workspace = true, features = ["server"]}
+log = { workspace = true, default-features = true }
+pallet-transaction-payment-rpc = { workspace = true }
+polkadot-cli = { workspace = true }
+polkadot-primitives = { workspace = true }
+prometheus-endpoint = { workspace = true }
+sc-basic-authorship = { workspace = true }
+sc-chain-spec = { workspace = true }
+sc-cli = { workspace = true }
+sc-client-api = { workspace = true }
+sc-consensus = { workspace = true }
+sc-executor = { workspace = true }
+sc-network = { workspace = true }
+sc-network-sync = { workspace = true }
+sc-offchain = { workspace = true }
+sc-rpc = { workspace = true }
+sc-service = { workspace = true }
+sc-sysinfo = { workspace = true }
+sc-telemetry = { workspace = true }
+sc-tracing = { workspace = true }
+sc-transaction-pool = { workspace = true }
+sc-transaction-pool-api = { workspace = true }
+serde = { workspace = true, default-features = true, features = ["derive"] }
+serde_json = { workspace = true }
+sp-api = { workspace = true }
+sp-block-builder = { workspace = true }
+sp-blockchain = { workspace = true }
+sp-consensus-aura = { workspace = true }
+sp-core = { workspace = true }
+sp-io = { workspace = true }
+sp-keystore = { workspace = true }
+sp-runtime = { workspace = true }
+sp-timestamp = { workspace = true }
+substrate-api-client = { workspace = true }
+substrate-frame-rpc-system = { workspace = true }
+sys-info = { workspace = true }
+url = { workspace = true }
+xcm = { workspace = true }
+
+[build-dependencies]
+substrate-build-script-utils = { workspace = true }
+
+[features]
+default = []
+runtime-benchmarks = [
+	"cumulus-primitives-core/runtime-benchmarks",
+	"cyborg-runtime/runtime-benchmarks",
+	"frame-benchmarking-cli/runtime-benchmarks",
+	"frame-benchmarking/runtime-benchmarks",
+	"polkadot-cli/runtime-benchmarks",
+	"polkadot-primitives/runtime-benchmarks",
+	"sc-service/runtime-benchmarks",
+	"sp-runtime/runtime-benchmarks",
+]
+try-runtime = [
+	"cyborg-runtime/try-runtime",
+	"polkadot-cli/try-runtime",
+	"sp-runtime/try-runtime",
+]
