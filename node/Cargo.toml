@@ -14,7 +14,7 @@ build = "build.rs"
 # name = "cyborg-node"
 
 [dependencies]
-clap = { workspace = true, features = ["derive"]}
+clap = { workspace = true }
 codec = { workspace = true }
 color-print = { workspace = true }
 cumulus-client-cli = { workspace = true }
@@ -33,7 +33,7 @@ frame-benchmarking-cli = { workspace = true }
 futures = { workspace = true }
 hex = { workspace = true }
 ipfs-api-backend-hyper = { workspace = true }
-jsonrpsee = { workspace = true, features = ["server"]}
+jsonrpsee = { workspace = true }
 log = { workspace = true, default-features = true }
 pallet-transaction-payment-rpc = { workspace = true }
 polkadot-cli = { workspace = true }
@@ -55,7 +55,7 @@ sc-telemetry = { workspace = true }
 sc-tracing = { workspace = true }
 sc-transaction-pool = { workspace = true }
 sc-transaction-pool-api = { workspace = true }
-serde = { workspace = true, default-features = true, features = ["derive"] }
+serde = { workspace = true, default-features = true }
 serde_json = { workspace = true }
 sp-api = { workspace = true }
 sp-block-builder = { workspace = true }

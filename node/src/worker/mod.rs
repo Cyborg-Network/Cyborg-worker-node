@@ -1,20 +1,22 @@
 use codec::{Decode, Encode, EncodeLike};
-use cyborg_runtime::apis::{TaskManagementEventsApi, VerifyWorkerRegistration};
+//use cyborg_runtime::apis::{TaskManagementEventsApi, VerifyWorkerRegistration};
 use ipfs_api_backend_hyper::TryFromUri;
 use ipfs_api_backend_hyper::{IpfsApi, IpfsClient};
 use log::info;
-use sc_client_api::BlockchainEvents;
+//use sc_client_api::BlockchainEvents;
 use serde::{Deserialize, Serialize};
-use sp_api::ProvideRuntimeApi;
-use sp_blockchain::HeaderBackend;
+//use sp_api::ProvideRuntimeApi;
+//use sp_blockchain::HeaderBackend;
 use sp_core::{sr25519, ConstU32, Pair};
-use sp_runtime::traits::Block;
+//use sp_runtime::traits::Block;
 use sp_runtime::BoundedVec;
 use std::{env, fs, option, sync::Arc};
 use substrate_api_client::ac_primitives::{
-    AssetRuntimeConfig, DefaultRuntimeConfig, GenericExtrinsicParams, PlainTip, WithExtrinsicParams,
+    AssetRuntimeConfig, GenericExtrinsicParams, PlainTip, WithExtrinsicParams,
 };
+use substrate_api_client::GetStorage;
 use substrate_api_client::{rpc::TungsteniteRpcClient, Api};
+
 use url::Url;
 use worker_spec::gather_worker_spec;
 
@@ -55,15 +57,7 @@ pub struct WorkerConfig {
     cpu: u16,
 }
 
-pub async fn start_worker<T, U, V, W>(client: Arc<T>)
-where
-    U: Block,
-    V: EncodeLike<sp_runtime::AccountId32>
-        + std::convert::From<sp_core::crypto::CryptoBytes<32, sp_core::sr25519::Sr25519PublicTag>>,
-    W: EncodeLike<u64> + std::convert::From<u64>,
-    T: ProvideRuntimeApi<U> + HeaderBackend<U> + BlockchainEvents<U>,
-    T::Api: TaskManagementEventsApi<U> + VerifyWorkerRegistration<U, V, W>,
-{
+pub async fn start_worker() {
     info!("worker_starting");
 
     // export CYBORG_WORKER_KEY="e5be9a5092b81bca64be81d212e7f2f9eba183bb7a90954f7b76361f6edb5c0a" # //Alice
@@ -94,8 +88,16 @@ where
     // WARNING: only works on zombienet because of port
     // TODO: get the port from cli arg
     let api_client = TungsteniteRpcClient::new_with_port("ws://127.0.0.1", 9988, 2).unwrap();
+    //let mut api = Api::<DefaultRuntimeConfig, _>::new(api_client).unwrap();
 
-    let mut api = Api::<DefaultRuntimeConfig, _>::new(api_client).unwrap();
+    let mut api = Api::<
+        WithExtrinsicParams<
+            AssetRuntimeConfig,
+            GenericExtrinsicParams<AssetRuntimeConfig, PlainTip<u128>>,
+        >,
+        TungsteniteRpcClient,
+    >::new(api_client)
+    .unwrap();
 
     api.set_signer(key.clone().into());
 
@@ -106,55 +108,58 @@ where
     info!("version_out: {:?}", &version_out);
 
     let worker_config = gather_worker_spec(worker_domain);
-    let worker_data = bootstrap_worker(client.clone(), api.clone(), worker_config)
-        .await
-        .unwrap();
-    custom_event_listener::event_listener_tester(client, api, ipfs_client, worker_data).await;
+    let worker_data = bootstrap_worker(&api, worker_config).await.unwrap();
+    // TO CHANGE:  custom_event_listener::event_listener_tester(client, api, ipfs_client, worker_data).await;
 }
-pub async fn bootstrap_worker<T, U, V, W>(
-    client: Arc<T>,
-    api: SubstrateClientApi,
+
+pub async fn bootstrap_worker(
+    api: &SubstrateClientApi,
     worker_config: WorkerConfig,
-) -> option::Option<WorkerData>
-where
-    U: Block,
-    V: EncodeLike<sp_runtime::AccountId32>
-        + std::convert::From<sp_core::crypto::CryptoBytes<32, sp_core::sr25519::Sr25519PublicTag>>,
-    W: EncodeLike<u64> + std::convert::From<u64>,
-    T: ProvideRuntimeApi<U> + HeaderBackend<U> + BlockchainEvents<U>,
-    T::Api: TaskManagementEventsApi<U> + VerifyWorkerRegistration<U, V, W>,
-{
+) -> option::Option<WorkerData> {
     match fs::read_to_string(CONFIG_FILE_NAME) {
         Err(_e) => {
             info!("worker registation not found, registering worker");
-            register_worker::register_worker_on_chain(api, worker_config).await
+            // TO CHANGE : register_worker::register_worker_on_chain(api, worker_config).await
+            None //temporary value
         }
         Ok(data) => {
             let worker_data: WorkerData = serde_json::from_str(&data).unwrap();
-            if verify_worker_registration(client, worker_data.clone()).await {
+            if verify_worker_registration(api, worker_data.clone()).await {
                 Some(worker_data)
             } else {
-                register_worker::register_worker_on_chain(api, worker_config).await
+                // TO CHANGE: register_worker::register_worker_on_chain(api, worker_config).await
+                None // temporary value
             }
         }
     }
 }
 
-pub async fn verify_worker_registration<T, U, V, W>(client: Arc<T>, worker_data: WorkerData) -> bool
-where
-    U: Block,
-    V: EncodeLike<sp_runtime::AccountId32>
-        + std::convert::From<sp_core::crypto::CryptoBytes<32, sp_core::sr25519::Sr25519PublicTag>>,
-    W: EncodeLike<u64> + std::convert::From<u64>,
-    T: ProvideRuntimeApi<U> + HeaderBackend<U> + BlockchainEvents<U>,
-    T::Api: TaskManagementEventsApi<U> + VerifyWorkerRegistration<U, V, W>,
-{
-    client
-        .runtime_api()
-        .verify_worker_registration(
-            client.info().best_hash,
-            (worker_data.worker.0.into(), worker_data.worker.1.into()),
-            worker_data.domain_encoded.try_into().unwrap_or_default(),
+pub async fn verify_worker_registration(api: &SubstrateClientApi, worker_data: WorkerData) -> bool {
+    let storage_key: Option<Vec<u8>> = api
+        .get_storage_map(
+            "pallet_edge_connect",        // Pallet name
+            "WorkerClusters",             // Storage map name
+            &worker_data.worker.encode(), // Encoded (AccountId, WorkerId) as the storage key
+            None,                         // Query the latest state
         )
-        .unwrap_or(false)
+        .unwrap_or(None); // Handle potential error
+
+    // If worker data exists in the storage, decode and verify the domain
+    if let Some(encoded_worker) = storage_key {
+        let stored_worker_data: WorkerData =
+            Decode::decode(&mut &encoded_worker[..]).expect("Failed to decode worker data");
+
+        stored_worker_data.domain_encoded == worker_data.domain_encoded
+    } else {
+        false
+    }
+
+    // client
+    //     .runtime_api()
+    //     .verify_worker_registration(
+    //         client.info().best_hash,
+    //         (worker_data.worker.0.into(), worker_data.worker.1.into()),
+    //         worker_data.domain_encoded.try_into().unwrap_or_default(),
+    //     )
+    //     .unwrap_or(false)
 }

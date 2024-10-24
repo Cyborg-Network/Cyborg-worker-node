@@ -17,7 +17,7 @@ docify = { workspace = true }
 substrate-wasm-builder = { workspace = true, optional = true}
 
 [dependencies]
-codec = { workspace = true, features = ["derive"]  }
+codec = { workspace = true}
 cumulus-pallet-aura-ext = { workspace = true }
 cumulus-pallet-parachain-system = { workspace = true }
 cumulus-pallet-session-benchmarking = { workspace = true }
