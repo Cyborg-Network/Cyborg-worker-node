@@ -1,1 +1,0 @@
-# Cyborg Worker Node
