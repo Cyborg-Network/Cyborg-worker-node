@@ -1,5 +1,5 @@
 use codec::{Decode, Encode, EncodeLike};
-//use cyborg_runtime::apis::{TaskManagementEventsApi, VerifyWorkerRegistration};
+use cyborg_runtime::apis::{TaskManagementEventsApi, VerifyWorkerRegistration};
 use ipfs_api_backend_hyper::TryFromUri;
 use ipfs_api_backend_hyper::{IpfsApi, IpfsClient};
 use log::info;
@@ -18,13 +18,6 @@ use substrate_api_client::GetStorage;
 use substrate_api_client::{rpc::TungsteniteRpcClient, Api};
 
 use url::Url;
-use worker_spec::gather_worker_spec;
-
-pub mod custom_event_listener;
-pub mod donwloade_and_execute_tasks;
-pub mod register_worker;
-pub mod submit_results;
-pub mod worker_spec;
 
 pub const CONFIG_FILE_NAME: &str = "registered_worker_config.json";
 
@@ -108,27 +101,25 @@ pub async fn start_worker() {
     info!("version_out: {:?}", &version_out);
 
     let worker_config = gather_worker_spec(worker_domain);
-    let worker_data = bootstrap_worker(&api, worker_config).await.unwrap();
+    let worker_data = bootstrap_worker(api, worker_config).await.unwrap();
     // TO CHANGE:  custom_event_listener::event_listener_tester(client, api, ipfs_client, worker_data).await;
 }
 
 pub async fn bootstrap_worker(
-    api: &SubstrateClientApi,
+    api: SubstrateClientApi,
     worker_config: WorkerConfig,
 ) -> option::Option<WorkerData> {
     match fs::read_to_string(CONFIG_FILE_NAME) {
         Err(_e) => {
             info!("worker registation not found, registering worker");
-            // TO CHANGE : register_worker::register_worker_on_chain(api, worker_config).await
-            None //temporary value
+            register_worker_on_chain(api, worker_config).await
         }
         Ok(data) => {
             let worker_data: WorkerData = serde_json::from_str(&data).unwrap();
-            if verify_worker_registration(api, worker_data.clone()).await {
+            if verify_worker_registration(&api, worker_data.clone()).await {
                 Some(worker_data)
             } else {
-                // TO CHANGE: register_worker::register_worker_on_chain(api, worker_config).await
-                None // temporary value
+                register_worker_on_chain(api, worker_config).await
             }
         }
     }
@@ -162,4 +153,305 @@ pub async fn verify_worker_registration(api: &SubstrateClientApi, worker_data: W
     //         worker_data.domain_encoded.try_into().unwrap_or_default(),
     //     )
     //     .unwrap_or(false)
+}
+
+use sys_info;
+
+pub fn gather_worker_spec(domain: String) -> WorkerConfig {
+    let domain = BoundedVec::try_from(domain.as_bytes().to_vec()).unwrap();
+    let ram = sys_info::mem_info().unwrap().total;
+    let storage = sys_info::disk_info().unwrap().total;
+    let cpu = sys_info::cpu_num().unwrap().try_into().unwrap();
+    WorkerConfig {
+        domain,
+        latitude: 0,
+        longitude: 0,
+        ram,
+        storage,
+        cpu,
+    }
+}
+
+use cyborg_runtime as runtime;
+use log::error;
+use sp_core::H256;
+use std::process::{Child, ChildStdout};
+use substrate_api_client::{SubmitAndWatch, XtStatus};
+
+pub async fn submit_result_onchain(
+    api: &SubstrateClientApi,
+    ipfs_client: &IpfsClient,
+    mut result: Child,
+    task_id: u64,
+) {
+    dbg!(&result);
+    let result_raw_data = result.stdout.take().unwrap();
+    dbg!(&result_raw_data);
+
+    let hash = publish_on_ipfs(result_raw_data, ipfs_client).await;
+    submit_to_chain(api, hash, task_id).await;
+}
+
+pub async fn publish_on_ipfs(result: ChildStdout, ipfs_client: &IpfsClient) -> String {
+    let ipfs_res = ipfs_client.add(result).await;
+    if let Ok(ipfs_res) = ipfs_res {
+        let hash = ipfs_res.hash;
+        dbg!(&hash);
+        hash
+    } else {
+        error!("Failed to publish on IPFS");
+        String::new()
+    }
+}
+
+pub async fn submit_to_chain(api: &SubstrateClientApi, result: String, task_id: u64) {
+    let result = BoundedVec::try_from(result.as_bytes().to_vec()).unwrap();
+
+    let completed_hash = H256::random();
+
+    let register_call = runtime::RuntimeCall::TaskManagement(
+        runtime::pallet_task_management::Call::submit_completed_task {
+            task_id,
+            completed_hash,
+            result,
+        },
+    );
+
+    dbg!(&register_call);
+
+    let tr_tx = api.compose_extrinsic_offline(register_call, api.get_nonce().unwrap());
+    info!("{:?}", &tr_tx);
+
+    let ext_response = api.submit_and_watch_extrinsic_until(tr_tx, XtStatus::InBlock);
+    if let Ok(ext_response) = ext_response {
+        info!("Task submited successfully ✅✅✅✅✅✅✅✅✅✅✅✅✅");
+        info!("{:?}", ext_response);
+    } else {
+        error!("❌ Something went wrong on result submission ❌");
+
+        info!("{:?}", &ext_response);
+    }
+}
+
+use futures::StreamExt;
+use sc_client_api::BlockchainEvents;
+use sp_api::ProvideRuntimeApi;
+use sp_blockchain::HeaderBackend;
+use sp_core::hexdisplay::AsBytesRef;
+use sp_runtime::traits::Block;
+
+pub async fn event_listener_tester<T, U>(
+    client: Arc<T>,
+    api: SubstrateClientApi,
+    ipfs_client: IpfsClient,
+    worker_data: WorkerData,
+) where
+    U: Block,
+    T: ProvideRuntimeApi<U> + HeaderBackend<U> + BlockchainEvents<U>,
+    T::Api: TaskManagementEventsApi<U>,
+{
+    info!("============ event_listener_tester ============");
+
+    let mut blocks = client.every_import_notification_stream();
+
+    while let Some(block_import_notification) = blocks.next().await {
+        info!("block_import_notification");
+
+        let block_hash = block_import_notification.hash;
+
+        match client.runtime_api().get_recent_events(block_hash) {
+            Ok(event_vec) => {
+                info!("{:?}", &event_vec);
+                for event in event_vec {
+                    if let cyborg_runtime::pallet_task_management::Event::TaskScheduled {
+                        assigned_worker,
+                        task_owner,
+                        task_id,
+                        task,
+                        ..
+                    } = event
+                    {
+                        if assigned_worker == (worker_data.worker.0.into(), worker_data.worker.1) {
+                            info!("task_id: {}, task_owner: {}", task_id, task_owner);
+                            let ipfs_hash = String::from_utf8_lossy(task.as_bytes_ref());
+                            info!("{}", &ipfs_hash);
+
+                            let result =
+                                download_and_execute_work_package(ipfs_hash.as_ref(), &ipfs_client)
+                                    .await;
+                            if let Some(Ok(output)) = result {
+                                info!("{:?}", &output);
+                                submit_result_onchain(&api, &ipfs_client, output, task_id).await;
+                            } else {
+                                info!("result: {:?}", result);
+                                error!("Failed to execute command");
+                            }
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                error!("{}", e);
+            }
+        }
+    }
+}
+
+use futures::TryStreamExt;
+use ipfs_api_backend_hyper::{self};
+use std::fs::File;
+use std::io::Write;
+use std::os::unix::fs::PermissionsExt;
+use std::path::Path;
+use std::process::{Command, Stdio};
+
+pub const WORK_PACKAGE_DIR: &str = "work_package_binary";
+
+pub async fn download_and_execute_work_package(
+    ipfs_hash: &str,
+    ipfs_client: &IpfsClient,
+) -> Option<Result<std::process::Child, std::io::Error>> {
+    info!("ipfs_hash: {}", ipfs_hash);
+    info!("============ download_file ============");
+    // TODO: validate its a valid ipfs hash
+    match ipfs_client
+        .cat(&format!("/ipfs/{ipfs_hash}"))
+        .map_ok(|chunk| chunk.to_vec())
+        .try_concat()
+        .await
+    {
+        Err(e) => {
+            error!("{}", e);
+            None
+        }
+        Ok(data) => {
+            info!("got data from ipfs with length of {}", &data.len());
+            let w_package_path = Path::new(WORK_PACKAGE_DIR);
+            if !w_package_path.exists() {
+                fs::create_dir(w_package_path).unwrap();
+            }
+            let file_path = format!("./{WORK_PACKAGE_DIR}/{ipfs_hash}");
+
+            let mut file = File::create(&file_path).unwrap();
+            let mut perms = file.metadata().unwrap().permissions();
+            perms.set_mode(perms.mode() | 0o111);
+
+            file.write_all(&data).unwrap();
+
+            file.set_permissions(perms).unwrap();
+            Some(Command::new(file_path).stdout(Stdio::piped()).spawn())
+        }
+    }
+}
+
+use sp_core::crypto::Ss58Codec;
+
+use substrate_api_client::ac_node_api::StaticEvent;
+
+#[derive(Debug, Clone, PartialEq, Eq, Decode)]
+struct EventWorkerRegistered {
+    creator: sr25519::Public,
+    worker: (sr25519::Public, u64),
+    domain: BoundedVec<u8, ConstU32<128>>,
+}
+
+impl StaticEvent for EventWorkerRegistered {
+    const PALLET: &'static str = "EdgeConnect";
+    const EVENT: &'static str = "WorkerRegistered";
+}
+
+pub async fn register_worker_on_chain(
+    api: SubstrateClientApi,
+    worker_config: WorkerConfig,
+) -> Option<WorkerData> {
+    // let domain = BoundedVec::try_from(worker_domain.as_bytes().to_vec()).unwrap();
+
+    let WorkerConfig {
+        domain,
+        latitude,
+        longitude,
+        ram,
+        storage,
+        cpu,
+    } = worker_config;
+
+    let register_call =
+        runtime::RuntimeCall::EdgeConnect(runtime::pallet_edge_connect::Call::register_worker {
+            domain,
+            latitude,
+            longitude,
+            ram,
+            storage,
+            cpu,
+        });
+
+    let tr_tx = api.compose_extrinsic_offline(register_call, api.get_nonce().unwrap());
+    info!("{:?}", &tr_tx);
+
+    let ext_response = api.submit_and_watch_extrinsic_until(tr_tx, XtStatus::InBlock);
+    info!("{:?}", &ext_response);
+
+    match ext_response {
+        Ok(ext_response_succ) => {
+            info!("{:?}", &ext_response_succ);
+            info!("Worker registered successfully ✅✅✅✅✅✅✅✅✅✅✅✅✅");
+            info!("Events: {:?}", ext_response_succ.events);
+
+            for event in ext_response_succ.events.unwrap() {
+                if event.pallet_name() == "EdgeConnect" {
+                    let decoded_event = event.as_event::<EventWorkerRegistered>();
+                    info!("{:?}", &decoded_event);
+                    match decoded_event {
+                        Err(_) | Ok(None) => {
+                            error!("❌Event not decoded properly❌");
+                        }
+                        Ok(Some(registration_event)) => {
+                            return worker_retain_after_restart(registration_event);
+                        }
+                    }
+                }
+            }
+            None
+        }
+        Err(e) => {
+            error!(
+                "Somethign went wrong while registering worker ❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌"
+            );
+            error!("{:?}", e);
+            error!("RESTART The worker node with proper environment variables");
+            None
+        }
+    }
+}
+
+fn worker_retain_after_restart(reg_event: EventWorkerRegistered) -> Option<WorkerData> {
+    let registered_worker_data = WorkerData {
+        creator: reg_event.creator.to_ss58check(),
+        worker: reg_event.worker,
+        domain: String::from_utf8_lossy(reg_event.domain.as_bytes_ref()).to_string(),
+        domain_encoded: reg_event.domain.into(),
+    };
+
+    let registered_worker_json = serde_json::to_string_pretty(&registered_worker_data);
+    info!("{:?}", &registered_worker_json);
+
+    use std::{fs::File, path::Path};
+
+    let config_path = Path::new(CONFIG_FILE_NAME);
+    match File::create(config_path) {
+        Err(e) => {
+            error!("{}", e);
+            None
+        }
+        Ok(mut created_file) => {
+            created_file
+                .write_all(registered_worker_json.unwrap().as_bytes())
+                .unwrap_or_else(|_| panic!("Unable to write file : {:?}", config_path.to_str()));
+            info!(
+                "✅✅Saved worker registration data to file: {:?}✅✅ ",
+                config_path.to_str()
+            );
+            Some(registered_worker_data)
+        }
+    }
 }
