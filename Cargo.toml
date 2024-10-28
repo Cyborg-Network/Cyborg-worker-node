@@ -15,8 +15,9 @@ clap = { version = "4.5.3", features = ["derive"] }
 log = { version = "0.4.21", default-features = false }
 serde = { version = "1.0.197", default-features = true, features = ["derive"]}
 serde_json = { version = "1.0.114", default-features = true }
+subxt = { version = "0.38.0", default-features = true }
+tokio = { version = "1.41.0", features = ["full"] }
 #substrate-api-client = { version = "0.18.0", features = ["tungstenite-client", "disable-metadata-hash-check"] }
-#tokio = { version = "1", features = ["full"] }
 
 [features]
 default = []
