@@ -1,70 +1,124 @@
 use clap::{Parser, Subcommand};
 
-#[derive(Debug, Parser)]
+#[derive(Debug, Parser, PartialEq)]
 #[command(
-    name = "cyborg-worker",
-    about = "A standalone off-chain worker",
-    version = "1.0"
+    name = "cyborg-worker",                  // Name of the CLI tool.
+    about = "A standalone off-chain worker", // Description shown in the CLI help.
+    version = "1.0"                          // Version number of the CLI tool.
 )]
 pub struct Cli {
-    /// Enable verbose logging.
-    #[clap(short, long)]
-    pub verbose: bool,
-
     /// Specify the subcommand to run.
     #[command(subcommand)]
-    pub command: Option<Commands>,
+    pub command: Option<Commands>, // Defines the possible subcommands, wrapped in an `Option`.
 }
 
-#[derive(Debug, Subcommand)]
+// Enum to define the available subcommands. Each variant corresponds to a different command.
+#[derive(Debug, Subcommand, PartialEq)]
 pub enum Commands {
     /// Register a worker with specified API URL and Account ID.
     Registration {
-        /// API URL for the registration
+        /// API URL for the registration process.
         #[clap(long, value_name = "API_URL")]
         api_url: String,
 
-        /// Account ID for the worker registration
+        /// Account ID for the worker registration.
         #[clap(long, value_name = "ACCOUNT_ID")]
         account_id: String,
     },
-    /// Start the worker with specified API URL and IFS URL.
+    /// Start the worker with specified API URL and IPFS URL.
     Start {
         /// API URL for starting the worker
         #[clap(long, value_name = "API_URL")]
         api_url: String,
 
-        /// IFS URL for the worker
-        #[clap(long, value_name = "IFS_URL")]
-        ifs_url: String,
+        /// IPFS URL for the worker.
+        #[clap(long, value_name = "IPFS_URL")]
+        ipfs_url: String,
     },
 }
 
-fn main() {
-    let cli = Cli::parse();
+// Implementation block for the `Cli` struct, adding a helper function to parse arguments.
+impl Cli {
+    pub fn parse_args() -> Self {
+        // Parses command-line arguments into the `Cli` struct.
+        Cli::parse()
+    }
+}
 
-    match &cli.command {
-        Some(Commands::Registration {
-            api_url,
-            account_id,
-        }) => {
-            println!(
-                "Registering worker with API URL: {}, Account ID: {}",
-                api_url, account_id
-            );
-        }
-        Some(Commands::Start { api_url, ifs_url }) => {
-            println!(
-                "Starting worker with API URL: {}, IFS URL: {}",
-                api_url, ifs_url
-            );
-        }
-        None => {
-            println!("No subcommand was used");
-        }
+//Unit tests
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_registration_command() {
+        // Simulate running the CLI with the `registration` subcommand and arguments.
+        let args = [
+            "cyborg-worker",
+            "registration",
+            "--api-url",
+            "http://example.com",
+            "--account-id",
+            "12345678",
+        ];
+
+        // Parse the arguments and check if they match the expected `Cli` struct.
+        let cli = Cli::try_parse_from(args).unwrap();
+
+        assert_eq!(
+            cli,
+            Cli {
+                command: Some(Commands::Registration {
+                    api_url: "http://example.com".to_string(),
+                    account_id: "12345678".to_string(),
+                })
+            }
+        );
     }
 
-    if cli.verbose {
-        println!("Verbose mode enabled");
+    #[test]
+    fn test_start_command() {
+        // Simulate running the CLI with the `start` subcommand and arguments.
+        let args = [
+            "cyborg-worker",
+            "start",
+            "--api-url",
+            "http://example.com",
+            "--ipfs-url",
+            "http://ipfs.example.com",
+        ];
+
+        // Parse the arguments and verify they match the expected `Cli` struct.
+        let cli = Cli::try_parse_from(args).unwrap();
+
+        assert_eq!(
+            cli,
+            Cli {
+                command: Some(Commands::Start {
+                    api_url: "http://example.com".to_string(),
+                    ipfs_url: "http://ipfs.example.com".to_string(),
+                })
+            }
+        );
+    }
+
+    #[test]
+    fn test_no_command() {
+        // Simulate running the CLI without any subcommand.
+        let args = ["cyborg-worker"];
+        let cli = Cli::try_parse_from(args).unwrap();
+
+        // Ensure `command` is `None` when no subcommand is provided.
+        assert_eq!(cli, Cli { command: None });
+    }
+
+    #[test]
+    fn test_invalid_command() {
+        // Simulate running the CLI with an invalid subcommand.
+        let args = ["cyborg-worker", "invalid"];
+
+        // Attempt to parse the arguments and expect an error for the unrecognized command.
+        let result = Cli::try_parse_from(args);
+        assert!(result.is_err());
     }
 }
