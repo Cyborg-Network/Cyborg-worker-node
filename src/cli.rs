@@ -22,14 +22,18 @@ pub enum Commands {
         api_url: String,
 
         /// Account ID for the worker registration.
-        #[clap(long, value_name = "ACCOUNT_ID")]
-        account_id: String,
+        #[clap(long, value_name = "ACCOUNT_SEED")]
+        account_seed: String,
     },
     /// Start the worker with specified API URL and IPFS URL.
-    Start {
+    Startmining {
         /// API URL for starting the worker
         #[clap(long, value_name = "API_URL")]
         api_url: String,
+
+        /// Account ID for the worker registration.
+        #[clap(long, value_name = "ACCOUNT_SEED")]
+        account_seed: String,
 
         /// IPFS URL for the worker.
         #[clap(long, value_name = "IPFS_URL")]
@@ -37,13 +41,13 @@ pub enum Commands {
     },
 }
 
-// Implementation block for the `Cli` struct, adding a helper function to parse arguments.
-impl Cli {
-    pub fn parse_args() -> Self {
-        // Parses command-line arguments into the `Cli` struct.
-        Cli::parse()
-    }
-}
+// // Implementation block for the `Cli` struct, adding a helper function to parse arguments.
+// impl Cli {
+//     pub fn parse_args() -> Self {
+//         // Parses command-line arguments into the `Cli` struct.
+//         Cli::parse()
+//     }
+// }
 
 //Unit tests
 #[cfg(test)]
@@ -58,7 +62,7 @@ mod test {
             "registration",
             "--api-url",
             "http://example.com",
-            "--account-id",
+            "--account-seed",
             "12345678",
         ];
 
@@ -70,7 +74,7 @@ mod test {
             Cli {
                 command: Some(Commands::Registration {
                     api_url: "http://example.com".to_string(),
-                    account_id: "12345678".to_string(),
+                    account_seed: "12345678".to_string(),
                 })
             }
         );
@@ -81,9 +85,11 @@ mod test {
         // Simulate running the CLI with the `start` subcommand and arguments.
         let args = [
             "cyborg-worker",
-            "start",
+            "startmining",
             "--api-url",
             "http://example.com",
+            "--account-seed",
+            "12345678",
             "--ipfs-url",
             "http://ipfs.example.com",
         ];
@@ -94,8 +100,9 @@ mod test {
         assert_eq!(
             cli,
             Cli {
-                command: Some(Commands::Start {
+                command: Some(Commands::Startmining {
                     api_url: "http://example.com".to_string(),
+                    account_seed: "12345678".to_string(),
                     ipfs_url: "http://ipfs.example.com".to_string(),
                 })
             }
