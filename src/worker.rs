@@ -10,9 +10,29 @@ use subxt::{OnlineClient, SubstrateConfig};
 
 #[async_trait]
 /// A trait for blockchain client operations, such as registering a worker, starting mining sessions, and processing events.
+///
+/// Provides an asynchronous API for interacting with a blockchain, which enables clients to register workers,
+/// initiate mining sessions, and handle blockchain events with asynchronous operations.
 pub trait BlockchainClient {
+    /// Registers a worker node on the blockchain.
+    ///
+    /// # Returns
+    /// A `Result` indicating `Ok(())` if successful, or an `Error` if registration fails.
     async fn register_worker(&self) -> Result<(), Box<dyn Error>>;
+
+    /// Starts a mining session on the blockchain by subscribing to events and listening to finalized blocks.
+    ///
+    /// # Returns
+    /// A `Result` indicating `Ok(())` if the session starts successfully, or an `Error` if it fails.
     async fn start_mining_session(&self) -> Result<(), Box<dyn Error>>;
+
+    /// Processes an event received from the blockchain.
+    ///
+    /// # Arguments
+    /// * `event` - A reference to an `EventDetails` object containing details of the blockchain event.
+    ///
+    /// # Returns
+    /// An `Option<String>` containing relevant information derived from the event, or `None` if no information is extracted.
     async fn process_event(&self, event: &EventDetails<SubstrateConfig>) -> Option<String>;
 }
 
@@ -28,7 +48,7 @@ pub struct CyborgClient {
 }
 
 #[subxt::subxt(runtime_metadata_path = "src/metadata.scale")]
-pub mod cyborg_node {}
+pub mod cyborg_node {} // Contains generated types and APIs for interacting with the Cyborg blockchain runtime.
 
 /// Implementation of the `BlockchainClient` trait for `CyborgClient`.
 #[async_trait]
@@ -40,8 +60,16 @@ impl BlockchainClient for CyborgClient {
     async fn register_worker(&self) -> Result<(), Box<dyn Error>> {
         println!("Registering worker with the Cyborg parachain...");
         let call = "";
-        println!(&self::node_uri);
-        println!(&self::ipfs_uri);
+
+        //Debug
+        println!(
+            "parachain url : {:?}",
+            self.node_uri.clone().unwrap_or_else(|| "".to_string())
+        );
+        println!(
+            "ipfs url : {:?}",
+            self.ipfs_uri.clone().unwrap_or_else(|| "".to_string())
+        );
 
         println!("Worker registration submitted: {:?}", call);
         Ok(())
@@ -54,8 +82,16 @@ impl BlockchainClient for CyborgClient {
     async fn start_mining_session(&self) -> Result<(), Box<dyn Error>> {
         println!("Starting mining session...");
 
-        println!(&self::node_uri);
-        println!(&self::ipfs_uri);
+        //Debug
+        println!(
+            "parachain url : {:?}",
+            self.node_uri.clone().unwrap_or_else(|| "".to_string())
+        );
+        println!(
+            "ipfs url : {:?}",
+            self.ipfs_uri.clone().unwrap_or_else(|| "".to_string())
+        );
+
         //let api = OnlineClient::<SubstrateConfig>::from_url("ws://127.0.0.1:9988").await?;
         let api = OnlineClient::<SubstrateConfig>::from_url("ws://127.0.0.1:9988").await?;
 
@@ -77,6 +113,16 @@ impl BlockchainClient for CyborgClient {
     /// # Returns
     /// An `Option<String>` that may contain information derived from the event.
     async fn process_event(&self, event: &EventDetails<SubstrateConfig>) -> Option<String> {
+        //Debug
+        println!(
+            "parachain url : {:?}",
+            self.node_uri.clone().unwrap_or_else(|| "".to_string())
+        );
+        println!(
+            "ipfs url : {:?}",
+            self.ipfs_uri.clone().unwrap_or_else(|| "".to_string())
+        );
+
         None
     }
 }
