@@ -31,6 +31,8 @@ impl BlockchainClient for CyborgClient {
     async fn register_worker(&self) -> Result<(), Box<dyn Error>> {
         println!("Registering worker with the Cyborg parachain...");
         let call = "";
+        println!(&self::node_uri);
+        println!(&self::ipfs_uri);
 
         println!("Worker registration submitted: {:?}", call);
         Ok(())
@@ -38,6 +40,9 @@ impl BlockchainClient for CyborgClient {
 
     async fn start_mining_session(&self) -> Result<(), Box<dyn Error>> {
         println!("Starting mining session...");
+        
+        println!(&self::node_uri);
+        println!(&self::ipfs_uri);
         //let api = OnlineClient::<SubstrateConfig>::from_url("ws://127.0.0.1:9988").await?;
         let api = OnlineClient::<SubstrateConfig>::from_url("ws://127.0.0.1:9988").await?;
 
