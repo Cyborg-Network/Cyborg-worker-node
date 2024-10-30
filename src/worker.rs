@@ -139,6 +139,9 @@ impl BlockchainClient for CyborgClient {
                 let worker = &worker_registered.worker;
                 let domain = &worker_registered.domain;
 
+                // `worker` is a tuple (T::AccountId, WorkerId)
+                let (worker_account, worker_id) = &worker_registered.worker;
+
                 println!(
                     "Worker Registered: Creator: {:?}, Worker: {:?}, Domain: {:?}",
                     creator, worker, domain
