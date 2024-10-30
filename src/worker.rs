@@ -1,12 +1,13 @@
 use async_trait::async_trait;
 use futures::StreamExt;
 use sp_core::{sr25519::Pair as Sr25519Keypair, Pair};
+use subxt::book::usage::events;
+use subxt::ext::jsonrpsee::core::client::Subscription;
 use std::error::Error;
 use subxt::client;
-use subxt::events::EventDetails;
-use subxt::events::Events;
 use subxt::ext::jsonrpsee::async_client::ClientBuilder;
 use subxt::{OnlineClient, SubstrateConfig};
+use subxt::events::{EventDetails, EventSubscriptionBuilder};
 
 #[async_trait]
 /// A trait for blockchain client operations, such as registering a worker, starting mining sessions, and processing events.
@@ -82,15 +83,42 @@ impl BlockchainClient for CyborgClient {
     async fn start_mining_session(&self) -> Result<(), Box<dyn Error>> {
         println!("Starting mining session...");
 
+        let mut subscription_builder = EventSubscriptionBuilder::new(self.client.events());
+        subscription_builder.subscribe_to::<cyborg_node::pallet_edge_connect::events::WorkerRegistered>();
+        subscription_builder.subscribe_to::<cyborg_node::pallet_edge_connect::events::WorkerRemoved>();
+        subscription_builder.subscribe_to::<cyborg_node::pallet_edge_connect::events::WorkerStatusUpdated>();
+        
+        subscription_builder.subscribe_to::<cyborg_node::pallet_task_management::events::TaskScheduled>();
+        // subscription_builder.subscribe_to::<cyborg_node::pallet_task_management::events::SubmittedCompletedTask>();
+        // subscription_builder.subscribe_to::<cyborg_node::pallet_task_management::events::VerifierResolverAssigned>();
+        // subscription_builder.subscribe_to::<cyborg_node::pallet_task_management::events::VerifiedCompletedTask>();
+        // subscription_builder.subscribe_to::<cyborg_node::pallet_task_management::events::ResolvedCompletedTask>();
+        // subscription_builder.subscribe_to::<cyborg_node::pallet_task_management::events::TaskReassigned>();
+
+        let mut subscription = subscription_builder.build().await?;
+
+        while let Some(event_result) = subscription.next().await {
+            match event_result {
+                Ok(event) => {
+                    if let Some(info) = self.process_event(&event).await {
+                        println!("Processed event info: {}", info);
+                    }
+                   
+                }
+                Err(e) => {
+                    println!("Error receiving event: {:?}", e);
+                }
+            }
+        }
         //Debug
-        println!(
-            "parachain url : {:?}",
-            self.node_uri.clone().unwrap_or_else(|| "".to_string())
-        );
-        println!(
-            "ipfs url : {:?}",
-            self.ipfs_uri.clone().unwrap_or_else(|| "".to_string())
-        );
+        // println!(
+        //     "parachain url : {:?}",
+        //     self.node_uri.clone().unwrap_or_else(|| "".to_string())
+        // );
+        // println!(
+        //     "ipfs url : {:?}",
+        //     self.ipfs_uri.clone().unwrap_or_else(|| "".to_string())
+        // );
 
         //let api = OnlineClient::<SubstrateConfig>::from_url("ws://127.0.0.1:9988").await?;
         
@@ -118,14 +146,25 @@ impl BlockchainClient for CyborgClient {
     /// An `Option<String>` that may contain information derived from the event.
     async fn process_event(&self, event: &EventDetails<SubstrateConfig>) -> Option<String> {
         //Debug
-        println!(
-            "parachain url : {:?}",
-            self.node_uri.clone().unwrap_or_else(|| "".to_string())
-        );
-        println!(
-            "ipfs url : {:?}",
-            self.ipfs_uri.clone().unwrap_or_else(|| "".to_string())
-        );
+        // println!(
+        //     "parachain url : {:?}",
+        //     self.node_uri.clone().unwrap_or_else(|| "".to_string())
+        // );
+        // println!(
+        //     "ipfs url : {:?}",
+        //     self.ipfs_uri.clone().unwrap_or_else(|| "".to_string())
+        // );
+
+        // None
+
+        // if let Some(worker_registered) = event.as_event::<cyborg_node::pallet_edge_connect::events::WorkerRegistered>() {
+        //     let creator = &worker_registered.creator;
+
+        //     None
+
+        // } else if let Some(worker_removed) = event.as_event::<<cyborg_node::pallet_edge_connect::events::WorkerRemoved>() {
+        //     None
+        // }
 
         None
     }
