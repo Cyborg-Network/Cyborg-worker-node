@@ -6,12 +6,20 @@ use subxt::{storage::DefaultAddress, OnlineClient, SubstrateConfig};
 pub struct NoKeypair;
 pub struct AccountKeypair(Sr25519Keypair);
 
+/// A builder pattern for constructing a `CyborgClient` instance.
+///
+/// This builder allows for flexible configuration of the Cyborg client,
+/// including setting the node URI, keypair, and IPFS URI.
 pub struct CyborgClientBuilder<Keypair> {
     node_uri: Option<String>,
     keypair: Keypair,
     ipfs_uri: Option<String>,
 }
 
+/// Default implementation for the `CyborgClientBuilder` when no keypair is provided.
+///
+/// This initializes the builder with default values where node URI and IPFS URI are None
+/// and the keypair is set to `NoKeypair`.
 impl Default for CyborgClientBuilder<NoKeypair> {
     fn default() -> Self {
         CyborgClientBuilder {
@@ -23,11 +31,22 @@ impl Default for CyborgClientBuilder<NoKeypair> {
 }
 
 impl<Keypair> CyborgClientBuilder<Keypair> {
+    /// Sets the node URI for the client to connect to.
+    ///
+    /// # Arguments
+    /// * `url` - A string representing the WebSocket URL of the node.
     pub fn node_uri(mut self, url: String) -> Self {
         self.node_uri = Some(url);
         self
     }
 
+    /// Sets the keypair for the client using a provided seed phrase.
+    ///
+    /// # Arguments
+    /// * `seed` - A string slice representing the seed phrase for generating the keypair.
+    ///
+    /// # Returns
+    /// A `Result` that, if successful, contains a new `CyborgClientBuilder` instance with an `AccountKeypair`.
     pub fn keypair(
         self,
         seed: &str,
@@ -40,6 +59,10 @@ impl<Keypair> CyborgClientBuilder<Keypair> {
         })
     }
 
+    /// Sets the IPFS URI for the client to use.
+    ///
+    /// # Arguments
+    /// * `url` - A string representing the IPFS server URL.
     pub fn ipfs_uri(mut self, url: String) -> Self {
         self.ipfs_uri = Some(url);
         self
@@ -47,9 +70,14 @@ impl<Keypair> CyborgClientBuilder<Keypair> {
 }
 
 impl CyborgClientBuilder<AccountKeypair> {
+    /// Builds the `CyborgClient` using the provided configurations.
+    ///
+    /// # Returns
+    /// A `Result` that, if successful, contains the constructed `CyborgClient`.
     pub async fn build(self) -> Result<CyborgClient, Box<dyn Error>> {
         match &self.node_uri {
             Some(url) => {
+                // Create an online client that connects to the specified Substrate node URL.
                 let client = OnlineClient::<SubstrateConfig>::from_url(url).await?;
 
                 Ok(CyborgClient {
@@ -73,10 +101,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_node_uri() {
+        // Test setting the node URI in the builder.
         let builder = CyborgClientBuilder::default().node_uri("ws://127.0.0.1:9988".to_string());
-
         assert_eq!(builder.node_uri, Some("ws://127.0.0.1:9988".to_string()));
 
+        // Test setting both node URI and keypair.
         let builder = CyborgClientBuilder::default()
             .node_uri("ws://127.0.0.1:9988".to_string())
             .keypair("//Alice");
@@ -89,6 +118,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_keypair() {
+        // Test setting the keypair in the builder.
         let builder = CyborgClientBuilder::default()
             .node_uri("ws://127.0.0.1:9988".to_string())
             .keypair("//Alice");
@@ -109,6 +139,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_ipfs_uri() -> Result<(), Box<dyn Error>> {
+        // Test setting the IPFS URI in the builder.
         let builder = CyborgClientBuilder::default()
             .node_uri("ws://127.0.0.1:9944".to_string())
             .keypair("//Alice")?
@@ -116,6 +147,7 @@ mod tests {
 
         assert_eq!(builder.ipfs_uri, Some("http://127.0.0.1:5001".to_string()));
 
+        // Test setting the IPFS URI without a keypair.
         let builder = CyborgClientBuilder::default()
             .node_uri("ws://127.0.0.1:9944".to_string())
             .ipfs_uri("http://127.0.0.1:5001".to_string());

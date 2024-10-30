@@ -6,6 +6,10 @@ use clap::{Parser, Subcommand};
     about = "A standalone off-chain worker", // Description shown in the CLI help.
     version = "1.0"                          // Version number of the CLI tool.
 )]
+
+/// `Cli` struct defines the command-line interface for the Cyborg worker.
+/// This struct uses the `clap` crate to parse command-line arguments.
+/// It contains a single field `command` which specifies the subcommand to be executed.
 pub struct Cli {
     /// Specify the subcommand to run.
     #[command(subcommand)]
@@ -14,14 +18,18 @@ pub struct Cli {
 
 // Enum to define the available subcommands. Each variant corresponds to a different command.
 #[derive(Debug, Subcommand, PartialEq)]
+/// `Commands` enum defines the available subcommands for the Cyborg worker.
+/// Each variant represents a specific action that can be performed by the worker.
+/// - `Registration`: Registers the worker with the specified API URL and account seed.
+/// - `Startmining`: Starts the mining process with the specified API URL, account seed, and IPFS URL.
 pub enum Commands {
-    /// Register a worker with specified API URL and Account ID.
+    /// Register a worker with specified API URL and Account Seed.
     Registration {
         /// API URL for the registration process.
         #[clap(long, value_name = "API_URL")]
         api_url: String,
 
-        /// Account ID for the worker registration.
+        /// Account Seed for the worker registration.
         #[clap(long, value_name = "ACCOUNT_SEED")]
         account_seed: String,
     },
