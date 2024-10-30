@@ -93,10 +93,14 @@ impl BlockchainClient for CyborgClient {
         );
 
         //let api = OnlineClient::<SubstrateConfig>::from_url("ws://127.0.0.1:9988").await?;
-        let api = OnlineClient::<SubstrateConfig>::from_url("ws://127.0.0.1:9988").await?;
+        
+        //let api = OnlineClient::<SubstrateConfig>::from_url(self.node_uri.clone().unwrap()).await?;
+        //let all_sub = api.blocks().subscribe_finalized().await?;
 
-        //let mut event_sub = api.events().subscribe_events().await?;
-        let all_sub = api.blocks().subscribe_finalized().await?;
+        //let mut blocks_sub = self.client.blocks().subscribe_finalized().await?;
+
+       
+
 
         // Subscribe to events from the blockchain
         //let mut event_sub = self.client.events().subscribe().await?;
