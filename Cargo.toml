@@ -22,14 +22,17 @@ hex = { version = "0.4.3" }
 ipfs-api-backend-hyper = { version = "0.6.0", features = ["with-send-sync", "with-hyper-tls"] }
 jsonrpsee = { version = "0.22", features = ["server"] }
 log = { version = "0.4.21", default-features = false }
+reqwest = { version = "0.12.9", features = ["json"] }
 serde = { version = "1.0.197", default-features = false }
 serde_json = { version = "1.0.114", default-features = false }
 sp-api = { version = "33.0.0", default-features = false }
 sp-blockchain = { version = "35.0.0" }
 sp-core = { version = "34.0.0", default-features = false }
 sp-runtime = { version = "38.0.0", default-features = false }
-subxt = "0.38.0"
+subxt = { version = "0.38" }
+subxt-signer = "0.38.0"
 sys-info = { version = "0.9.1" }
+tokio = "1.41.0"
 url = { version = "2.5.2" }
 
 [build-dependencies]
