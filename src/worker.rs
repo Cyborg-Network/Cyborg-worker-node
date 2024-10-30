@@ -1,13 +1,13 @@
 use async_trait::async_trait;
 use futures::StreamExt;
 use sp_core::{sr25519::Pair as Sr25519Keypair, Pair};
-use subxt::book::usage::events;
-use subxt::ext::jsonrpsee::core::client::Subscription;
 use std::error::Error;
+use subxt::book::usage::events;
 use subxt::client;
+use subxt::events::EventDetails;
 use subxt::ext::jsonrpsee::async_client::ClientBuilder;
+use subxt::ext::jsonrpsee::core::client::Subscription;
 use subxt::{OnlineClient, SubstrateConfig};
-use subxt::events::{EventDetails, EventSubscriptionBuilder};
 
 #[async_trait]
 /// A trait for blockchain client operations, such as registering a worker, starting mining sessions, and processing events.
@@ -33,8 +33,11 @@ pub trait BlockchainClient {
     /// * `event` - A reference to an `EventDetails` object containing details of the blockchain event.
     ///
     /// # Returns
-    /// An `Option<String>` containing relevant information derived from the event, or `None` if no information is extracted.
-    async fn process_event(&self, event: &EventDetails<SubstrateConfig>) -> Option<String>;
+    /// A `Result<(), Error>` indicating `Ok(())` if processing is successful, or an `Error` if an issue occurs.
+    async fn process_event(
+        &self,
+        event: &EventDetails<SubstrateConfig>,
+    ) -> Result<(), Box<dyn Error>>;
 }
 
 /// Represents a client for interacting with the Cyborg blockchain.
@@ -83,89 +86,108 @@ impl BlockchainClient for CyborgClient {
     async fn start_mining_session(&self) -> Result<(), Box<dyn Error>> {
         println!("Starting mining session...");
 
-        let mut subscription_builder = EventSubscriptionBuilder::new(self.client.events());
-        subscription_builder.subscribe_to::<cyborg_node::pallet_edge_connect::events::WorkerRegistered>();
-        subscription_builder.subscribe_to::<cyborg_node::pallet_edge_connect::events::WorkerRemoved>();
-        subscription_builder.subscribe_to::<cyborg_node::pallet_edge_connect::events::WorkerStatusUpdated>();
-        
-        subscription_builder.subscribe_to::<cyborg_node::pallet_task_management::events::TaskScheduled>();
-        // subscription_builder.subscribe_to::<cyborg_node::pallet_task_management::events::SubmittedCompletedTask>();
-        // subscription_builder.subscribe_to::<cyborg_node::pallet_task_management::events::VerifierResolverAssigned>();
-        // subscription_builder.subscribe_to::<cyborg_node::pallet_task_management::events::VerifiedCompletedTask>();
-        // subscription_builder.subscribe_to::<cyborg_node::pallet_task_management::events::ResolvedCompletedTask>();
-        // subscription_builder.subscribe_to::<cyborg_node::pallet_task_management::events::TaskReassigned>();
+        // Subscribe to finalized blocks
+        let mut block_subscription = self.client.blocks().subscribe_finalized().await?;
+        println!("Listening for mining session events. Press Ctrl+C to stop.");
 
-        let mut subscription = subscription_builder.build().await?;
+        // Iterate over each block and process its events
+        while let Some(block) = block_subscription.next().await {
+            let block = block?;
+            let events = block.events().await?;
 
-        while let Some(event_result) = subscription.next().await {
-            match event_result {
-                Ok(event) => {
-                    if let Some(info) = self.process_event(&event).await {
-                        println!("Processed event info: {}", info);
+            // Process each event in the finalized block
+            for event in events.iter() {
+                if let Ok(event) = event {
+                    if let Err(e) = self.process_event(&event).await {
+                        println!("Error processing event: {:?}", e)
                     }
-                   
-                }
-                Err(e) => {
-                    println!("Error receiving event: {:?}", e);
+                } else {
+                    println!("Error decoding event: {:?}", event);
                 }
             }
         }
-        //Debug
-        // println!(
-        //     "parachain url : {:?}",
-        //     self.node_uri.clone().unwrap_or_else(|| "".to_string())
-        // );
-        // println!(
-        //     "ipfs url : {:?}",
-        //     self.ipfs_uri.clone().unwrap_or_else(|| "".to_string())
-        // );
-
-        //let api = OnlineClient::<SubstrateConfig>::from_url("ws://127.0.0.1:9988").await?;
-        
-        //let api = OnlineClient::<SubstrateConfig>::from_url(self.node_uri.clone().unwrap()).await?;
-        //let all_sub = api.blocks().subscribe_finalized().await?;
-
-        //let mut blocks_sub = self.client.blocks().subscribe_finalized().await?;
-
-       
-
-
-        // Subscribe to events from the blockchain
-        //let mut event_sub = self.client.events().subscribe().await?;
-        println!("Listening for mining session events. Press Ctrl+C to stop.");
 
         Ok(())
     }
 
     /// Processes an event from the blockchain.
     ///
+    /// Checks the type of each event and prints relevant details for specific events
+    /// such as `WorkerRegistered`, `WorkerRemoved`, and `WorkerStatusUpdated`.
+    ///
     /// # Arguments
     /// * `event` - A reference to an `EventDetails` object containing event information.
     ///
     /// # Returns
-    /// An `Option<String>` that may contain information derived from the event.
-    async fn process_event(&self, event: &EventDetails<SubstrateConfig>) -> Option<String> {
-        //Debug
-        // println!(
-        //     "parachain url : {:?}",
-        //     self.node_uri.clone().unwrap_or_else(|| "".to_string())
-        // );
-        // println!(
-        //     "ipfs url : {:?}",
-        //     self.ipfs_uri.clone().unwrap_or_else(|| "".to_string())
-        // );
+    /// A `Result<(), Error>` indicating success if the event is processed correctly,
+    /// or an error if event decoding fails.
+    async fn process_event(
+        &self,
+        event: &EventDetails<SubstrateConfig>,
+    ) -> Result<(), Box<dyn Error>> {
+        // subscription_builder.subscribe_to::<cyborg_node::pallet_task_management::events::TaskScheduled>();
+        // subscription_builder.subscribe_to::<cyborg_node::pallet_task_management::events::SubmittedCompletedTask>();
+        // subscription_builder.subscribe_to::<cyborg_node::pallet_task_management::events::VerifierResolverAssigned>();
+        // subscription_builder.subscribe_to::<cyborg_node::pallet_task_management::events::VerifiedCompletedTask>();
+        // subscription_builder.subscribe_to::<cyborg_node::pallet_task_management::events::ResolvedCompletedTask>();
+        // subscription_builder.subscribe_to::<cyborg_node::pallet_task_management::events::TaskReassigned>();
 
-        // None
+        // Check for WorkerRegistered event
+        match event.as_event::<cyborg_node::edge_connect::events::WorkerRegistered>() {
+            Ok(Some(worker_registered)) => {
+                let creator = &worker_registered.creator;
+                let worker = &worker_registered.worker;
+                let domain = &worker_registered.domain;
 
-        // if let Some(worker_registered) = event.as_event::<cyborg_node::pallet_edge_connect::events::WorkerRegistered>() {
-        //     let creator = &worker_registered.creator;
+                println!(
+                    "Worker Registered: Creator: {:?}, Worker: {:?}, Domain: {:?}",
+                    creator, worker, domain
+                );
+            }
+            Err(e) => {
+                println!("Error decoding WorkerRegistered event: {:?}", e);
+                return Err(Box::new(e));
+            }
+            _ => {} // Skip non-matching events
+        }
 
-        //     None
+        // Check for WorkerRemoved event
+        match event.as_event::<cyborg_node::edge_connect::events::WorkerRemoved>() {
+            Ok(Some(worker_removed)) => {
+                let creator = &worker_removed.creator;
+                let worker_id = &worker_removed.worker_id;
 
-        // } else if let Some(worker_removed) = event.as_event::<<cyborg_node::pallet_edge_connect::events::WorkerRemoved>() {
-        //     None
-        // }
+                println!(
+                    "Worker Removed: Creator: {:?}, Worker ID: {:?}",
+                    creator, worker_id
+                );
+            }
+            Err(e) => {
+                println!("Error decoding WorkerRemoved event: {:?}", e);
+                return Err(Box::new(e));
+            }
+            _ => {} // Skip non-matching events
+        }
 
-        None
+        // Check for WorkerStatusUpdated event
+        match event.as_event::<cyborg_node::edge_connect::events::WorkerStatusUpdated>() {
+            Ok(Some(status_updated)) => {
+                let creator = &status_updated.creator;
+                let worker_id = &status_updated.worker_id;
+                let worker_status = &status_updated.worker_status;
+
+                println!(
+                    "Worker Status Updated: Creator: {:?}, Worker ID: {:?}, Status: {:?}",
+                    creator, worker_id, worker_status
+                );
+            }
+            Err(e) => {
+                println!("Error decoding WorkerStatusUpdated event: {:?}", e);
+                return Err(Box::new(e));
+            }
+            _ => {} // Skip non-matching events
+        }
+
+        Ok(())
     }
 }
