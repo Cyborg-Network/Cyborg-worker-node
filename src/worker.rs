@@ -191,6 +191,26 @@ impl BlockchainClient for CyborgClient {
             _ => {} // Skip non-matching events
         }
 
+        // Check for TaskScheduled event
+        match event.as_event::<cyborg_node::task_management::events::TaskScheduled>() {
+            Ok(Some(task_scheduled)) => {
+                let assigned_worker = &task_scheduled.assigned_worker;
+                let task_owner = &task_scheduled.task_owner;
+                let task_id = &task_scheduled.task_id;
+                let task = &task_scheduled.task;
+
+                println!(
+                    "TaskScheduled: Assigned Worker: {:?}, Task Owner: {:?}, Task ID: {:?}, Task Data: {:?}",
+                    assigned_worker, task_owner, task_id, task
+                );
+            }
+            Err(e) => {
+                println!("Error decoding TaskScheduled event: {:?}", e);
+                return Err(Box::new(e));
+            }
+            _ => {} // Skip non-matching events
+        }
+
         Ok(())
     }
 }
