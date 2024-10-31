@@ -408,6 +408,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-trait"
+version = "0.1.83"
+source = "git+https://github.com/dtolnay/async-trait.git#c8f573316ec1ac894ebeb6fe8e99c5c0603d004c"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.85",
+]
+
+[[package]]
 name = "atomic-take"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -973,6 +983,7 @@ dependencies = [
 name = "cyborg-worker-node"
 version = "0.1.0"
 dependencies = [
+ "async-trait 0.1.83 (git+https://github.com/dtolnay/async-trait.git)",
  "clap",
  "color-print",
  "docify",
@@ -2128,7 +2139,7 @@ version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a9d131b408b4caafe1e7c00d410a09ad3eb7e3ab68690cf668e86904b2176b4"
 dependencies = [
- "async-trait",
+ "async-trait 0.1.83 (registry+https://github.com/rust-lang/crates.io-index)",
  "base64 0.13.1",
  "bytes",
  "futures",
@@ -2146,7 +2157,7 @@ version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b74065805db266ba2c6edbd670b23c4714824a955628472b2e46cc9f3a869cb"
 dependencies = [
- "async-trait",
+ "async-trait 0.1.83 (registry+https://github.com/rust-lang/crates.io-index)",
  "bytes",
  "cfg-if",
  "common-multipart-rfc7578",
@@ -2293,7 +2304,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4b257e1ec385e07b0255dde0b933f948b5c8b8c28d42afda9587c3a967b896d"
 dependencies = [
  "anyhow",
- "async-trait",
+ "async-trait 0.1.83 (registry+https://github.com/rust-lang/crates.io-index)",
  "beef",
  "futures-util",
  "hyper 0.14.31",
@@ -2314,7 +2325,7 @@ version = "0.24.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2882f6f8acb9fdaec7cefc4fd607119a9bd709831df7d7672a1d3b644628280"
 dependencies = [
- "async-trait",
+ "async-trait 0.1.83 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures-timer",
  "futures-util",
  "jsonrpsee-types 0.24.7",
@@ -4336,7 +4347,7 @@ version = "0.39.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ab094e8a7e9e5c7f05f8d90592aa1d1cf9b3f547d0dd401daff7ed98af942e12"
 dependencies = [
- "async-trait",
+ "async-trait 0.1.83 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures",
  "log",
  "sp-core",
@@ -4456,7 +4467,7 @@ version = "33.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "53407ba38ec22ca4a16381722c4bd0b559a0428bc1713079b0d5163ada63186a"
 dependencies = [
- "async-trait",
+ "async-trait 0.1.83 (registry+https://github.com/rust-lang/crates.io-index)",
  "impl-trait-for-tuples",
  "parity-scale-codec",
  "scale-info",
@@ -4797,7 +4808,7 @@ version = "0.38.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c53029d133e4e0cb7933f1fe06f2c68804b956de9bb8fa930ffca44e9e5e4230"
 dependencies = [
- "async-trait",
+ "async-trait 0.1.83 (registry+https://github.com/rust-lang/crates.io-index)",
  "derive-where",
  "either",
  "frame-metadata 17.0.0",
