@@ -4,15 +4,8 @@ use subxt::utils::AccountId32;
 use subxt::{OnlineClient, PolkadotConfig};
 use subxt_signer::{SecretUri, sr25519::Keypair as SR25519Keypair};
 use std::str::FromStr;
-use url::Url;
-use ipfs_api_backend_hyper::IpfsClient;
-use ipfs_api_backend_hyper::TryFromUri;
+use pinata_sdk::PinataApi;
 use std::env;
-
-pub const CONFIG_FILE_NAME: &str = "registered_worker_config.json";
-
-pub const IPFS_DEFAULT_URI: &str =
-	"https://8be9886d720942e0be9c10bc4351e9dd:ea84a88bd688458188735bff8c576e90@ipfs.infura.io:5001/api/v0";
 
 pub struct NoKeypair;
 pub struct AccountKeypair(SR25519Keypair);
@@ -22,9 +15,9 @@ pub struct AccountKeypair(SR25519Keypair);
 /// This builder allows for flexible configuration of the Cyborg client,
 /// including setting the node URI, keypair, and IPFS URI.
 pub struct CyborgClientBuilder<Keypair> {
-    node_uri: Option<String>,
+    parachain_url: Option<String>,
     keypair: Keypair,
-    ipfs_client: Option<IpfsClient>,
+    ipfs_client: Option<PinataApi>,
     identity: (AccountId32, u64),
     creator: AccountId32,
 }
@@ -36,7 +29,7 @@ pub struct CyborgClientBuilder<Keypair> {
 impl Default for CyborgClientBuilder<NoKeypair> {
     fn default() -> Self {
         CyborgClientBuilder {
-            node_uri: None,
+            parachain_url: None,
             keypair: NoKeypair,
             ipfs_client: None,
             identity: (AccountId32::from([0u8; 32]), 0),
@@ -50,8 +43,8 @@ impl<Keypair> CyborgClientBuilder<Keypair> {
     ///
     /// # Arguments
     /// * `url` - A string representing the WebSocket URL of the node.
-    pub fn node_uri(mut self, url: String) -> Self {
-        self.node_uri = Some(url);
+    pub fn parachain_url(mut self, url: String) -> Self {
+        self.parachain_url = Some(url);
         self
     }
 
@@ -66,11 +59,10 @@ impl<Keypair> CyborgClientBuilder<Keypair> {
         self,
         seed: &str,
     ) -> Result<CyborgClientBuilder<AccountKeypair>, Box<dyn Error>> {
-        // TODO add in seed argument instead of hardcoded seed
-        let uri = SecretUri::from_str("bottom drive obey lake curtain smoke basket hold race lonely fit walk//Alice")?;
+        let uri = SecretUri::from_str(seed)?;
         let keypair = SR25519Keypair::from_uri(&uri)?;
         Ok(CyborgClientBuilder {
-            node_uri: self.node_uri,
+            parachain_url: self.parachain_url,
             keypair: AccountKeypair(keypair),
             ipfs_client: self.ipfs_client,
             identity: self.identity,
@@ -82,22 +74,27 @@ impl<Keypair> CyborgClientBuilder<Keypair> {
     ///
     /// # Arguments
     /// * `url` - A string representing the IPFS server URL.
-    pub fn ipfs_uri(mut self, url: String) -> Self {
-        let ipfs_credentials = env::var("IPFS");
+    pub async fn ipfs_uri(mut self) -> Self {
+        let ipfs_url = env::var("CYBORG_WORKER_NODE_IPFS_API_URL")
+            .expect("Not able to process CYBORG_WORKER_NODE_IPFS_API_URL environment variable - please check if it is set.");
+        let ipfs_api_key = env::var("CYBORG_WORKER_NODE_IPFS_API_KEY")
+            .expect("Not able to process CYBORG_WORKER_NODE_IPFS_API_KEY environment variable - please check if it is set.");
+        let ipfs_api_secret = env::var("CYBORG_WORKER_NODE_IPFS_API_SECRET")
+            .expect("Not able to process CYBORG_WORKER_NODE_IPFS_API_SECRET environment variable - please check if it is set.");
 
-        let ipfs_url = ipfs_credentials
-        .ok()
-        .and_then(|creds| creds.parse::<Url>().ok())
-        .unwrap_or_else(|| {
-            IPFS_DEFAULT_URI
-                .parse::<Url>()
-                .expect("Invalid default IPFS URI")
-        });
+        let api = PinataApi::new(ipfs_api_key, ipfs_api_secret).unwrap();
 
-        let ipfs_client = IpfsClient::build_with_base_uri(ipfs_url.to_string().parse().unwrap())
-            .with_credentials(ipfs_url.username(), ipfs_url.password().unwrap());
-        
-        self.ipfs_client = Some(ipfs_client);
+        let result = api.test_authentication().await;
+
+        if let Ok(_) = result {
+            println!("IPFS authentication successful");
+        } else {
+            panic!("IPFS authentication failed, therefore cannot start worker.");
+        }
+
+        println!("IPFS URL: {}", ipfs_url);
+
+        self.ipfs_client = Some(api);
         self
     }
 
@@ -114,7 +111,7 @@ impl CyborgClientBuilder<AccountKeypair> {
     /// # Returns
     /// A `Result` that, if successful, contains the constructed `CyborgClient`.
     pub async fn build(self) -> Result<CyborgClient, Box<dyn Error>> {
-        match &self.node_uri {
+        match &self.parachain_url {
             Some(url) => {
                 // Create an online client that connects to the specified Substrate node URL.
                 let client = OnlineClient::<PolkadotConfig>::from_url(url).await?;
@@ -123,7 +120,7 @@ impl CyborgClientBuilder<AccountKeypair> {
                     client,
                     keypair: self.keypair.0,
                     ipfs_client: self.ipfs_client,
-                    node_uri: self.node_uri,
+                    node_uri: self.parachain_url,
                     identity: self.identity,
                     creator: self.creator,
                 })

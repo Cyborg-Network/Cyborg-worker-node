@@ -16,6 +16,7 @@
 mod builder;
 mod cli;
 mod worker;
+mod specs;
 mod substrate_interface;
 
 use crate::worker::BlockchainClient;
@@ -23,7 +24,6 @@ use builder::CyborgClientBuilder;
 use clap::Parser;
 use cli::{Cli, Commands};
 use std::{error::Error, fs};
-use serde::Deserialize;
 //use subxt::ext::jsonrpsee::core::client::error;
 
 #[tokio::main]
@@ -34,14 +34,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
     match &cli.command {
         // Handle the "registration" subcommand.
         Some(Commands::Registration {
-            api_url,
+            parachain_url,
             account_seed,
         }) => {
-            println!("Registering worker with API URL: {}", api_url);
+            println!("Registering worker with API URL: {}", parachain_url);
 
             // Build the Cyborg client using the provided API URL and account seed.
             let client = CyborgClientBuilder::default()
-                .node_uri(api_url.to_string())
+                .parachain_url(parachain_url.to_string())
                 .keypair(account_seed)?
                 .build()
                 .await?;
@@ -52,15 +52,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         // Handle the "startmining" subcommand.
         Some(Commands::Startmining {
-            api_url,
+            parachain_url,
             account_seed,
             //ipfs_url,
         }) => {
-            let ipfs_url = "url".to_string();
-            println!(
-                "Starting mining session with API URL: {}, IPFS URL: {:?}",
-                api_url, ipfs_url
-            );
+            println!("Starting mining session. Parachain URL: {}", parachain_url);
 
             let config_string = fs::read_to_string("registered_worker_config.json")?;
 
@@ -68,9 +64,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
             // Build the Cyborg client using the provided API URL, account seed, and IPFS URL.
             let client = CyborgClientBuilder::default()
-                .node_uri(api_url.to_string())
+                .parachain_url(parachain_url.to_string())
                 .keypair(account_seed)?
-                .ipfs_uri(ipfs_url.clone())
+                .ipfs_uri().await
                 .config(config)
                 .build()
                 .await?;

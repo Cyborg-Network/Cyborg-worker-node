@@ -27,7 +27,7 @@ pub enum Commands {
     Registration {
         /// API URL for the registration process.
         #[clap(long, value_name = "API_URL")]
-        api_url: String,
+        parachain_url: String,
 
         /// Account Seed for the worker registration.
         #[clap(long, value_name = "ACCOUNT_SEED")]
@@ -37,7 +37,7 @@ pub enum Commands {
     Startmining {
         /// API URL for starting the worker
         #[clap(long, value_name = "API_URL")]
-        api_url: String,
+        parachain_url: String,
 
         /// Account ID for the worker registration.
         #[clap(long, value_name = "ACCOUNT_SEED")]
