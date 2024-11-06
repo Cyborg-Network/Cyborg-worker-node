@@ -1,0 +1,11 @@
+[package]
+name = "zk_worker"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "zk_worker"  # Library name, can be the same as your project name
+path = "src/lib.rs"         # Library entry file (default is `src/lib.rs`)
+
+[dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
