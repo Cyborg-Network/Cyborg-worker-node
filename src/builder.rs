@@ -59,8 +59,12 @@ impl<Keypair> CyborgClientBuilder<Keypair> {
         self,
         seed: &str,
     ) -> Result<CyborgClientBuilder<AccountKeypair>, Box<dyn Error>> {
-        let uri = SecretUri::from_str(seed)?;
-        let keypair = SR25519Keypair::from_uri(&uri)?;
+        println!("Keypair: {}", seed);
+        let uri = SecretUri::from_str(seed)
+            .expect("Keypair was not set correctly");
+        let keypair = SR25519Keypair::from_uri(&uri)
+            .expect("Keypair from URI failed");
+
         Ok(CyborgClientBuilder {
             parachain_url: self.parachain_url,
             keypair: AccountKeypair(keypair),
@@ -82,7 +86,12 @@ impl<Keypair> CyborgClientBuilder<Keypair> {
         let ipfs_api_secret = env::var("CYBORG_WORKER_NODE_IPFS_API_SECRET")
             .expect("Not able to process CYBORG_WORKER_NODE_IPFS_API_SECRET environment variable - please check if it is set.");
 
-        let api = PinataApi::new(ipfs_api_key, ipfs_api_secret).unwrap();
+        println!("IPFS API URL: {}", ipfs_url);
+        println!("IPFS API KEY: {}", ipfs_api_key);
+        println!("IPFS API SECRET: {}", ipfs_api_secret);
+
+        let api = PinataApi::new(ipfs_api_key, ipfs_api_secret)
+            .expect("Not able to create IPFS API client");
 
         let result = api.test_authentication().await;
 

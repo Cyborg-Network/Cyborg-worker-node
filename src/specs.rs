@@ -71,8 +71,8 @@ impl Location {
 }
 
 fn f64_to_i32_coordinates(lat: f64, lon: f64) -> Coordinates {
-    let lat_i32 = (lat * 1_000_000.0).round() as i32;
-    let lon_i32 = (lon * 1_000_000.0).round() as i32;
+    let lat_i32 = (lat * 1_000_000.00).round() as i32;
+    let lon_i32 = (lon * 1_000_000.00).round() as i32;
 
     (lat_i32, lon_i32)
 }

@@ -62,7 +62,16 @@ echo "export CYBORG_WORKER_NODE_IPFS_API_SECRET=\"$IPFS_SECRET\"" >> ~/.bashrc
 
 source ~/.bashrc
 
-$WORKER_BINARY_PATH registration --parachain-url "$PARACHAIN_URL" --account-seed "$ACCOUNT_SEED"
+if ! id "cyborg-user" &>/dev/null; then
+    sudo useradd -r -s /bin/false cyborg-user
+fi
+
+sudo mkdir -p /var/lib/cyborg/worker-node/packages
+sudo mkdir -p /var/lib/cyborg/worker-node/config
+sudo chown -R cyborg-user:cyborg-user /var/lib/cyborg
+sudo chmod -R 700 /var/lib/cyborg
+
+sudo $WORKER_BINARY_PATH registration --parachain-url "$PARACHAIN_URL" --account-seed "$ACCOUNT_SEED"
 
 echo "Creating systemd service for worker node: $WORKER_SERVICE_FILE"
 sudo bash -c "cat > $WORKER_SERVICE_FILE" << EOL
@@ -71,12 +80,14 @@ Description=Binary that will execute compute requests from the cyborg-parachain.
 After=network.target
 
 [Service]
+User=cyborg-user
+Group=cyborg-user
 Environment=PARACHAIN_URL=$PARACHAIN_URL
-Environment=ACCOUNT_SEED=$ACCOUNT_SEED
+Environment="ACCOUNT_SEED=\"$ACCOUNT_SEED\""
 Environment="CYBORG_WORKER_NODE_IPFS_API_URL=$IPFS_URL"
 Environment="CYBORG_WORKER_NODE_IPFS_API_KEY=$IPFS_KEY"
 Environment="CYBORG_WORKER_NODE_IPFS_API_SECRET=$IPFS_SECRET"
-ExecStart=$WORKER_BINARY_PATH startmining --parachain-url \$PARACHAIN_URL --account-seed \$ACCOUNT_SEED
+ExecStart=$WORKER_BINARY_PATH startmining --parachain-url \$PARACHAIN_URL --account-seed "\$ACCOUNT_SEED"
 Restart=always
 RestartSec=3
 
@@ -93,6 +104,8 @@ Description=Agent that is able to check the health of the node, provide reuired 
 After=network.target
 
 [Service]
+User=cyborg-user
+Group=cyborg-user
 ExecStart=$AGENT_BINARY_PATH run
 Restart=always
 RestartSec=3

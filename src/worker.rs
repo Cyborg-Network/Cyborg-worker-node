@@ -1,12 +1,12 @@
 use async_trait::async_trait;
 use pinata_sdk::PinByJson;
 use pinata_sdk::PinataApi;
+use sp_core::blake2_256;
 use std::error::Error;
 use std::process::Output;
 use std::str::FromStr;
 use subxt::events::EventDetails;
 use subxt::utils::H256;
-use dirs::home_dir;
 //use subxt::ext::jsonrpsee::async_client::ClientBuilder;
 
 use codec::{Decode, Encode};
@@ -22,10 +22,16 @@ use subxt::{OnlineClient, PolkadotConfig};
 use subxt_signer::sr25519::Keypair;
 use substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 use reqwest::get;
+use std::fs::File;
+use std::io::Write;
+use std::os::unix::fs::PermissionsExt;
+use std::path::Path;
+use std::process::{Command, Stdio};
 
 use crate::{substrate_interface, specs};
 
-pub const CONFIG_FILE_NAME: &str = "registered_worker_config.json";
+pub const CONFIG_FILE_NAME: &str = "worker_config.json";
+pub const WORK_PACKAGE_DIR: &str = "current_task";
 
 // datastructure for worker registartion persistence
 #[derive(Debug, Clone, PartialEq, Eq, Decode, Encode, Serialize, Deserialize)]
@@ -138,13 +144,16 @@ impl BlockchainClient for CyborgClient {
                 worker: event.worker.clone(),
             })?;
 
-            let home_dir = home_dir().expect("Unable to get home directory");
+            let package_dir_path = Path::new("/var/lib/cyborg/worker-node/packages");
+            let config_dir_path = Path::new("/var/lib/cyborg/worker-node/config");
+            let file_path = config_dir_path.join(CONFIG_FILE_NAME);
 
-            let dir_path = home_dir.join("cyborg-worker");
-            let file_path = dir_path.join("registered_worker_config.json");
+            if !fs::metadata(&config_dir_path).is_ok() {
+                fs::create_dir_all(&config_dir_path)?;
+            }
 
-            if !fs::metadata(&dir_path).is_ok() {
-                fs::create_dir_all(&dir_path)?;
+            if !fs::metadata(&package_dir_path).is_ok() {
+                fs::create_dir_all(&package_dir_path)?;
             }
         
             // Write content to the file (will overwrite existing content)
@@ -349,8 +358,8 @@ pub async fn submit_result_onchain(
     let result_raw_data = String::from_utf8(result.stdout).expect("Invalid UTF-8 output");
     dbg!(&result_raw_data);
 
-    let hash = publish_on_ipfs(result_raw_data, ipfs_client).await;
-    let chain_result = submit_to_chain(api, signer_keypair, hash, task_id).await;
+    let cid = publish_on_ipfs(result_raw_data.clone(), ipfs_client).await;
+    let chain_result = submit_to_chain(api, signer_keypair, cid, task_id, result_raw_data).await;
 
     match chain_result {
         Ok(_) => {
@@ -378,12 +387,12 @@ pub async fn publish_on_ipfs(result: String, ipfs_client: &PinataApi) -> String 
     }
 }
 
-pub async fn submit_to_chain(api: &OnlineClient<PolkadotConfig>, signer_keypair: &Keypair, result: String, task_id: u64)
+pub async fn submit_to_chain(api: &OnlineClient<PolkadotConfig>, signer_keypair: &Keypair, result: String, task_id: u64, task_output: String)
     -> Result<(), Box<dyn std::error::Error>> 
 {
     let result_cid: BoundedVec<u8> = BoundedVec::from(BoundedVec(result.as_bytes().to_vec()));
 
-    let completed_hash = H256::from_str(result.as_str()).unwrap();
+    let completed_hash = H256::from(blake2_256(task_output.as_bytes()));
 
     let result_submission_tx = substrate_interface::api::tx()
         .task_management()
@@ -420,14 +429,6 @@ pub async fn submit_to_chain(api: &OnlineClient<PolkadotConfig>, signer_keypair:
     Ok(())
 }
 
-use std::fs::File;
-use std::io::Write;
-use std::os::unix::fs::PermissionsExt;
-use std::path::Path;
-use std::process::{Command, Stdio};
-
-pub const WORK_PACKAGE_DIR: &str = "work_package_binary";
-
 pub async fn download_and_execute_work_package(
     ipfs_cid: &str,
 ) -> Option<Result<std::process::Output, std::io::Error>> {
@@ -457,10 +458,8 @@ pub async fn download_and_execute_work_package(
 
             println!("Downloaded {} bytes from Crust's IPFS gateway.", response_bytes.len());
 
-            let home_dir = home_dir().expect("Unable to get home directory");
-
-            let dir_path = home_dir.join("cyborg-worker");
-            let file_path = dir_path.join("current_task");
+            let dir_path = Path::new("/var/lib/cyborg/worker-node/packages");
+            let file_path = dir_path.join(WORK_PACKAGE_DIR);
 
             if !dir_path.exists() {
                 if let Err(e) = fs::create_dir_all(&dir_path) {

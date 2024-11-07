@@ -58,9 +58,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }) => {
             println!("Starting mining session. Parachain URL: {}", parachain_url);
 
-            let config_string = fs::read_to_string("registered_worker_config.json")?;
+            let config_string = fs::read_to_string("/var/lib/cyborg/worker-node/config/worker_config.json")?;
 
             let config: worker::WorkerData = serde_json::from_str(&config_string)?;
+
+            println!("Config: {config:?}");
 
             // Build the Cyborg client using the provided API URL, account seed, and IPFS URL.
             let client = CyborgClientBuilder::default()
