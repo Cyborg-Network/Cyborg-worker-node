@@ -3,10 +3,12 @@ use pinata_sdk::PinByJson;
 use pinata_sdk::PinataApi;
 use sp_core::blake2_256;
 use std::error::Error;
+use std::io::Read;
 use std::process::Output;
 use std::str::FromStr;
 use subxt::events::EventDetails;
 use subxt::utils::H256;
+use zbus::{Connection, Message};
 //use subxt::ext::jsonrpsee::async_client::ClientBuilder;
 
 use codec::{Decode, Encode};
@@ -27,6 +29,7 @@ use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::process::{Command, Stdio};
+use zip::read::ZipArchive;
 
 use crate::{substrate_interface, specs};
 
@@ -52,6 +55,12 @@ pub struct WorkerConfig {
 #[derive(Deserialize)]
 pub struct IpResponse {
     pub ip: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ZkFiles {
+    zk_public_input: Option<String>,
+    zk_circuit: Option<String>,
 }
 
 #[async_trait]
@@ -291,6 +300,9 @@ impl BlockchainClient for CyborgClient {
 
                         let result = download_and_execute_work_package("bafybeic5sgq6obgfg6xine6cf4qpv7xrvnzst5ufyxnzbnzvcafuif56j4/ipfs_test").await;
 
+                        //TODO process zk_files
+                        let zk_files = download_and_extract_zk_files("Qmf9v8VbJ6WFGbakeWEXFhUc91V1JG26grakv3dTj8rERh").await;
+
                         if let Some(Ok(output)) = result {
                             println!("Operation sucessful: {:?}", output);
                             submit_result_onchain(&self.client, &self.keypair, &ipfs_client, output, task_scheduled.task_id).await;
@@ -513,6 +525,61 @@ pub async fn download_and_execute_work_package(
     }
 }
 
+async fn download_and_extract_zk_files(ipfs_cid: &str) -> Option<ZkFiles> {
+    let url = format!("https://ipfs.io/ipfs/{}", ipfs_cid);
+
+    let response = get(&url).await.unwrap();
+
+    if !response.status().is_success() {
+        return None;
+    }
+
+    let bytes = response.bytes().await.unwrap();
+
+    let reader = std::io::Cursor::new(bytes);
+
+    let mut archive = ZipArchive::new(reader).unwrap();
+
+    let mut unpacked_files = ZkFiles {
+        zk_public_input: None,
+        zk_circuit: None,
+    };
+
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i).unwrap();
+
+        let filename = file.name().to_string();
+
+        let mut buffer = Vec::new();
+        file.read_to_end(&mut buffer).unwrap();
+
+        match filename.as_str() {
+            "zk_public_input.json" => unpacked_files.zk_public_input = Some(String::from_utf8(buffer).unwrap()),
+            "zk_circuit.circom" => unpacked_files.zk_circuit = Some(String::from_utf8(buffer).unwrap()),
+            _ => {
+                println!("Unexpected file in zip: {}", filename);
+            }
+        }
+    }
+
+    Some(unpacked_files)
+}
+
+/// Can send stages 1-4 of the zk-verification process to the cyborg-agent, which will send it to the frontend
+async fn emit_zk_stage_signal(stage: u8) -> Result<(), Box<dyn Error>> {
+    let connection = Connection::system().await?;
+
+    let msg = Message::signal(
+        "/com/cyborg/CyborgAgent",
+        "com.cyborg.AgentZkInterface",
+        "ZkStageChanged",
+    )?
+    .build(&stage).unwrap();
+
+    connection.send(&msg).await?;
+
+    Ok(())
+}
 /*
 
 fn worker_retain_after_restart(reg_event: EventWorkerRegistered) -> Option<WorkerData> {
