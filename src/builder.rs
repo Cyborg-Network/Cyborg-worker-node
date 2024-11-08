@@ -108,8 +108,8 @@ impl<Keypair> CyborgClientBuilder<Keypair> {
     }
 
     pub fn config(mut self, config: WorkerData) -> Self {
-        self.identity = config.worker;
-        self.creator = AccountId32::from_str(&config.creator).unwrap();
+        self.identity = config.worker_identity;
+        self.creator = AccountId32::from_str(&config.worker_owner).unwrap();
         self
     }
 }

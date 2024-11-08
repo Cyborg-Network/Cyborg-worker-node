@@ -30,6 +30,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::process::{Command, Stdio};
 use zip::read::ZipArchive;
+use tokio::{task, time::{sleep, Duration}};
 
 use crate::{substrate_interface, specs};
 
@@ -39,8 +40,13 @@ pub const WORK_PACKAGE_DIR: &str = "current_task";
 // datastructure for worker registartion persistence
 #[derive(Debug, Clone, PartialEq, Eq, Decode, Encode, Serialize, Deserialize)]
 pub struct WorkerData {
-    pub creator: String,
-    pub worker: (AccountId32, u64),
+    pub worker_owner: String,
+    pub worker_identity: (AccountId32, u64),
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TaskOwner {
+    pub task_owner: String,
 }
 
 pub struct WorkerConfig {
@@ -149,8 +155,8 @@ impl BlockchainClient for CyborgClient {
         if let Some(event) = registration_event {
 
             let worker_file_json = serde_json::to_string(&WorkerData {
-                creator: event.creator.clone().to_string(),
-                worker: event.worker.clone(),
+                worker_owner: event.creator.clone().to_string(),
+                worker_identity: event.worker.clone(),
             })?;
 
             let package_dir_path = Path::new("/var/lib/cyborg/worker-node/packages");
@@ -184,6 +190,12 @@ impl BlockchainClient for CyborgClient {
         println!("Starting mining session...");
 
         info!("============ event_listener_tester ============");
+
+        task::spawn(async move {
+            if let Err(e) = wait_and_send_update().await {
+                eprintln!("Error while sending signal: {}", e);
+            }
+        });
 
         let mut blocks = self.client.blocks().subscribe_finalized().await?;
 
@@ -286,6 +298,22 @@ impl BlockchainClient for CyborgClient {
         match event.as_event::<substrate_interface::api::task_management::events::TaskScheduled>() {
             Ok(Some(task_scheduled)) => {
                 let assigned_worker = &task_scheduled.assigned_worker;
+
+                let task_owner = &task_scheduled.task_owner;
+
+                let owner_file_json = serde_json::to_string(&TaskOwner {
+                    task_owner: task_owner.clone().to_string(),
+                })?;
+    
+                let config_dir_path = Path::new("/var/lib/cyborg/worker-node/config");
+                let file_path = config_dir_path.join("task_owner.json");
+    
+                if !fs::metadata(&config_dir_path).is_ok() {
+                    fs::create_dir_all(&config_dir_path)?;
+                }
+    
+                // Write content to the file (will overwrite existing content)
+                fs::write(&file_path, owner_file_json)?;
 
                 if *assigned_worker == self.identity {
                     if let Some(ipfs_client) = &self.ipfs_client {
@@ -566,19 +594,32 @@ async fn download_and_extract_zk_files(ipfs_cid: &str) -> Option<ZkFiles> {
 }
 
 /// Can send stages 1-4 of the zk-verification process to the cyborg-agent, which will send it to the frontend
-async fn emit_zk_stage_signal(stage: u8) -> Result<(), Box<dyn Error>> {
+async fn emit_zk_update(stage: u8) -> Result<(), Box<dyn Error>> {
     let connection = Connection::system().await?;
 
     let msg = Message::signal(
         "/com/cyborg/CyborgAgent",
         "com.cyborg.AgentZkInterface",
-        "ZkStageChanged",
+        "ZkUpdate",
     )?
     .build(&stage).unwrap();
 
     connection.send(&msg).await?;
 
     Ok(())
+}
+
+pub async fn wait_and_send_update() -> zbus::Result<()> {
+    // Wait for 10 seconds
+    println!("Waiting for 10 seconds...");
+    let loopvec = [1,2,3,4];
+
+    loop {
+        for i in loopvec {
+            let _ = emit_zk_update(i).await;
+            sleep(Duration::from_secs(10)).await;
+        }
+    }
 }
 /*
 
