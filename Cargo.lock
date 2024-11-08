@@ -1033,6 +1033,7 @@ dependencies = [
  "sysinfo",
  "tokio",
  "url",
+ "zk_worker",
 ]
 
 [[package]]
@@ -6348,3 +6349,7 @@ dependencies = [
  "quote",
  "syn 2.0.85",
 ]
+
+[[package]]
+name = "zk_worker"
+version = "0.1.0"
