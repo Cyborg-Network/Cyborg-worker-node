@@ -225,9 +225,9 @@ pub mod api {
             .hash();
         runtime_metadata_hash
             == [
-                180u8, 255u8, 182u8, 211u8, 53u8, 63u8, 41u8, 231u8, 99u8, 126u8, 72u8, 239u8,
-                233u8, 70u8, 228u8, 217u8, 108u8, 27u8, 87u8, 116u8, 167u8, 6u8, 32u8, 157u8, 40u8,
-                241u8, 201u8, 254u8, 241u8, 127u8, 61u8, 49u8,
+                181u8, 122u8, 220u8, 88u8, 102u8, 95u8, 18u8, 44u8, 39u8, 120u8, 248u8, 179u8,
+                94u8, 211u8, 99u8, 241u8, 44u8, 230u8, 74u8, 44u8, 118u8, 125u8, 46u8, 55u8, 180u8,
+                26u8, 204u8, 1u8, 232u8, 193u8, 214u8, 227u8,
             ]
     }
     pub mod system {
@@ -1386,9 +1386,9 @@ pub mod api {
                         "Events",
                         (),
                         [
-                            118u8, 190u8, 30u8, 70u8, 68u8, 103u8, 207u8, 45u8, 43u8, 226u8, 184u8,
-                            44u8, 175u8, 229u8, 124u8, 66u8, 214u8, 233u8, 133u8, 167u8, 197u8,
-                            94u8, 17u8, 32u8, 187u8, 100u8, 8u8, 79u8, 82u8, 198u8, 20u8, 235u8,
+                            163u8, 71u8, 92u8, 137u8, 167u8, 100u8, 52u8, 107u8, 20u8, 218u8, 51u8,
+                            244u8, 75u8, 152u8, 148u8, 29u8, 152u8, 219u8, 81u8, 106u8, 218u8,
+                            147u8, 30u8, 218u8, 27u8, 146u8, 66u8, 86u8, 137u8, 149u8, 116u8, 86u8,
                         ],
                     )
                 }
@@ -4987,10 +4987,9 @@ pub mod api {
                             call: ::subxt::ext::subxt_core::alloc::boxed::Box::new(call),
                         },
                         [
-                            127u8, 108u8, 83u8, 122u8, 190u8, 122u8, 252u8, 142u8, 99u8, 173u8,
-                            110u8, 101u8, 200u8, 174u8, 59u8, 127u8, 215u8, 94u8, 61u8, 89u8, 29u8,
-                            211u8, 212u8, 127u8, 163u8, 193u8, 9u8, 27u8, 151u8, 171u8, 129u8,
-                            11u8,
+                            189u8, 68u8, 8u8, 182u8, 66u8, 3u8, 122u8, 173u8, 38u8, 157u8, 94u8,
+                            218u8, 69u8, 136u8, 160u8, 201u8, 166u8, 120u8, 20u8, 133u8, 8u8,
+                            199u8, 79u8, 151u8, 172u8, 159u8, 211u8, 76u8, 95u8, 179u8, 55u8, 57u8,
                         ],
                     )
                 }
@@ -5013,9 +5012,9 @@ pub mod api {
                             weight,
                         },
                         [
-                            78u8, 2u8, 44u8, 157u8, 68u8, 213u8, 79u8, 34u8, 248u8, 244u8, 113u8,
-                            118u8, 127u8, 130u8, 84u8, 152u8, 95u8, 194u8, 137u8, 226u8, 29u8,
-                            121u8, 162u8, 86u8, 58u8, 218u8, 73u8, 65u8, 16u8, 66u8, 230u8, 71u8,
+                            182u8, 1u8, 45u8, 103u8, 191u8, 239u8, 151u8, 216u8, 244u8, 162u8,
+                            141u8, 133u8, 74u8, 19u8, 79u8, 57u8, 103u8, 220u8, 77u8, 86u8, 55u8,
+                            58u8, 149u8, 217u8, 175u8, 132u8, 5u8, 26u8, 180u8, 100u8, 82u8, 191u8,
                         ],
                     )
                 }
@@ -5055,10 +5054,10 @@ pub mod api {
                             call: ::subxt::ext::subxt_core::alloc::boxed::Box::new(call),
                         },
                         [
-                            107u8, 126u8, 102u8, 153u8, 59u8, 210u8, 161u8, 1u8, 76u8, 237u8,
-                            155u8, 167u8, 217u8, 192u8, 102u8, 135u8, 174u8, 7u8, 72u8, 32u8,
-                            168u8, 22u8, 235u8, 40u8, 125u8, 52u8, 10u8, 0u8, 176u8, 55u8, 7u8,
-                            145u8,
+                            114u8, 206u8, 143u8, 242u8, 202u8, 239u8, 101u8, 117u8, 25u8, 202u8,
+                            43u8, 105u8, 29u8, 227u8, 33u8, 63u8, 14u8, 123u8, 28u8, 17u8, 242u8,
+                            238u8, 144u8, 72u8, 136u8, 212u8, 165u8, 187u8, 113u8, 99u8, 254u8,
+                            63u8,
                         ],
                     )
                 }
@@ -11824,9 +11823,10 @@ pub mod api {
     pub mod edge_connect {
         use super::root_mod;
         use super::runtime_types;
-        #[doc = "Pallet Errors"]
+        #[doc = "The `Error` enum contains all possible errors that can occur when interacting with this pallet."]
+        #[doc = "These errors will be returned in the `DispatchResult` when a function call fails."]
         pub type Error = runtime_types::pallet_edge_connect::pallet::Error;
-        #[doc = "Registers a Worker with either a domain or ip and initialize it with an inactive status."]
+        #[doc = "Contains a variant per dispatchable extrinsic that this pallet has."]
         pub type Call = runtime_types::pallet_edge_connect::pallet::Call;
         pub mod calls {
             use super::root_mod;
@@ -11849,6 +11849,7 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
+                #[doc = "Registers a Worker with either a domain and initialize it with an inactive status."]
                 pub struct RegisterWorker {
                     pub domain: register_worker::Domain,
                     pub latitude: register_worker::Latitude,
@@ -11887,7 +11888,7 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                #[doc = "Remove Worker from storage"]
+                #[doc = "Remove a worker from storage an deactivates it"]
                 pub struct RemoveWorker {
                     pub worker_id: remove_worker::WorkerId,
                 }
@@ -11914,6 +11915,7 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
+                #[doc = "Switches the visibility of a worker between active and inactive."]
                 pub struct ToggleWorkerVisibility {
                     pub worker_id: toggle_worker_visibility::WorkerId,
                     pub visibility: toggle_worker_visibility::Visibility,
@@ -11930,6 +11932,7 @@ pub mod api {
             }
             pub struct TransactionApi;
             impl TransactionApi {
+                #[doc = "Registers a Worker with either a domain and initialize it with an inactive status."]
                 pub fn register_worker(
                     &self,
                     domain: types::register_worker::Domain,
@@ -11959,7 +11962,7 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = "Remove Worker from storage"]
+                #[doc = "Remove a worker from storage an deactivates it"]
                 pub fn remove_worker(
                     &self,
                     worker_id: types::remove_worker::WorkerId,
@@ -11976,6 +11979,7 @@ pub mod api {
                         ],
                     )
                 }
+                #[doc = "Switches the visibility of a worker between active and inactive."]
                 pub fn toggle_worker_visibility(
                     &self,
                     worker_id: types::toggle_worker_visibility::WorkerId,
@@ -12000,7 +12004,8 @@ pub mod api {
                 }
             }
         }
-        #[doc = "The `Event` enum of this pallet"]
+        #[doc = "The `Event` enum contains the various events that can be emitted by this pallet."]
+        #[doc = "Events are emitted when significant actions or state changes happen in the pallet."]
         pub type Event = runtime_types::pallet_edge_connect::pallet::Event;
         pub mod events {
             use super::runtime_types;
@@ -12015,6 +12020,11 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
+            #[doc = "Event emitted when a new worker is successfully registered."]
+            #[doc = ""]
+            #[doc = "- `creator`: The account ID of the worker's creator."]
+            #[doc = "- `worker`: A tuple containing the account ID of the worker owner and the worker ID."]
+            #[doc = "- `domain`: The domain associated with the"]
             pub struct WorkerRegistered {
                 pub creator: worker_registered::Creator,
                 pub worker: worker_registered::Worker,
@@ -12046,6 +12056,10 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
+            #[doc = "Event emitted when a worker is removed from the system."]
+            #[doc = ""]
+            #[doc = "- `creator`: The account ID of the worker's creator."]
+            #[doc = "- `worker_id`: The ID of the worker that was removed."]
             pub struct WorkerRemoved {
                 pub creator: worker_removed::Creator,
                 pub worker_id: worker_removed::WorkerId,
@@ -12070,6 +12084,11 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
+            #[doc = "Event emitted when a worker's status is updated (e.g., toggling visibility)."]
+            #[doc = ""]
+            #[doc = "- `creator`: The account ID of the worker's creator."]
+            #[doc = "- `worker_id`: The ID of the worker whose status was updated."]
+            #[doc = "- `worker_status`: The new status of the worker, either active or inactive."]
             pub struct WorkerStatusUpdated {
                 pub creator: worker_status_updated::Creator,
                 pub worker_id: worker_status_updated::WorkerId,
@@ -12108,6 +12127,7 @@ pub mod api {
             }
             pub struct StorageApi;
             impl StorageApi {
+                #[doc = " AccountWorkers Information, Storage map for associating an account ID with a worker ID. If no worker exists, the query returns None."]
                 #[doc = " Keeps track of workerIds per account if any"]
                 pub fn account_workers_iter(
                     &self,
@@ -12130,6 +12150,7 @@ pub mod api {
                         ],
                     )
                 }
+                #[doc = " AccountWorkers Information, Storage map for associating an account ID with a worker ID. If no worker exists, the query returns None."]
                 #[doc = " Keeps track of workerIds per account if any"]
                 pub fn account_workers(
                     &self,
@@ -12157,7 +12178,7 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Worker Cluster information"]
+                #[doc = " Worker Cluster information, Storage map to keep track of detailed worker cluster information for each (account ID, worker ID) pair."]
                 pub fn worker_clusters_iter(
                     &self,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
@@ -12179,7 +12200,7 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Worker Cluster information"]
+                #[doc = " Worker Cluster information, Storage map to keep track of detailed worker cluster information for each (account ID, worker ID) pair."]
                 pub fn worker_clusters_iter1(
                     &self,
                     _0: impl ::core::borrow::Borrow<types::worker_clusters::Param0>,
@@ -12206,7 +12227,7 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Worker Cluster information"]
+                #[doc = " Worker Cluster information, Storage map to keep track of detailed worker cluster information for each (account ID, worker ID) pair."]
                 pub fn worker_clusters(
                     &self,
                     _0: impl ::core::borrow::Borrow<types::worker_clusters::Param0>,
@@ -12253,7 +12274,7 @@ pub mod api {
         #[doc = "Errors inform users that something went wrong."]
         #[doc = "<https://paritytech.github.io/polkadot-sdk/master/polkadot_sdk_docs/guides/your_first_pallet/index.html#event-and-error>"]
         pub type Error = runtime_types::pallet_task_management::pallet::Error;
-        #[doc = "Creates a task and assigns it to an available worker"]
+        #[doc = "Contains a variant per dispatchable extrinsic that this pallet has."]
         pub type Call = runtime_types::pallet_task_management::pallet::Call;
         pub mod calls {
             use super::root_mod;
@@ -12276,14 +12297,26 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
+                #[doc = "Creates a new task and assigns it to a randomly selected worker."]
                 pub struct TaskScheduler {
                     pub task_data: task_scheduler::TaskData,
+                    pub zk_files_cid: task_scheduler::ZkFilesCid,
+                    pub worker_owner: task_scheduler::WorkerOwner,
+                    pub worker_id: task_scheduler::WorkerId,
+                    pub compute_hours_deposit: task_scheduler::ComputeHoursDeposit,
                 }
                 pub mod task_scheduler {
                     use super::runtime_types;
                     pub type TaskData = runtime_types::bounded_collections::bounded_vec::BoundedVec<
                         ::core::primitive::u8,
                     >;
+                    pub type ZkFilesCid =
+                        runtime_types::bounded_collections::bounded_vec::BoundedVec<
+                            ::core::primitive::u8,
+                        >;
+                    pub type WorkerOwner = ::subxt::ext::subxt_core::utils::AccountId32;
+                    pub type WorkerId = ::core::primitive::u64;
+                    pub type ComputeHoursDeposit = ::core::option::Option<::core::primitive::u32>;
                 }
                 impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for TaskScheduler {
                     const PALLET: &'static str = "TaskManagement";
@@ -12304,6 +12337,7 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
+                #[doc = "Allows a worker to submit a completed task for verification by a verifier."]
                 pub struct SubmitCompletedTask {
                     pub task_id: submit_completed_task::TaskId,
                     pub completed_hash: submit_completed_task::CompletedHash,
@@ -12336,9 +12370,8 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                #[doc = "Verifies completed task once an assignedverifier have succussfully validate correct completed task"]
-                #[doc = "Can only be called from root"]
-                #[doc = "Assign new verifier as resolver if verification fails. Resolver will determine correct result."]
+                #[doc = "Verifies whether the submitted completed task is correct."]
+                #[doc = "If verification fails, a new resolver is assigned to review the task."]
                 pub struct VerifyCompletedTask {
                     pub task_id: verify_completed_task::TaskId,
                     pub completed_hash: verify_completed_task::CompletedHash,
@@ -12367,9 +12400,7 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                #[doc = "Checks whether resolver matches the executor or verifier."]
-                #[doc = "If it matches one, the task is resolved and award is split between the matching pair. The failing worker is slashed."]
-                #[doc = "If no matches, the task is reassigned to a new executor and cycle repeats"]
+                #[doc = "Resolver finalizes the verification of a task in case of disputes."]
                 pub struct ResolveCompletedTask {
                     pub task_id: resolve_completed_task::TaskId,
                     pub completed_hash: resolve_completed_task::CompletedHash,
@@ -12386,22 +12417,35 @@ pub mod api {
             }
             pub struct TransactionApi;
             impl TransactionApi {
+                #[doc = "Creates a new task and assigns it to a randomly selected worker."]
                 pub fn task_scheduler(
                     &self,
                     task_data: types::task_scheduler::TaskData,
+                    zk_files_cid: types::task_scheduler::ZkFilesCid,
+                    worker_owner: types::task_scheduler::WorkerOwner,
+                    worker_id: types::task_scheduler::WorkerId,
+                    compute_hours_deposit: types::task_scheduler::ComputeHoursDeposit,
                 ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::TaskScheduler>
                 {
                     ::subxt::ext::subxt_core::tx::payload::StaticPayload::new_static(
                         "TaskManagement",
                         "task_scheduler",
-                        types::TaskScheduler { task_data },
+                        types::TaskScheduler {
+                            task_data,
+                            zk_files_cid,
+                            worker_owner,
+                            worker_id,
+                            compute_hours_deposit,
+                        },
                         [
-                            21u8, 210u8, 1u8, 32u8, 14u8, 76u8, 109u8, 163u8, 241u8, 238u8, 200u8,
-                            10u8, 246u8, 205u8, 210u8, 61u8, 28u8, 248u8, 248u8, 194u8, 124u8,
-                            98u8, 103u8, 20u8, 56u8, 3u8, 155u8, 220u8, 54u8, 215u8, 91u8, 25u8,
+                            58u8, 248u8, 183u8, 100u8, 167u8, 244u8, 178u8, 36u8, 230u8, 169u8,
+                            213u8, 124u8, 22u8, 251u8, 199u8, 2u8, 100u8, 47u8, 209u8, 118u8,
+                            138u8, 125u8, 59u8, 138u8, 61u8, 231u8, 13u8, 75u8, 195u8, 6u8, 155u8,
+                            34u8,
                         ],
                     )
                 }
+                #[doc = "Allows a worker to submit a completed task for verification by a verifier."]
                 pub fn submit_completed_task(
                     &self,
                     task_id: types::submit_completed_task::TaskId,
@@ -12424,9 +12468,8 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = "Verifies completed task once an assignedverifier have succussfully validate correct completed task"]
-                #[doc = "Can only be called from root"]
-                #[doc = "Assign new verifier as resolver if verification fails. Resolver will determine correct result."]
+                #[doc = "Verifies whether the submitted completed task is correct."]
+                #[doc = "If verification fails, a new resolver is assigned to review the task."]
                 pub fn verify_completed_task(
                     &self,
                     task_id: types::verify_completed_task::TaskId,
@@ -12447,9 +12490,7 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = "Checks whether resolver matches the executor or verifier."]
-                #[doc = "If it matches one, the task is resolved and award is split between the matching pair. The failing worker is slashed."]
-                #[doc = "If no matches, the task is reassigned to a new executor and cycle repeats"]
+                #[doc = "Resolver finalizes the verification of a task in case of disputes."]
                 pub fn resolve_completed_task(
                     &self,
                     task_id: types::resolve_completed_task::TaskId,
@@ -12489,11 +12530,13 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
+            #[doc = "A task has been scheduled and assigned to a worker."]
             pub struct TaskScheduled {
                 pub assigned_worker: task_scheduled::AssignedWorker,
                 pub task_owner: task_scheduled::TaskOwner,
                 pub task_id: task_scheduled::TaskId,
                 pub task: task_scheduled::Task,
+                pub zk_files_cid: task_scheduled::ZkFilesCid,
             }
             pub mod task_scheduled {
                 use super::runtime_types;
@@ -12504,6 +12547,9 @@ pub mod api {
                 pub type TaskOwner = ::subxt::ext::subxt_core::utils::AccountId32;
                 pub type TaskId = ::core::primitive::u64;
                 pub type Task = runtime_types::bounded_collections::bounded_vec::BoundedVec<
+                    ::core::primitive::u8,
+                >;
+                pub type ZkFilesCid = runtime_types::bounded_collections::bounded_vec::BoundedVec<
                     ::core::primitive::u8,
                 >;
             }
@@ -12522,6 +12568,7 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
+            #[doc = "A completed task has been submitted for verification."]
             pub struct SubmittedCompletedTask {
                 pub task_id: submitted_completed_task::TaskId,
                 pub assigned_verifier: submitted_completed_task::AssignedVerifier,
@@ -12549,6 +12596,7 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
+            #[doc = "A resolver has been assigned to determine the correct result after verification failure."]
             pub struct VerifierResolverAssigned {
                 pub task_id: verifier_resolver_assigned::TaskId,
                 pub assigned_resolver: verifier_resolver_assigned::AssignedResolver,
@@ -12576,6 +12624,7 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
+            #[doc = "A completed task has been successfully verified."]
             pub struct VerifiedCompletedTask {
                 pub task_id: verified_completed_task::TaskId,
             }
@@ -12598,6 +12647,7 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
+            #[doc = "A completed task has been successfully resolved by the resolver."]
             pub struct ResolvedCompletedTask {
                 pub task_id: resolved_completed_task::TaskId,
             }
@@ -12620,6 +12670,7 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
+            #[doc = "A task has been reassigned to a new worker."]
             pub struct TaskReassigned {
                 pub task_id: task_reassigned::TaskId,
                 pub assigned_executor: task_reassigned::AssignedExecutor,
@@ -12682,6 +12733,7 @@ pub mod api {
             }
             pub struct StorageApi;
             impl StorageApi {
+                #[doc = " Status of tasks within the system."]
                 pub fn task_status_iter(
                     &self,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
@@ -12702,6 +12754,7 @@ pub mod api {
                         ],
                     )
                 }
+                #[doc = " Status of tasks within the system."]
                 pub fn task_status(
                     &self,
                     _0: impl ::core::borrow::Borrow<types::task_status::Param0>,
@@ -12727,6 +12780,7 @@ pub mod api {
                         ],
                     )
                 }
+                #[doc = " Allocation of tasks to workers."]
                 pub fn task_allocations_iter(
                     &self,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
@@ -12748,6 +12802,7 @@ pub mod api {
                         ],
                     )
                 }
+                #[doc = " Allocation of tasks to workers."]
                 pub fn task_allocations(
                     &self,
                     _0: impl ::core::borrow::Borrow<types::task_allocations::Param0>,
@@ -12774,6 +12829,7 @@ pub mod api {
                         ],
                     )
                 }
+                #[doc = " Owners of the tasks."]
                 pub fn task_owners_iter(
                     &self,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
@@ -12795,6 +12851,7 @@ pub mod api {
                         ],
                     )
                 }
+                #[doc = " Owners of the tasks."]
                 pub fn task_owners(
                     &self,
                     _0: impl ::core::borrow::Borrow<types::task_owners::Param0>,
@@ -12821,6 +12878,7 @@ pub mod api {
                         ],
                     )
                 }
+                #[doc = " The next task ID to be assigned."]
                 pub fn next_task_id(
                     &self,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
@@ -12842,7 +12900,7 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Task Information"]
+                #[doc = " Task metadata and information."]
                 pub fn tasks_iter(
                     &self,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
@@ -12857,13 +12915,13 @@ pub mod api {
                         "Tasks",
                         (),
                         [
-                            37u8, 35u8, 182u8, 50u8, 40u8, 83u8, 4u8, 220u8, 153u8, 80u8, 214u8,
-                            85u8, 238u8, 81u8, 208u8, 106u8, 32u8, 31u8, 44u8, 8u8, 0u8, 194u8,
-                            170u8, 20u8, 212u8, 71u8, 0u8, 15u8, 251u8, 64u8, 253u8, 204u8,
+                            247u8, 74u8, 176u8, 120u8, 87u8, 6u8, 138u8, 182u8, 55u8, 227u8, 69u8,
+                            51u8, 58u8, 72u8, 59u8, 83u8, 110u8, 129u8, 23u8, 199u8, 112u8, 34u8,
+                            215u8, 127u8, 141u8, 37u8, 58u8, 132u8, 64u8, 141u8, 132u8, 162u8,
                         ],
                     )
                 }
-                #[doc = " Task Information"]
+                #[doc = " Task metadata and information."]
                 pub fn tasks(
                     &self,
                     _0: impl ::core::borrow::Borrow<types::tasks::Param0>,
@@ -12883,9 +12941,9 @@ pub mod api {
                             _0.borrow(),
                         ),
                         [
-                            37u8, 35u8, 182u8, 50u8, 40u8, 83u8, 4u8, 220u8, 153u8, 80u8, 214u8,
-                            85u8, 238u8, 81u8, 208u8, 106u8, 32u8, 31u8, 44u8, 8u8, 0u8, 194u8,
-                            170u8, 20u8, 212u8, 71u8, 0u8, 15u8, 251u8, 64u8, 253u8, 204u8,
+                            247u8, 74u8, 176u8, 120u8, 87u8, 6u8, 138u8, 182u8, 55u8, 227u8, 69u8,
+                            51u8, 58u8, 72u8, 59u8, 83u8, 110u8, 129u8, 23u8, 199u8, 112u8, 34u8,
+                            215u8, 127u8, 141u8, 37u8, 58u8, 132u8, 64u8, 141u8, 132u8, 162u8,
                         ],
                     )
                 }
@@ -12942,7 +13000,8 @@ pub mod api {
     pub mod status_aggregator {
         use super::root_mod;
         use super::runtime_types;
-        #[doc = "The `Event` enum of this pallet"]
+        #[doc = "The `Event` enum contains the various events that can be emitted by this pallet."]
+        #[doc = "Events are emitted when significant actions or state changes happen in the pallet."]
         pub type Event = runtime_types::pallet_status_aggregator::pallet::Event;
         pub mod events {
             use super::runtime_types;
@@ -12957,6 +13016,13 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
+            #[doc = "Event emitted when the worker status is updated based on aggregated data from the oracle."]
+            #[doc = "This provides the new online and availability status for the worker and the block number where the status was last updated."]
+            #[doc = ""]
+            #[doc = "- `worker`: A tuple containing the worker's account ID and the worker ID."]
+            #[doc = "- `online`: A boolean indicating whether the worker is online."]
+            #[doc = "- `available`: A boolean indicating whether the worker is available."]
+            #[doc = "- `last_block_processed`: The block number at which the worker's status was last updated."]
             pub struct UpdateFromAggregatedWorkerInfo {
                 pub worker: update_from_aggregated_worker_info::Worker,
                 pub online: update_from_aggregated_worker_info::Online,
@@ -12988,6 +13054,10 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
+            #[doc = "Event emitted when the last block is updated after clearing data for the current period."]
+            #[doc = "This indicates that data from the oracle has been successfully processed and cleared for the given block range."]
+            #[doc = ""]
+            #[doc = "- `block_number`: The block number at which the clearing occurred."]
             pub struct LastBlockUpdated {
                 pub block_number: last_block_updated::BlockNumber,
             }
@@ -13047,6 +13117,8 @@ pub mod api {
             }
             pub struct StorageApi;
             impl StorageApi {
+                #[doc = " Stores the last block number that the pallet processed for clearing data."]
+                #[doc = " This is used to track the last time data was aggregated and cleared by the pallet's hooks."]
                 pub fn last_cleared_block(
                     &self,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
@@ -13067,7 +13139,12 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Stores the amount of status entries for a given worker provided for this period"]
+                #[doc = " Stores the status entries (online/offline, available/unavailable) for each worker over a specific period."]
+                #[doc = " The status is provided by different oracle feeders, and the data is collected and aggregated to calculate"]
+                #[doc = " the overall status for each worker."]
+                #[doc = ""]
+                #[doc = " - The storage key is a tuple of `(T::AccountId, WorkerId)`, which uniquely identifies the worker."]
+                #[doc = " - The value is a bounded vector of `StatusInstance`, which contains the worker's status over time."]
                 pub fn worker_status_entries_per_period_iter(
                     &self,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
@@ -13088,7 +13165,12 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Stores the amount of status entries for a given worker provided for this period"]
+                #[doc = " Stores the status entries (online/offline, available/unavailable) for each worker over a specific period."]
+                #[doc = " The status is provided by different oracle feeders, and the data is collected and aggregated to calculate"]
+                #[doc = " the overall status for each worker."]
+                #[doc = ""]
+                #[doc = " - The storage key is a tuple of `(T::AccountId, WorkerId)`, which uniquely identifies the worker."]
+                #[doc = " - The value is a bounded vector of `StatusInstance`, which contains the worker's status over time."]
                 pub fn worker_status_entries_per_period_iter1(
                     &self,
                     _0: impl ::core::borrow::Borrow<types::worker_status_entries_per_period::Param0>,
@@ -13114,7 +13196,12 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Stores the amount of status entries for a given worker provided for this period"]
+                #[doc = " Stores the status entries (online/offline, available/unavailable) for each worker over a specific period."]
+                #[doc = " The status is provided by different oracle feeders, and the data is collected and aggregated to calculate"]
+                #[doc = " the overall status for each worker."]
+                #[doc = ""]
+                #[doc = " - The storage key is a tuple of `(T::AccountId, WorkerId)`, which uniquely identifies the worker."]
+                #[doc = " - The value is a bounded vector of `StatusInstance`, which contains the worker's status over time."]
                 pub fn worker_status_entries_per_period(
                     &self,
                     _0: impl ::core::borrow::Borrow<types::worker_status_entries_per_period::Param0>,
@@ -13151,7 +13238,11 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Tracks whether an oracle provider has submitted status for a given worker during the current period"]
+                #[doc = " Tracks whether a specific oracle provider has submitted worker status data during the current period."]
+                #[doc = " This is used to prevent multiple submissions from the same oracle provider within a period."]
+                #[doc = ""]
+                #[doc = " - The key is a tuple of the oracle provider's account and the worker `(T::AccountId, (T::AccountId, WorkerId))`."]
+                #[doc = " - The value is a boolean indicating whether the oracle has already submitted data."]
                 pub fn submitted_per_period_iter(
                     &self,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
@@ -13173,7 +13264,11 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Tracks whether an oracle provider has submitted status for a given worker during the current period"]
+                #[doc = " Tracks whether a specific oracle provider has submitted worker status data during the current period."]
+                #[doc = " This is used to prevent multiple submissions from the same oracle provider within a period."]
+                #[doc = ""]
+                #[doc = " - The key is a tuple of the oracle provider's account and the worker `(T::AccountId, (T::AccountId, WorkerId))`."]
+                #[doc = " - The value is a boolean indicating whether the oracle has already submitted data."]
                 pub fn submitted_per_period_iter1(
                     &self,
                     _0: impl ::core::borrow::Borrow<types::submitted_per_period::Param0>,
@@ -13200,7 +13295,11 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Tracks whether an oracle provider has submitted status for a given worker during the current period"]
+                #[doc = " Tracks whether a specific oracle provider has submitted worker status data during the current period."]
+                #[doc = " This is used to prevent multiple submissions from the same oracle provider within a period."]
+                #[doc = ""]
+                #[doc = " - The key is a tuple of the oracle provider's account and the worker `(T::AccountId, (T::AccountId, WorkerId))`."]
+                #[doc = " - The value is a boolean indicating whether the oracle has already submitted data."]
                 pub fn submitted_per_period(
                     &self,
                     _0: impl ::core::borrow::Borrow<types::submitted_per_period::Param0>,
@@ -13238,7 +13337,12 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Resulting percentages for status uptimes"]
+                #[doc = " Stores the resulting percentage status (online and available) for each worker after aggregation."]
+                #[doc = " This is calculated by taking the status data submitted during the period and determining the"]
+                #[doc = " percentage of time the worker was online and available."]
+                #[doc = ""]
+                #[doc = " - The key is `(T::AccountId, WorkerId)`, representing the worker."]
+                #[doc = " - The value is `ProcessStatusPercentages`, which contains the percentages and the block number of the last processed status."]
                 pub fn resulting_worker_status_percentages_iter(
                     &self,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
@@ -13259,7 +13363,12 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Resulting percentages for status uptimes"]
+                #[doc = " Stores the resulting percentage status (online and available) for each worker after aggregation."]
+                #[doc = " This is calculated by taking the status data submitted during the period and determining the"]
+                #[doc = " percentage of time the worker was online and available."]
+                #[doc = ""]
+                #[doc = " - The key is `(T::AccountId, WorkerId)`, representing the worker."]
+                #[doc = " - The value is `ProcessStatusPercentages`, which contains the percentages and the block number of the last processed status."]
                 pub fn resulting_worker_status_percentages_iter1(
                     &self,
                     _0: impl ::core::borrow::Borrow<types::resulting_worker_status_percentages::Param0>,
@@ -13285,7 +13394,12 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Resulting percentages for status uptimes"]
+                #[doc = " Stores the resulting percentage status (online and available) for each worker after aggregation."]
+                #[doc = " This is calculated by taking the status data submitted during the period and determining the"]
+                #[doc = " percentage of time the worker was online and available."]
+                #[doc = ""]
+                #[doc = " - The key is `(T::AccountId, WorkerId)`, representing the worker."]
+                #[doc = " - The value is `ProcessStatusPercentages`, which contains the percentages and the block number of the last processed status."]
                 pub fn resulting_worker_status_percentages(
                     &self,
                     _0: impl ::core::borrow::Borrow<types::resulting_worker_status_percentages::Param0>,
@@ -13322,7 +13436,11 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Resulting status determined by given percentage threshold"]
+                #[doc = " Stores the final status (online/offline and available/unavailable) for each worker based on the percentage thresholds."]
+                #[doc = " The final status is determined based on the configured threshold values for uptime."]
+                #[doc = ""]
+                #[doc = " - The key is `(T::AccountId, WorkerId)`, representing the worker."]
+                #[doc = " - The value is `ProcessStatus`, which contains the final online and available status for the worker."]
                 pub fn resulting_worker_status_iter(
                     &self,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
@@ -13344,7 +13462,11 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Resulting status determined by given percentage threshold"]
+                #[doc = " Stores the final status (online/offline and available/unavailable) for each worker based on the percentage thresholds."]
+                #[doc = " The final status is determined based on the configured threshold values for uptime."]
+                #[doc = ""]
+                #[doc = " - The key is `(T::AccountId, WorkerId)`, representing the worker."]
+                #[doc = " - The value is `ProcessStatus`, which contains the final online and available status for the worker."]
                 pub fn resulting_worker_status_iter1(
                     &self,
                     _0: impl ::core::borrow::Borrow<types::resulting_worker_status::Param0>,
@@ -13371,7 +13493,11 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Resulting status determined by given percentage threshold"]
+                #[doc = " Stores the final status (online/offline and available/unavailable) for each worker based on the percentage thresholds."]
+                #[doc = " The final status is determined based on the configured threshold values for uptime."]
+                #[doc = ""]
+                #[doc = " - The key is `(T::AccountId, WorkerId)`, representing the worker."]
+                #[doc = " - The value is `ProcessStatus`, which contains the final online and available status for the worker."]
                 pub fn resulting_worker_status(
                     &self,
                     _0: impl ::core::borrow::Borrow<types::resulting_worker_status::Param0>,
@@ -14505,6 +14631,9 @@ pub mod api {
                     pub metadata: runtime_types::bounded_collections::bounded_vec::BoundedVec<
                         ::core::primitive::u8,
                     >,
+                    pub zk_files_cid: runtime_types::bounded_collections::bounded_vec::BoundedVec<
+                        ::core::primitive::u8,
+                    >,
                     pub time_elapsed: ::core::option::Option<_1>,
                     pub average_cpu_percentage_use: ::core::option::Option<::core::primitive::u8>,
                     pub task_type: runtime_types::cyborg_primitives::task::TaskType,
@@ -14513,6 +14642,8 @@ pub mod api {
                             ::core::primitive::u8,
                         >,
                     >,
+                    pub compute_hours_deposit: ::core::option::Option<_1>,
+                    pub consume_compute_hours: ::core::option::Option<_1>,
                 }
                 #[derive(
                     :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -16518,9 +16649,10 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                #[doc = "Registers a Worker with either a domain or ip and initialize it with an inactive status."]
+                #[doc = "Contains a variant per dispatchable extrinsic that this pallet has."]
                 pub enum Call {
                     #[codec(index = 0)]
+                    #[doc = "Registers a Worker with either a domain and initialize it with an inactive status."]
                     register_worker {
                         domain: runtime_types::bounded_collections::bounded_vec::BoundedVec<
                             ::core::primitive::u8,
@@ -16532,9 +16664,10 @@ pub mod api {
                         cpu: ::core::primitive::u16,
                     },
                     #[codec(index = 1)]
-                    #[doc = "Remove Worker from storage"]
+                    #[doc = "Remove a worker from storage an deactivates it"]
                     remove_worker { worker_id: ::core::primitive::u64 },
                     #[codec(index = 2)]
+                    #[doc = "Switches the visibility of a worker between active and inactive."]
                     toggle_worker_visibility {
                         worker_id: ::core::primitive::u64,
                         visibility: ::core::primitive::bool,
@@ -16555,13 +16688,17 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                #[doc = "Pallet Errors"]
+                #[doc = "The `Error` enum contains all possible errors that can occur when interacting with this pallet."]
+                #[doc = "These errors will be returned in the `DispatchResult` when a function call fails."]
                 pub enum Error {
                     #[codec(index = 0)]
+                    #[doc = "Error indicating that either the IP address or the domain was missing when attempting to register a worker."]
                     WorkerRegisterMissingIpOrDomain,
                     #[codec(index = 1)]
+                    #[doc = "Error indicating that the worker already exists and cannot be registered again."]
                     WorkerExists,
                     #[codec(index = 2)]
+                    #[doc = "Error indicating that the worker does not exist in the system when trying to perform actions (e.g., removal or status update)."]
                     WorkerDoesNotExist,
                 }
                 #[derive(
@@ -16579,9 +16716,15 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                #[doc = "The `Event` enum of this pallet"]
+                #[doc = "The `Event` enum contains the various events that can be emitted by this pallet."]
+                #[doc = "Events are emitted when significant actions or state changes happen in the pallet."]
                 pub enum Event {
                     #[codec(index = 0)]
+                    #[doc = "Event emitted when a new worker is successfully registered."]
+                    #[doc = ""]
+                    #[doc = "- `creator`: The account ID of the worker's creator."]
+                    #[doc = "- `worker`: A tuple containing the account ID of the worker owner and the worker ID."]
+                    #[doc = "- `domain`: The domain associated with the"]
                     WorkerRegistered {
                         creator: ::subxt::ext::subxt_core::utils::AccountId32,
                         worker: (
@@ -16593,11 +16736,20 @@ pub mod api {
                         >,
                     },
                     #[codec(index = 1)]
+                    #[doc = "Event emitted when a worker is removed from the system."]
+                    #[doc = ""]
+                    #[doc = "- `creator`: The account ID of the worker's creator."]
+                    #[doc = "- `worker_id`: The ID of the worker that was removed."]
                     WorkerRemoved {
                         creator: ::subxt::ext::subxt_core::utils::AccountId32,
                         worker_id: ::core::primitive::u64,
                     },
                     #[codec(index = 2)]
+                    #[doc = "Event emitted when a worker's status is updated (e.g., toggling visibility)."]
+                    #[doc = ""]
+                    #[doc = "- `creator`: The account ID of the worker's creator."]
+                    #[doc = "- `worker_id`: The ID of the worker whose status was updated."]
+                    #[doc = "- `worker_status`: The new status of the worker, either active or inactive."]
                     WorkerStatusUpdated {
                         creator: ::subxt::ext::subxt_core::utils::AccountId32,
                         worker_id: ::core::primitive::u64,
@@ -17205,9 +17357,17 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                #[doc = "The `Event` enum of this pallet"]
+                #[doc = "The `Event` enum contains the various events that can be emitted by this pallet."]
+                #[doc = "Events are emitted when significant actions or state changes happen in the pallet."]
                 pub enum Event {
                     #[codec(index = 0)]
+                    #[doc = "Event emitted when the worker status is updated based on aggregated data from the oracle."]
+                    #[doc = "This provides the new online and availability status for the worker and the block number where the status was last updated."]
+                    #[doc = ""]
+                    #[doc = "- `worker`: A tuple containing the worker's account ID and the worker ID."]
+                    #[doc = "- `online`: A boolean indicating whether the worker is online."]
+                    #[doc = "- `available`: A boolean indicating whether the worker is available."]
+                    #[doc = "- `last_block_processed`: The block number at which the worker's status was last updated."]
                     UpdateFromAggregatedWorkerInfo {
                         worker: (
                             ::subxt::ext::subxt_core::utils::AccountId32,
@@ -17218,6 +17378,10 @@ pub mod api {
                         last_block_processed: ::core::primitive::u32,
                     },
                     #[codec(index = 1)]
+                    #[doc = "Event emitted when the last block is updated after clearing data for the current period."]
+                    #[doc = "This indicates that data from the oracle has been successfully processed and cleared for the given block range."]
+                    #[doc = ""]
+                    #[doc = "- `block_number`: The block number at which the clearing occurred."]
                     LastBlockUpdated {
                         block_number: ::core::primitive::u32,
                     },
@@ -17406,15 +17570,23 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                #[doc = "Creates a task and assigns it to an available worker"]
+                #[doc = "Contains a variant per dispatchable extrinsic that this pallet has."]
                 pub enum Call {
                     #[codec(index = 0)]
+                    #[doc = "Creates a new task and assigns it to a randomly selected worker."]
                     task_scheduler {
                         task_data: runtime_types::bounded_collections::bounded_vec::BoundedVec<
                             ::core::primitive::u8,
                         >,
+                        zk_files_cid: runtime_types::bounded_collections::bounded_vec::BoundedVec<
+                            ::core::primitive::u8,
+                        >,
+                        worker_owner: ::subxt::ext::subxt_core::utils::AccountId32,
+                        worker_id: ::core::primitive::u64,
+                        compute_hours_deposit: ::core::option::Option<::core::primitive::u32>,
                     },
                     #[codec(index = 1)]
+                    #[doc = "Allows a worker to submit a completed task for verification by a verifier."]
                     submit_completed_task {
                         task_id: ::core::primitive::u64,
                         completed_hash: ::subxt::ext::subxt_core::utils::H256,
@@ -17423,17 +17595,14 @@ pub mod api {
                         >,
                     },
                     #[codec(index = 2)]
-                    #[doc = "Verifies completed task once an assignedverifier have succussfully validate correct completed task"]
-                    #[doc = "Can only be called from root"]
-                    #[doc = "Assign new verifier as resolver if verification fails. Resolver will determine correct result."]
+                    #[doc = "Verifies whether the submitted completed task is correct."]
+                    #[doc = "If verification fails, a new resolver is assigned to review the task."]
                     verify_completed_task {
                         task_id: ::core::primitive::u64,
                         completed_hash: ::subxt::ext::subxt_core::utils::H256,
                     },
                     #[codec(index = 3)]
-                    #[doc = "Checks whether resolver matches the executor or verifier."]
-                    #[doc = "If it matches one, the task is resolved and award is split between the matching pair. The failing worker is slashed."]
-                    #[doc = "If no matches, the task is reassigned to a new executor and cycle repeats"]
+                    #[doc = "Resolver finalizes the verification of a task in case of disputes."]
                     resolve_completed_task {
                         task_id: ::core::primitive::u64,
                         completed_hash: ::subxt::ext::subxt_core::utils::H256,
@@ -17458,23 +17627,41 @@ pub mod api {
                 #[doc = "<https://paritytech.github.io/polkadot-sdk/master/polkadot_sdk_docs/guides/your_first_pallet/index.html#event-and-error>"]
                 pub enum Error {
                     #[codec(index = 0)]
+                    #[doc = "The provided task ID does not exist."]
                     UnassignedTaskId,
                     #[codec(index = 1)]
+                    #[doc = "The caller is not the task owner."]
                     InvalidTaskOwner,
                     #[codec(index = 2)]
+                    #[doc = "A task must be assigned before it can proceed to the next step."]
                     RequireAssignedTask,
                     #[codec(index = 3)]
+                    #[doc = "A verifier must be assigned to the task."]
                     RequireAssignedVerifier,
                     #[codec(index = 4)]
+                    #[doc = "A completed task's hash must be provided by the assigned verifier."]
                     RequireAssignedVerifierCompletedHash,
                     #[codec(index = 5)]
+                    #[doc = "A resolver must be assigned to review the task."]
                     RequireAssignedResolver,
                     #[codec(index = 6)]
+                    #[doc = "No workers are available for the task."]
                     NoWorkersAvailable,
                     #[codec(index = 7)]
+                    #[doc = "The task verification process cannot be found."]
                     TaskVerificationNotFound,
                     #[codec(index = 8)]
+                    #[doc = "No new workers are available for the task reassignment."]
                     NoNewWorkersAvailable,
+                    #[codec(index = 9)]
+                    #[doc = "The worker, to which the task should be assigned does not exist."]
+                    WorkerDoesNotExist,
+                    #[codec(index = 10)]
+                    #[doc = "A compute hour deposit is required to schedule or proceed with the task."]
+                    RequireComputeHoursDeposit,
+                    #[codec(index = 11)]
+                    #[doc = "The user has insufficient compute hours balance for the requested deposit."]
+                    InsufficientComputeHours,
                 }
                 #[derive(
                     :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -17495,6 +17682,7 @@ pub mod api {
                 #[doc = "<https://paritytech.github.io/polkadot-sdk/master/polkadot_sdk_docs/guides/your_first_pallet/index.html#event-and-error>"]
                 pub enum Event {
                     #[codec(index = 0)]
+                    #[doc = "A task has been scheduled and assigned to a worker."]
                     TaskScheduled {
                         assigned_worker: (
                             ::subxt::ext::subxt_core::utils::AccountId32,
@@ -17505,8 +17693,12 @@ pub mod api {
                         task: runtime_types::bounded_collections::bounded_vec::BoundedVec<
                             ::core::primitive::u8,
                         >,
+                        zk_files_cid: runtime_types::bounded_collections::bounded_vec::BoundedVec<
+                            ::core::primitive::u8,
+                        >,
                     },
                     #[codec(index = 1)]
+                    #[doc = "A completed task has been submitted for verification."]
                     SubmittedCompletedTask {
                         task_id: ::core::primitive::u64,
                         assigned_verifier: (
@@ -17515,6 +17707,7 @@ pub mod api {
                         ),
                     },
                     #[codec(index = 2)]
+                    #[doc = "A resolver has been assigned to determine the correct result after verification failure."]
                     VerifierResolverAssigned {
                         task_id: ::core::primitive::u64,
                         assigned_resolver: (
@@ -17523,10 +17716,13 @@ pub mod api {
                         ),
                     },
                     #[codec(index = 3)]
+                    #[doc = "A completed task has been successfully verified."]
                     VerifiedCompletedTask { task_id: ::core::primitive::u64 },
                     #[codec(index = 4)]
+                    #[doc = "A completed task has been successfully resolved by the resolver."]
                     ResolvedCompletedTask { task_id: ::core::primitive::u64 },
                     #[codec(index = 5)]
+                    #[doc = "A task has been reassigned to a new worker."]
                     TaskReassigned {
                         task_id: ::core::primitive::u64,
                         assigned_executor: (

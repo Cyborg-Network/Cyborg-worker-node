@@ -20,8 +20,9 @@ pub struct Location {
 
 pub async fn gather_worker_spec() -> Result<worker::WorkerConfig, Box<dyn std::error::Error>> {
 
-    let response = reqwest::get("https://api.ipify.org?format=json").await?
-        .json::<worker::IpResponse>().await?;
+    //let response = reqwest::get("https://api.ipify.org?format=json").await?.json::<worker::IpResponse>().await?;
+
+    let response = worker::IpResponse { ip: String::from("127.0.0.1") };
 
     let location = Location::get_location().await;
 

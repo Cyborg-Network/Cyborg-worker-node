@@ -1130,6 +1130,7 @@ dependencies = [
  "tokio",
  "url",
  "zbus",
+ "zbus_names",
  "zip",
 ]
 

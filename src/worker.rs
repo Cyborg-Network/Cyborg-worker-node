@@ -2,13 +2,15 @@ use async_trait::async_trait;
 use pinata_sdk::PinByJson;
 use pinata_sdk::PinataApi;
 use sp_core::blake2_256;
+use zbus::conn;
+use zbus::object_server::SignalEmitter;
+use zbus_names::BusName;
 use std::error::Error;
 use std::io::Read;
 use std::process::Output;
-use std::str::FromStr;
 use subxt::events::EventDetails;
 use subxt::utils::H256;
-use zbus::{Connection, Message};
+use zbus::Connection;
 //use subxt::ext::jsonrpsee::async_client::ClientBuilder;
 
 use codec::{Decode, Encode};
@@ -299,24 +301,30 @@ impl BlockchainClient for CyborgClient {
             Ok(Some(task_scheduled)) => {
                 let assigned_worker = &task_scheduled.assigned_worker;
 
-                let task_owner = &task_scheduled.task_owner;
+                println!(
+                    "Task Scheduled: Assigned worker: {:?}",
+                    assigned_worker
+                );
 
-                let owner_file_json = serde_json::to_string(&TaskOwner {
-                    task_owner: task_owner.clone().to_string(),
-                })?;
-    
-                let config_dir_path = Path::new("/var/lib/cyborg/worker-node/config");
-                let file_path = config_dir_path.join("task_owner.json");
-    
-                if !fs::metadata(&config_dir_path).is_ok() {
-                    fs::create_dir_all(&config_dir_path)?;
-                }
-    
-                // Write content to the file (will overwrite existing content)
-                fs::write(&file_path, owner_file_json)?;
+                println!("Self identity: {:?}", self.identity);
 
                 if *assigned_worker == self.identity {
                     if let Some(ipfs_client) = &self.ipfs_client {
+                        let task_owner = &task_scheduled.task_owner;
+
+                        let owner_file_json = serde_json::to_string(&TaskOwner {
+                            task_owner: task_owner.clone().to_string(),
+                        })?;
+    
+                        let config_dir_path = Path::new("/var/lib/cyborg/worker-node/config");
+                        let file_path = config_dir_path.join("task_owner.json");
+    
+                        if !fs::metadata(&config_dir_path).is_ok() {
+                            fs::create_dir_all(&config_dir_path)?;
+                        }
+    
+                        // Write content to the file (will overwrite existing content)
+                        fs::write(&file_path, owner_file_json)?;
 
                         let ipfs_hash_bounded: Vec<u8> = BoundedVec::encode(&task_scheduled.task);
                         
@@ -594,29 +602,33 @@ async fn download_and_extract_zk_files(ipfs_cid: &str) -> Option<ZkFiles> {
 }
 
 /// Can send stages 1-4 of the zk-verification process to the cyborg-agent, which will send it to the frontend
-async fn emit_zk_update(stage: u8) -> Result<(), Box<dyn Error>> {
-    let connection = Connection::system().await?;
+async fn emit_zk_update(stage: u8, connection: &Connection) -> Result<(), Box<dyn Error>> {
+    
 
-    let msg = Message::signal(
+    let cxt = SignalEmitter::new(
+        connection,
         "/com/cyborg/CyborgAgent",
-        "com.cyborg.AgentZkInterface",
-        "ZkUpdate",
-    )?
-    .build(&stage).unwrap();
+    )?;
 
-    connection.send(&msg).await?;
-
+    cxt.emit("com.cyborg.AgentZkInterface", "ZkUpdate", &stage).await?;
     Ok(())
 }
 
-pub async fn wait_and_send_update() -> zbus::Result<()> {
-    // Wait for 10 seconds
-    println!("Waiting for 10 seconds...");
+async fn wait_and_send_update() -> zbus::Result<()> {
+
+    let connection = Connection::system().await?;
+
+    let well_known_name = BusName::try_from("com.cyborg.CyborgAgent")?;
+    connection.request_name(well_known_name).await?;
+    
     let loopvec = [1,2,3,4];
 
     loop {
         for i in loopvec {
-            let _ = emit_zk_update(i).await;
+            if let Err(e) = emit_zk_update(i, &connection).await {
+                println!("Error while sending signal: {}", e);
+            }
+            println!("Waiting for 10 seconds...");
             sleep(Duration::from_secs(10)).await;
         }
     }
