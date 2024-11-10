@@ -18,18 +18,21 @@ mod cli;
 mod worker;
 mod specs;
 mod substrate_interface;
+mod zk_helper;
 
 use crate::worker::BlockchainClient;
 use builder::CyborgClientBuilder;
 use clap::Parser;
 use cli::{Cli, Commands};
 use std::{error::Error, fs};
+use zk_helper::fetch_and_build;
 //use subxt::ext::jsonrpsee::core::client::error;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
 
+    fetch_and_build();
     // Match on the provided subcommand and execute the corresponding action.
     match &cli.command {
         // Handle the "registration" subcommand.

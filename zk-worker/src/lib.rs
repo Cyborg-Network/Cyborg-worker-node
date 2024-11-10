@@ -36,6 +36,27 @@ pub fn verify_proof() -> Result<(), Box<dyn std::error::Error>> {
     run_make_target("verify-proof")
 }
 
+pub fn clean_up_old_zk_files() {
+    run_make_target("clean-task").expect("Failed to clean up task circuit and witness files");
+
+    let wasm_task = Path::new("build/task_js/task.wasm");
+    assert!(!wasm_task.exists());
+
+    let witness_path = Path::new("build/task_js/witness.wtns");
+    assert!(!witness_path.exists());
+
+    run_make_target("clean-pot").expect("Failed to clean up pot files");
+
+    let verification_key_path = Path::new("build/verification_key.json");
+    assert!(!verification_key_path.exists());
+
+    run_make_target("clean-proof").expect("Failed to clean up proof files");
+    
+    let proof = Path::new("build/proof.json");
+    assert!(!proof.exists());
+}
+
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // build_circuit_and_witness().expect("Failed to run make target");
     // initiate_powers_of_tau().expect("Failed to run make tau");
