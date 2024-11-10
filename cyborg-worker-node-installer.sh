@@ -69,6 +69,7 @@ fi
 
 sudo mkdir -p /var/lib/cyborg/worker-node/packages
 sudo mkdir -p /var/lib/cyborg/worker-node/config
+sudo mkdir -p /var/lib/cyborg/worker-node/logs
 sudo chown -R cyborg-user:cyborg-user /var/lib/cyborg
 sudo chmod -R 700 /var/lib/cyborg
 
