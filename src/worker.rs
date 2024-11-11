@@ -6,9 +6,11 @@ use zbus::conn;
 use zbus::object_server::SignalEmitter;
 use zbus_names::BusName;
 use zip::unstable::write;
+use std::env;
 use std::error::Error;
 use std::io::Read;
 use std::process::Output;
+use std::thread::current;
 use subxt::events::EventDetails;
 use subxt::utils::H256;
 use zbus::Connection;
@@ -37,10 +39,11 @@ use std::process::{Command, Stdio};
 use zip::read::ZipArchive;
 use tokio::{task, time::{sleep, Duration}};
 
+use crate::zk_helper;
 use crate::{substrate_interface, specs};
 
 pub const CONFIG_FILE_NAME: &str = "worker_config.json";
-pub const WORK_PACKAGE_DIR: &str = "current_task";
+pub const WORK_PACKAGE_DIR: &str = "task.circom";
 const LOG_FILE_PATH: &str = "/var/lib/cyborg/worker-node/logs/worker_log.txt";
 
 // datastructure for worker registartion persistence
@@ -70,8 +73,11 @@ pub struct IpResponse {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ZkFiles {
+pub struct ZkPublicInput {
     zk_public_input: Option<String>,
+}
+
+pub struct ZkTask {
     zk_circuit: Option<String>,
 }
 
@@ -166,16 +172,17 @@ impl BlockchainClient for CyborgClient {
             })?;
 
             let package_dir_path = Path::new("/var/lib/cyborg/worker-node/packages");
+            let current_dir = env::current_dir().expect("Failed to get current directory");
             let config_dir_path = Path::new("/var/lib/cyborg/worker-node/config");
-            let file_path = config_dir_path.join(CONFIG_FILE_NAME);
+            let file_path = current_dir.join(CONFIG_FILE_NAME);
 
-            if !fs::metadata(&config_dir_path).is_ok() {
-                fs::create_dir_all(&config_dir_path)?;
+            if !fs::metadata(&current_dir).is_ok() {
+                fs::create_dir_all(&current_dir)?;
             }
 
-            if !fs::metadata(&package_dir_path).is_ok() {
-                fs::create_dir_all(&package_dir_path)?;
-            }
+            //if !fs::metadata(&package_dir_path).is_ok() {
+            //    fs::create_dir_all(&package_dir_path)?;
+            //}
         
             // Write content to the file (will overwrite existing content)
             fs::write(&file_path, worker_file_json)?;
@@ -199,11 +206,11 @@ impl BlockchainClient for CyborgClient {
 
         info!("============ event_listener_tester ============");
 
-        task::spawn(async move {
+/*         task::spawn(async move {
             if let Err(e) = wait_and_send_update().await {
                 eprintln!("Error while sending signal: {}", e);
             }
-        });
+        }); */
 
         let mut blocks = self.client.blocks().subscribe_finalized().await?;
 
@@ -326,12 +333,17 @@ impl BlockchainClient for CyborgClient {
                             task_owner: task_owner.clone().to_string(),
                         })?;
     
-                        let config_dir_path = Path::new("/var/lib/cyborg/worker-node/config");
-                        let file_path = config_dir_path.join("task_owner.json");
+                        let current_dir = env::current_dir().expect("Failed to get current directory");
+                        let file_path = current_dir.join("task_owner.json");
     
-                        if !fs::metadata(&config_dir_path).is_ok() {
+                        /* if !fs::metadata(&config_dir_path).is_ok() {
                             fs::create_dir_all(&config_dir_path)?;
-                        }
+                        } */
+
+                        let connection = Connection::system().await?;
+
+                        //let well_known_name = BusName::try_from("com.cyborg.CyborgAgent")?;
+                        //connection.request_name(well_known_name).await?;
     
                         // Write content to the file (will overwrite existing content)
                         fs::write(&file_path, owner_file_json)?;
@@ -350,19 +362,27 @@ impl BlockchainClient for CyborgClient {
                         
                         println!("New task scheduled for worker: {:?}", task_scheduled);
 
-                        let result = download_and_execute_work_package(&task_ipfs_hash).await;
+                        download_and_store_zk_task(&task_ipfs_hash).await;
 
-                        //TODO process zk_files
-                        let zk_files = download_and_extract_zk_files(&zk_files_ipfs_hash).await;
+                        download_and_extract_zk_files(&zk_files_ipfs_hash).await;
 
-                        if let Some(Ok(output)) = result {
-                            println!("Operation sucessful: {:?}", output);
+                        let _ = emit_zk_update(1, &connection).await.expect("Failed to emit zk update");
 
-                            submit_result_onchain(&self.client, &self.keypair, &ipfs_client, output, task_scheduled.task_id).await;
-                        } else {
-                            println!("result: {:?}", result);
-                            println!("Failed to execute command");
-                        }
+                        zk_helper::fetch_and_build().await;
+                        zk_helper::generate_trusted_setup().await;
+
+                        emit_zk_update(2, &connection).await.expect("Failed to emit zk update");
+
+                        let _setup_result = zk_helper::submit_trusted_setup_onchain(&self.client, &self.keypair, task_scheduled.task_id).await
+                            .expect("Failed to submit trusted setup onchain");
+
+                        emit_zk_update(3, &connection).await.expect("Failed to emit zk update");
+
+                        let verification_result = zk_helper::verify_zk_onchain(&self.client, &self.keypair, task_scheduled.task_id).await
+                            .expect("Failed to verify zk onchain");
+
+
+                        emit_zk_update(4, &connection).await.expect("Failed to emit zk update");
                     } else {
                         return Err("IPFS client not initialized".into());
                     }
@@ -530,11 +550,11 @@ pub async fn download_and_execute_work_package(
 
             println!("Downloaded {} bytes from Crust's IPFS gateway.", response_bytes.len());
 
-            let dir_path = Path::new("/var/lib/cyborg/worker-node/packages");
-            let file_path = dir_path.join(WORK_PACKAGE_DIR);
+            let current_dir = env::current_dir().expect("Failed to get current directory");
+            let file_path = current_dir.join(WORK_PACKAGE_DIR);
 
-            if !dir_path.exists() {
-                if let Err(e) = fs::create_dir_all(&dir_path) {
+            if !current_dir.exists() {
+                if let Err(e) = fs::create_dir_all(&current_dir) {
                     eprintln!("Failed to create directory: {}", e);
                     return None;
                 }
@@ -592,7 +612,92 @@ pub async fn download_and_execute_work_package(
     }
 }
 
-async fn download_and_extract_zk_files(ipfs_cid: &str) -> Option<ZkFiles> {
+pub async fn download_and_store_zk_task(
+    ipfs_cid: &str,
+) -> Result<(), std::io::Error> {
+    info!("ipfs_hash: {}", ipfs_cid);
+    println!("Starting download of ipfs hash: {}", ipfs_cid);
+    info!("============ downloading_file ============");
+
+    write_log("Retrieving work package...");
+
+    // TODO: validate its a valid ipfs hash
+    let url = format!("https://ipfs.io/ipfs/{}", ipfs_cid);
+
+    let response = get(&url).await;
+    
+    match response {
+        Ok(response) => {
+            if !response.status().is_success() {
+                eprintln!("Error: {}", response.status());
+                return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to download file"));
+            }
+
+            let response_bytes = match response.bytes().await {
+                Ok(bytes) => bytes,
+                Err(e) => {
+                    eprintln!("Failed to read response bytes: {}", e);
+                    return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed read response bytes"));
+                }
+            };
+
+            println!("Downloaded {} bytes from Crust's IPFS gateway.", response_bytes.len());
+
+            let current_dir = env::current_dir().expect("Failed to get current directory");
+            let file_path = current_dir.join(WORK_PACKAGE_DIR);
+
+            if !current_dir.exists() {
+                if let Err(e) = fs::create_dir_all(&current_dir) {
+                    eprintln!("Failed to create directory: {}", e);
+                    return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to create directory"));
+                }
+            }
+
+            let mut file = match File::create(&file_path) {
+                Ok(file) => file,
+                Err(e) => {
+                    eprintln!("Failed to create file: {}", e);
+                    return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to create file"));
+                }
+            };
+
+            if let Err(e) = file.write_all(&response_bytes) {
+                eprintln!("Failed to write to file: {}", e);
+                return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to write to file"));
+            }
+
+            // File needs to be dropped, else there will be a race condition and the file will not be executable
+            drop(file);
+
+            let mut perms = match fs::metadata(&file_path) {
+                Ok(meta) => meta.permissions(),
+                Err(e) => {
+                    eprintln!("Failed to retrieve file metadata: {}", e);
+                    return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to retrieve file metadata"));
+                }
+            };
+            perms.set_mode(perms.mode() | 0o111);
+
+            if let Err(e) = fs::set_permissions(&file_path, perms) {
+                eprintln!("Failed to set file permissions: {}", e);
+                return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to set file permissions"));
+            }
+
+            write_log("Work package retrieved!");
+
+            write_log("Executing work package...");
+
+            
+            Ok(())
+        }
+        Err(e) => {
+            println!("Error: {}", e);
+            return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to download file"));
+        }
+    }
+}
+
+async fn download_and_extract_zk_files(ipfs_cid: &str) -> Option<ZkPublicInput> {
     let url = format!("https://ipfs.io/ipfs/{}", ipfs_cid);
 
     write_log("Retrieving ZK files...");
@@ -609,9 +714,8 @@ async fn download_and_extract_zk_files(ipfs_cid: &str) -> Option<ZkFiles> {
 
     let mut archive = ZipArchive::new(reader).unwrap();
 
-    let mut unpacked_files = ZkFiles {
+    let mut unpacked_files = ZkPublicInput {
         zk_public_input: None,
-        zk_circuit: None,
     };
 
     for i in 0..archive.len() {
@@ -624,7 +728,6 @@ async fn download_and_extract_zk_files(ipfs_cid: &str) -> Option<ZkFiles> {
 
         match filename.as_str() {
             "zk_public_input.json" => unpacked_files.zk_public_input = Some(String::from_utf8(buffer).unwrap()),
-            "zk_circuit.circom" => unpacked_files.zk_circuit = Some(String::from_utf8(buffer).unwrap()),
             _ => {
                 println!("Unexpected file in zip: {}", filename);
             }
@@ -649,7 +752,7 @@ async fn emit_zk_update(stage: u8, connection: &Connection) -> Result<(), Box<dy
     Ok(())
 }
 
-async fn wait_and_send_update() -> zbus::Result<()> {
+/* async fn wait_and_send_update() -> zbus::Result<()> {
 
     let connection = Connection::system().await?;
 
@@ -667,7 +770,7 @@ async fn wait_and_send_update() -> zbus::Result<()> {
             sleep(Duration::from_secs(10)).await;
         }
     }
-}
+} */
 
 fn write_log(message: &str) {
     let file_path = Path::new(LOG_FILE_PATH);

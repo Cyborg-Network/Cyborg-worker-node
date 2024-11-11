@@ -25,7 +25,7 @@ go-to-build:
 
 # Compile circuit
 compile-circuit:
-	circom task.circom --r1cs --wasm --sym -o build --O0 -p bls12381
+	/home/tom/.cargo/bin/circom task.circom --r1cs --wasm --sym -o build --O0 -p bls12381
 
 # Compute witness
 compute-witness:

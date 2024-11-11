@@ -24,16 +24,14 @@ use crate::worker::BlockchainClient;
 use builder::CyborgClientBuilder;
 use clap::Parser;
 use cli::{Cli, Commands};
-use std::{error::Error, fs};
+use std::{env, error::Error, fs};
 use zk_helper::{fetch_and_build, generate_trusted_setup};
 //use subxt::ext::jsonrpsee::core::client::error;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
-
-    fetch_and_build().await;
-    generate_trusted_setup().await;
+    dotenv::dotenv().ok();
 
     // Match on the provided subcommand and execute the corresponding action.
     match &cli.command {
@@ -63,9 +61,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }) => {
             println!("Starting mining session. Parachain URL: {}", parachain_url);
 
-            let config_string = fs::read_to_string("/var/lib/cyborg/worker-node/config/worker_config.json")?;
+            let current_dir = env::current_dir().expect("Failed to get current directory");
+            let config_string = current_dir.join("worker_config.json");
+            let slice = config_string.to_str();
 
-            let config: worker::WorkerData = serde_json::from_str(&config_string)?;
+            if let Some(slice) = slice {
+                
+            let config = fs::read_to_string(slice)?;
+
+            let config: worker::WorkerData = serde_json::from_str(&config)?;
 
             println!("Config: {config:?}");
 
@@ -80,6 +84,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
             // Start the mining session using the built client.
             client.start_mining_session().await?;
+            } else {
+                println!("Config file not found. Exiting.");
+            }
         }
 
         _ => {
