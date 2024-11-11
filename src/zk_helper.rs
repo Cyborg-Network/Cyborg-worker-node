@@ -10,17 +10,19 @@ use substrate_interface::api::runtime_types::bounded_collections::bounded_vec::B
 use std::env;
 use std::path::Path;
 
-pub async fn fetch_and_build() {
+pub async fn fetch_and_build() -> io::Result<()> {
     let original_dir = env::current_dir().expect("Failed to get current directory");
     migrate_circuit_and_input_to_zk_worker();
     build_circuit_and_witness();
     env::set_current_dir(&original_dir).expect("Failed to change directory");
+    Ok(())
 }
 
-pub async fn generate_trusted_setup() {
+pub async fn generate_trusted_setup() -> io::Result<()> {
     let original_dir = env::current_dir().expect("Failed to get current directory");
     initiate_powers_of_tau();
     env::set_current_dir(&original_dir).expect("Failed to change directory");
+    Ok(())
 }
 
 fn migrate_circuit_and_input_to_zk_worker() -> io::Result<()> {
