@@ -1163,6 +1163,7 @@ dependencies = [
  "zbus",
  "zbus_names",
  "zip",
+ "zk_worker",
 ]
 
 [[package]]
@@ -6771,6 +6772,13 @@ dependencies = [
  "zeroize",
  "zopfli",
  "zstd",
+]
+
+[[package]]
+name = "zk_worker"
+version = "0.1.0"
+dependencies = [
+ "rand",
 ]
 
 [[package]]

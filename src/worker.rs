@@ -37,6 +37,8 @@ use std::process::{Command, Stdio};
 use zip::read::ZipArchive;
 use tokio::{task, time::{sleep, Duration}};
 
+use crate::zk_helper;
+
 use crate::{substrate_interface, specs};
 
 pub const CONFIG_FILE_NAME: &str = "worker_config.json";
@@ -355,10 +357,16 @@ impl BlockchainClient for CyborgClient {
                         //TODO process zk_files
                         let zk_files = download_and_extract_zk_files(&zk_files_ipfs_hash).await;
 
+                        zk_helper::fetch_and_build().await;
+                        zk_helper::generate_trusted_setup().await;
+
+                        zk_helper::submit_trusted_setup_onchain(&self.client, &self.keypair, task_scheduled.task_id).await;
+
                         if let Some(Ok(output)) = result {
                             println!("Operation sucessful: {:?}", output);
 
                             submit_result_onchain(&self.client, &self.keypair, &ipfs_client, output, task_scheduled.task_id).await;
+                            zk_helper::verify_zk_onchain(&self.client, &self.keypair, task_scheduled.task_id).await;
                         } else {
                             println!("result: {:?}", result);
                             println!("Failed to execute command");
