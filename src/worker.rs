@@ -2,13 +2,18 @@ use async_trait::async_trait;
 use pinata_sdk::PinByJson;
 use pinata_sdk::PinataApi;
 use sp_core::blake2_256;
+use zbus::conn;
+use zbus::object_server::SignalEmitter;
+use zbus_names::BusName;
+use zip::unstable::write;
 use std::error::Error;
 use std::io::Read;
 use std::process::Output;
-use std::str::FromStr;
 use subxt::events::EventDetails;
 use subxt::utils::H256;
-use zbus::{Connection, Message};
+use zbus::Connection;
+use chrono::Local;
+use fs2::FileExt;
 //use subxt::ext::jsonrpsee::async_client::ClientBuilder;
 
 use codec::{Decode, Encode};
@@ -24,23 +29,30 @@ use subxt::{OnlineClient, PolkadotConfig};
 use subxt_signer::sr25519::Keypair;
 use substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 use reqwest::get;
-use std::fs::File;
-use std::io::Write;
+use std::fs::{File, OpenOptions};
+use std::io::{Write, Result as WriteResult};
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::process::{Command, Stdio};
 use zip::read::ZipArchive;
+use tokio::{task, time::{sleep, Duration}};
 
 use crate::{substrate_interface, specs};
 
 pub const CONFIG_FILE_NAME: &str = "worker_config.json";
 pub const WORK_PACKAGE_DIR: &str = "current_task";
+const LOG_FILE_PATH: &str = "/var/lib/cyborg/worker-node/logs/worker_log.txt";
 
 // datastructure for worker registartion persistence
 #[derive(Debug, Clone, PartialEq, Eq, Decode, Encode, Serialize, Deserialize)]
 pub struct WorkerData {
-    pub creator: String,
-    pub worker: (AccountId32, u64),
+    pub worker_owner: String,
+    pub worker_identity: (AccountId32, u64),
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TaskOwner {
+    pub task_owner: String,
 }
 
 pub struct WorkerConfig {
@@ -149,8 +161,8 @@ impl BlockchainClient for CyborgClient {
         if let Some(event) = registration_event {
 
             let worker_file_json = serde_json::to_string(&WorkerData {
-                creator: event.creator.clone().to_string(),
-                worker: event.worker.clone(),
+                worker_owner: event.creator.clone().to_string(),
+                worker_identity: event.worker.clone(),
             })?;
 
             let package_dir_path = Path::new("/var/lib/cyborg/worker-node/packages");
@@ -183,7 +195,15 @@ impl BlockchainClient for CyborgClient {
     async fn start_mining_session(&self) -> Result<(), Box<dyn Error>> {
         println!("Starting mining session...");
 
+        write_log("Waiting for tasks...");
+
         info!("============ event_listener_tester ============");
+
+        task::spawn(async move {
+            if let Err(e) = wait_and_send_update().await {
+                eprintln!("Error while sending signal: {}", e);
+            }
+        });
 
         let mut blocks = self.client.blocks().subscribe_finalized().await?;
 
@@ -287,24 +307,57 @@ impl BlockchainClient for CyborgClient {
             Ok(Some(task_scheduled)) => {
                 let assigned_worker = &task_scheduled.assigned_worker;
 
+                println!(
+                    "Task Scheduled: Assigned worker: {:?}",
+                    assigned_worker
+                );
+
+                reset_log();
+
+                write_log("New task received, processing...");
+
+                println!("Self identity: {:?}", self.identity);
+
                 if *assigned_worker == self.identity {
                     if let Some(ipfs_client) = &self.ipfs_client {
+                        let task_owner = &task_scheduled.task_owner;
 
-                        let ipfs_hash_bounded: Vec<u8> = BoundedVec::encode(&task_scheduled.task);
+                        let owner_file_json = serde_json::to_string(&TaskOwner {
+                            task_owner: task_owner.clone().to_string(),
+                        })?;
+    
+                        let config_dir_path = Path::new("/var/lib/cyborg/worker-node/config");
+                        let file_path = config_dir_path.join("task_owner.json");
+    
+                        if !fs::metadata(&config_dir_path).is_ok() {
+                            fs::create_dir_all(&config_dir_path)?;
+                        }
+    
+                        // Write content to the file (will overwrite existing content)
+                        fs::write(&file_path, owner_file_json)?;
+
+                        let task_ipfs_hash_bounded: &Vec<u8> = &task_scheduled.task.0;
                         
-                        let ipfs_hash = String::from_utf8_lossy(&ipfs_hash_bounded);
+                        let task_ipfs_hash = String::from_utf8_lossy(&task_ipfs_hash_bounded);
 
-                        println!("Ipfs hash: {:?}", ipfs_hash);
+                        println!("Ipfs hash: {:?}", task_ipfs_hash);
+
+                        let zk_files_ipfs_hash_bounded: &Vec<u8> = &task_scheduled.zk_files_cid.0;
+
+                        let zk_files_ipfs_hash = String::from_utf8_lossy(&zk_files_ipfs_hash_bounded);
+
+                        println!("Ipfs hash: {:?}", zk_files_ipfs_hash);
                         
                         println!("New task scheduled for worker: {:?}", task_scheduled);
 
-                        let result = download_and_execute_work_package("bafybeic5sgq6obgfg6xine6cf4qpv7xrvnzst5ufyxnzbnzvcafuif56j4/ipfs_test").await;
+                        let result = download_and_execute_work_package(&task_ipfs_hash).await;
 
                         //TODO process zk_files
-                        let zk_files = download_and_extract_zk_files("Qmf9v8VbJ6WFGbakeWEXFhUc91V1JG26grakv3dTj8rERh").await;
+                        let zk_files = download_and_extract_zk_files(&zk_files_ipfs_hash).await;
 
                         if let Some(Ok(output)) = result {
                             println!("Operation sucessful: {:?}", output);
+
                             submit_result_onchain(&self.client, &self.keypair, &ipfs_client, output, task_scheduled.task_id).await;
                         } else {
                             println!("result: {:?}", result);
@@ -370,12 +423,17 @@ pub async fn submit_result_onchain(
     let result_raw_data = String::from_utf8(result.stdout).expect("Invalid UTF-8 output");
     dbg!(&result_raw_data);
 
+    write_log(format!("Result: {}", &result_raw_data).as_str());
+
+    write_log("Submitting result onchain...");
+
     let cid = publish_on_ipfs(result_raw_data.clone(), ipfs_client).await;
     let chain_result = submit_to_chain(api, signer_keypair, cid, task_id, result_raw_data).await;
 
     match chain_result {
         Ok(_) => {
             println!("Result submitted to chain successfully");
+            write_log("Result submitted to chain successfully!");
         }
         Err(e) => {
             println!("Failed to submit result to chain: {:?}", e);
@@ -448,6 +506,8 @@ pub async fn download_and_execute_work_package(
     println!("Starting download of ipfs hash: {}", ipfs_cid);
     info!("============ downloading_file ============");
 
+    write_log("Retrieving work package...");
+
     // TODO: validate its a valid ipfs hash
     let url = format!("https://ipfs.io/ipfs/{}", ipfs_cid);
 
@@ -510,8 +570,15 @@ pub async fn download_and_execute_work_package(
                 return None;
             }
 
+            write_log("Work package retrieved!");
+
+            write_log("Executing work package...");
+
             match Command::new(&file_path).stdout(Stdio::piped()).spawn() {
-                Ok(child_process) => Some(Ok(child_process.wait_with_output().ok()?)),
+                Ok(child_process) => {
+                    write_log("Work package executed!");
+                    Some(Ok(child_process.wait_with_output().ok()?))
+                }
                 Err(e) => {
                     eprintln!("Failed to execute command: {}", e);
                     None 
@@ -527,6 +594,8 @@ pub async fn download_and_execute_work_package(
 
 async fn download_and_extract_zk_files(ipfs_cid: &str) -> Option<ZkFiles> {
     let url = format!("https://ipfs.io/ipfs/{}", ipfs_cid);
+
+    write_log("Retrieving ZK files...");
 
     let response = get(&url).await.unwrap();
 
@@ -562,23 +631,89 @@ async fn download_and_extract_zk_files(ipfs_cid: &str) -> Option<ZkFiles> {
         }
     }
 
+    write_log("ZK files retrieved!");
+
     Some(unpacked_files)
 }
 
 /// Can send stages 1-4 of the zk-verification process to the cyborg-agent, which will send it to the frontend
-async fn emit_zk_stage_signal(stage: u8) -> Result<(), Box<dyn Error>> {
+async fn emit_zk_update(stage: u8, connection: &Connection) -> Result<(), Box<dyn Error>> {
+    
+
+    let cxt = SignalEmitter::new(
+        connection,
+        "/com/cyborg/CyborgAgent",
+    )?;
+
+    cxt.emit("com.cyborg.AgentZkInterface", "ZkUpdate", &stage).await?;
+    Ok(())
+}
+
+async fn wait_and_send_update() -> zbus::Result<()> {
+
     let connection = Connection::system().await?;
 
-    let msg = Message::signal(
-        "/com/cyborg/CyborgAgent",
-        "com.cyborg.AgentZkInterface",
-        "ZkStageChanged",
-    )?
-    .build(&stage).unwrap();
+    let well_known_name = BusName::try_from("com.cyborg.CyborgAgent")?;
+    connection.request_name(well_known_name).await?;
+    
+    let loopvec = [1,2,3,4];
 
-    connection.send(&msg).await?;
+    loop {
+        for i in loopvec {
+            if let Err(e) = emit_zk_update(i, &connection).await {
+                println!("Error while sending signal: {}", e);
+            }
+            println!("Waiting for 10 seconds...");
+            sleep(Duration::from_secs(10)).await;
+        }
+    }
+}
 
-    Ok(())
+fn write_log(message: &str) {
+    let file_path = Path::new(LOG_FILE_PATH);
+    if let Ok(mut file) = OpenOptions::new().append(true).create(true).open(file_path) {
+    
+        if let Err(e) = file.lock_exclusive() {
+            println!("Failed to lock file: {}", e);
+            return;
+        }
+    
+        let now = Local::now();
+        let formatted_message = format!("{} - {}\n", now.format("%Y-%m-%d %H:%M:%S"), message);
+    
+        if let Err(e) = file.write_all(formatted_message.as_bytes()) {
+            println!("Failed to write to file: {}", e);
+            return;
+        }
+    
+        if let Err(e) = file.unlock() {
+            println!("Failed to unlock file: {}", e);
+            return;
+        }
+    } else {
+        println!("Failed to open file");
+        return;
+    }
+}
+
+fn reset_log() {
+    let file_path = Path::new(LOG_FILE_PATH);
+    if let Ok(file) = File::create(file_path){
+        if let Err(e) = file.lock_exclusive() {
+            println!("Failed reset log file: {}", e);
+            return;
+        }
+    
+        if let Err(e) = file.set_len(0) {
+            println!("Failed to reset log file: {}", e);
+            return;
+        }
+    
+        if let Err(e) = file.unlock() {
+            println!("Failed to reset log file: {}", e);
+            return;
+        }
+    }
 }
 /*
 
