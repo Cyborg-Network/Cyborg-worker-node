@@ -15,11 +15,13 @@ publish = false
 [dependencies]
 zk_worker = { path = "zk-worker" }
 async-trait = { git = "https://github.com/dtolnay/async-trait.git" }
+chrono = "0.4.38"
 clap = { version = "4.5.3", features = ["derive"] }
 codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false }
 color-print = { version = "0.3.4" } 
 dirs = "5.0.1"
 docify = { version = "0.2.8" }
+fs2 = "0.4.3"
 futures = "0.3.28"
 hex = { version = "0.4.3" } 
 ipfs-api-backend-hyper = { version = "0.6.0", features = ["with-send-sync", "with-hyper-tls"] }
@@ -40,6 +42,7 @@ sysinfo = "0.32.0"
 tokio = "1.41.0"
 url = { version = "2.5.2" }
 zbus = "5.1.1"
+zbus_names = "4.1.0"
 zip = "2.2.0"
 
 [build-dependencies]

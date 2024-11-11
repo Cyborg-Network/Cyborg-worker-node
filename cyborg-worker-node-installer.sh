@@ -16,6 +16,7 @@ WORKER_BINARY_URL="server.cyborgnetwork.io:8080/assets/cyborg-worker-node"
 WORKER_BINARY_NAME="cyborg-worker-node"
 WORKER_BINARY_PATH="/usr/local/bin/$WORKER_BINARY_NAME"
 WORKER_SERVICE_FILE="/etc/systemd/system/$WORKER_BINARY_NAME.service"
+WORKER_DBUS_FILE="/etc/dbus-1/system.d/com.cyborg.CyborgAgent.conf"
 
 
 echo "Downloading the worker node from $WORKER_BINARY_URL..."
@@ -68,10 +69,29 @@ fi
 
 sudo mkdir -p /var/lib/cyborg/worker-node/packages
 sudo mkdir -p /var/lib/cyborg/worker-node/config
+sudo mkdir -p /var/lib/cyborg/worker-node/logs
 sudo chown -R cyborg-user:cyborg-user /var/lib/cyborg
 sudo chmod -R 700 /var/lib/cyborg
 
 sudo $WORKER_BINARY_PATH registration --parachain-url "$PARACHAIN_URL" --account-seed "$ACCOUNT_SEED"
+
+echo "Creating dbus configuration file for worker node..."
+sudo bash -c "cat > $WORKER_DBUS_FILE" << EOL
+<!DOCTYPE busconfig PUBLIC
+ "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+<busconfig>
+
+  <policy context="default">
+    <allow own="com.cyborg.CyborgAgent"/>
+  </policy>
+
+  <policy context="default">
+    <allow send_interface="com.cyborg.AgentZkInterface"/>
+  </policy>
+
+</busconfig>
+EOL
 
 echo "Creating systemd service for worker node: $WORKER_SERVICE_FILE"
 sudo bash -c "cat > $WORKER_SERVICE_FILE" << EOL
