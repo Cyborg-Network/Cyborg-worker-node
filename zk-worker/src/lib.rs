@@ -1,17 +1,41 @@
 use std::fs;
 use std::path::Path;
 use std::process::{Command, Output};
+use std::env;
+use std::process::Stdio;
+use std::io::Write;
+use rand::Rng;
+use std::io::BufReader;
+use std::thread;
+use std::io::{BufRead, stdin, stdout};
+
+
+pub fn set_environment() {
+    let current_file = file!();
+    let current_dir = Path::new(current_file)
+        .parent()
+        .and_then(|p| p.parent())
+        .expect("Failed to get the parent of the parent directory")
+        .canonicalize()
+        .expect("Failed to canonicalize path");
+
+    env::set_current_dir(&current_dir).expect("Failed to change directory");
+}
 
 fn run_make_target(target: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let status = Command::new("make")
-        .arg(target)
-        .status()?;
+    set_environment();
+    let output = Command::new("make")
+    .arg(target)
+    .output()
+    .expect("Failed to execute command");
 
-    if status.success() {
+    if output.status.success() {
         println!("Successfully ran make target: {}", target);
         Ok(())
     } else {
         eprintln!("Make target {} failed to execute", target);
+        eprintln!("Command failed with exit code {}.", output.status.code().unwrap());
+        eprintln!("Error details: {}", String::from_utf8_lossy(&output.stderr));
         Err("Make command failed".into())
     }
 }
@@ -23,7 +47,38 @@ pub fn build_circuit_and_witness() -> Result<(), Box<dyn std::error::Error>> { /
 
 // Initiate powers of tau ceremony for trusted setup
 pub fn initiate_powers_of_tau() -> Result<(), Box<dyn std::error::Error>> {
-    run_make_target("tau")
+    set_environment();
+
+    let mut rng = rand::thread_rng();
+
+    let mut child = Command::new("make")
+        .arg("tau")
+        .stdin(Stdio::piped())  
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("Failed to start process");
+
+        let mut stdin = child.stdin.take().expect("Failed to capture stdin");
+        let stdout = child.stdout.take().expect("Failed to capture stdout");
+        let reader = BufReader::new(stdout);
+        
+        for line in reader.lines() {
+            let line = line.expect("Failed to read line");
+            println!("Output from command: {}", line);
+    
+            let entropy: u32 = rng.gen_range(1..=1000); 
+            writeln!(stdin, "{}", entropy).expect("Failed to write to stdin");
+        }
+
+    let status = child.wait().expect("Failed to wait on child");
+
+    if status.success() {
+        println!("Command executed successfully.");
+        Ok(())
+    } else {
+        eprintln!("Command failed.");
+        Err("Tau trusted setup failed".into())
+    }
 }
 
 // Generate proof
@@ -58,7 +113,7 @@ pub fn clean_up_old_zk_files() {
 
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // build_circuit_and_witness().expect("Failed to run make target");
+    build_circuit_and_witness().expect("Failed to run make target");
     // initiate_powers_of_tau().expect("Failed to run make tau");
     // generate_proof().expect("Failed to run make tau");
     // verify_proof().expect("Failed to run make tau");

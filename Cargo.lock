@@ -6703,6 +6703,9 @@ dependencies = [
 [[package]]
 name = "zk_worker"
 version = "0.1.0"
+dependencies = [
+ "rand",
+]
 
 [[package]]
 name = "zopfli"

@@ -1,4 +1,4 @@
-use zk_worker::{build_circuit_and_witness, initiate_powers_of_tau, clean_up_old_zk_files};
+use zk_worker::{ build_circuit_and_witness, initiate_powers_of_tau, clean_up_old_zk_files};
 use std::fs;
 use std::io;
 use subxt::{OnlineClient, PolkadotConfig};
@@ -7,14 +7,20 @@ use subxt_signer::sr25519::Keypair;
 use crate::substrate_interface;
 use substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 
+use std::env;
+use std::path::Path;
 
-pub fn fetch_and_build() {
+pub async fn fetch_and_build() {
+    let original_dir = env::current_dir().expect("Failed to get current directory");
     migrate_circuit_and_input_to_zk_worker();
     build_circuit_and_witness();
+    env::set_current_dir(&original_dir).expect("Failed to change directory");
 }
 
 pub async fn generate_trusted_setup() {
+    let original_dir = env::current_dir().expect("Failed to get current directory");
     initiate_powers_of_tau();
+    env::set_current_dir(&original_dir).expect("Failed to change directory");
 }
 
 fn migrate_circuit_and_input_to_zk_worker() -> io::Result<()> {

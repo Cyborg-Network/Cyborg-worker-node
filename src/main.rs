@@ -25,14 +25,16 @@ use builder::CyborgClientBuilder;
 use clap::Parser;
 use cli::{Cli, Commands};
 use std::{error::Error, fs};
-use zk_helper::fetch_and_build;
+use zk_helper::{fetch_and_build, generate_trusted_setup};
 //use subxt::ext::jsonrpsee::core::client::error;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
 
-    fetch_and_build();
+    fetch_and_build().await;
+    generate_trusted_setup().await;
+
     // Match on the provided subcommand and execute the corresponding action.
     match &cli.command {
         // Handle the "registration" subcommand.
