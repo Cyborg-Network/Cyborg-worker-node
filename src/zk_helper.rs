@@ -1,6 +1,7 @@
 use zk_worker::{ build_circuit_and_witness, initiate_powers_of_tau, clean_up_old_zk_files};
 use std::fs;
 use std::io;
+use std::path::PathBuf;
 use subxt::{OnlineClient, PolkadotConfig};
 use subxt_signer::sr25519::Keypair;
 
@@ -11,21 +12,21 @@ use std::env;
 use std::path::Path;
 
 pub async fn fetch_and_build() {
-    let original_dir = env::current_dir().expect("Failed to get current directory");
-    migrate_circuit_and_input_to_zk_worker();
+    //let original_dir = PathBuf::from("/usr/local/bin");
+    //migrate_circuit_and_input_to_zk_worker();
     build_circuit_and_witness();
-    env::set_current_dir(&original_dir).expect("Failed to change directory");
+    //env::set_current_dir(&original_dir).expect("Failed to change directory");
 }
 
 pub async fn generate_trusted_setup() {
-    let original_dir = env::current_dir().expect("Failed to get current directory");
+    //let original_dir = PathBuf::from("/usr/local/bin");
     initiate_powers_of_tau();
-    env::set_current_dir(&original_dir).expect("Failed to change directory");
+    //env::set_current_dir(&original_dir).expect("Failed to change directory");
 }
 
 fn migrate_circuit_and_input_to_zk_worker() -> io::Result<()> {
-    let circuit_src = "zk_circuit.circom";
-    let input_src = "zk_public_input.json";
+    let circuit_src = "/var/lib/cyborg/worker-node/zk-files/zk_circuit.circom";
+    let input_src = "/var/lib/cyborg/worker-node/zk-files/zk_public_input.json";
     let input_dest = "zk-worker/input.json";
     let circuit_dest = "zk-worker/task.circom";
 
@@ -55,8 +56,11 @@ fn migrate_circuit_and_input_to_zk_worker() -> io::Result<()> {
 pub async fn submit_trusted_setup_onchain(api: &OnlineClient<PolkadotConfig>, signer_keypair: &Keypair, task_id: u64)
     -> Result<(), Box<dyn std::error::Error>> 
 {
-    let json_verification_key = fs::read_to_string("../zk-worker/build/verification_key.json")?;
-    let json_pub_input = fs::read_to_string("../zk-worker/input.json")?;
+    let path = "/var/lib/cyborg/worker-node/zk-files/build/verification_key.json";
+    let path2 = "/var/lib/cyborg/worker-node/zk-files/input.json";
+
+    let json_verification_key = fs::read_to_string(path)?;
+    let json_pub_input = fs::read_to_string(path2)?;
 
     let bytes_verification_key: Vec<u8> = json_verification_key.into_bytes();
     let bytes_pub_input: Vec<u8> = json_pub_input.into_bytes();
@@ -100,7 +104,9 @@ pub async fn submit_trusted_setup_onchain(api: &OnlineClient<PolkadotConfig>, si
 pub async fn verify_zk_onchain(api: &OnlineClient<PolkadotConfig>, signer_keypair: &Keypair, task_id: u64)
     -> Result<(), Box<dyn std::error::Error>> 
 {
-    let json_proof = fs::read_to_string("../zk-worker/build/proof.json")?;
+    let path = "/var/lib/cyborg/worker-node/zk-files/build/proof.json";
+
+    let json_proof = fs::read_to_string(path)?;
 
     let bytes_proof: Vec<u8> = json_proof.into_bytes();
 

@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use std::env;
 use std::process::Stdio;
@@ -11,8 +11,9 @@ use std::io::{BufRead, stdin, stdout};
 
 
 pub fn set_environment() {
-    let current_file = file!();
-    let current_dir = Path::new(current_file)
+    let _current_file = file!();
+    let current_dir = Path::new("/var/lib/cyborg/worker-node/zk-files");
+    let current_dir = Path::new(current_dir)
         .parent()
         .and_then(|p| p.parent())
         .expect("Failed to get the parent of the parent directory")
@@ -42,7 +43,7 @@ fn run_make_target(target: &str) -> Result<(), Box<dyn std::error::Error>> {
 
 // build circuit and generate witness
 pub fn build_circuit_and_witness() -> Result<(), Box<dyn std::error::Error>> { // build_circuit_and_witness
-    run_make_target("build")
+    run_make_target("build-step")
 }
 
 // Initiate powers of tau ceremony for trusted setup

@@ -7,6 +7,7 @@ use zbus::object_server::SignalEmitter;
 use zbus_names::BusName;
 use zip::unstable::write;
 use std::error::Error;
+use std::fs::create_dir_all;
 use std::io::Read;
 use std::process::Output;
 use subxt::events::EventDetails;
@@ -37,10 +38,11 @@ use std::process::{Command, Stdio};
 use zip::read::ZipArchive;
 use tokio::{task, time::{sleep, Duration}};
 
+use crate::zk_helper;
 use crate::{substrate_interface, specs};
 
 pub const CONFIG_FILE_NAME: &str = "worker_config.json";
-pub const WORK_PACKAGE_DIR: &str = "current_task";
+pub const WORK_PACKAGE_DIR: &str = "task.circom";
 const LOG_FILE_PATH: &str = "/var/lib/cyborg/worker-node/logs/worker_log.txt";
 
 // datastructure for worker registartion persistence
@@ -199,13 +201,15 @@ impl BlockchainClient for CyborgClient {
 
         info!("============ event_listener_tester ============");
 
-        task::spawn(async move {
+        /* task::spawn(async move {
             if let Err(e) = wait_and_send_update().await {
                 eprintln!("Error while sending signal: {}", e);
             }
-        });
+        }); */
 
         let mut blocks = self.client.blocks().subscribe_finalized().await?;
+
+        //let mut blocks = self.client.blocks().su.await?;
 
         while let Some(Ok(block)) = blocks.next().await {
             //info!("New block imported: {:?}", block.hash());
@@ -332,6 +336,11 @@ impl BlockchainClient for CyborgClient {
                         if !fs::metadata(&config_dir_path).is_ok() {
                             fs::create_dir_all(&config_dir_path)?;
                         }
+
+                        let connection = Connection::system().await?;
+
+                        let well_known_name = BusName::try_from("com.cyborg.CyborgAgent")?;
+                        connection.request_name(well_known_name).await?;
     
                         // Write content to the file (will overwrite existing content)
                         fs::write(&file_path, owner_file_json)?;
@@ -352,15 +361,30 @@ impl BlockchainClient for CyborgClient {
 
                         let result = download_and_execute_work_package(&task_ipfs_hash).await;
 
-                        //TODO process zk_files
-                        let zk_files = download_and_extract_zk_files(&zk_files_ipfs_hash).await;
+                        download_and_extract_zk_files(&zk_files_ipfs_hash).await;
+
+                        let _ = emit_zk_update(1, &connection).await.expect("Failed to emit zk update");
+
+                        zk_helper::fetch_and_build().await;
+                        zk_helper::generate_trusted_setup().await;
+
+                        emit_zk_update(2, &connection).await.expect("Failed to emit zk update");
+
+                        let _setup_result = zk_helper::submit_trusted_setup_onchain(&self.client, &self.keypair, task_scheduled.task_id).await
+                            .expect("Failed to submit trusted setup onchain");
+
+                        emit_zk_update(3, &connection).await.expect("Failed to emit zk update");
 
                         if let Some(Ok(output)) = result {
                             println!("Operation sucessful: {:?}", output);
 
                             submit_result_onchain(&self.client, &self.keypair, &ipfs_client, output, task_scheduled.task_id).await;
+                            let verification_result = zk_helper::verify_zk_onchain(&self.client, &self.keypair, task_scheduled.task_id).await
+                                .expect("Failed to verify zk onchain");
+
+                            emit_zk_update(4, &connection).await.expect("Failed to emit zk update");
                         } else {
-                            println!("result: {:?}", result);
+                           println!("result: {:?}", result);
                             println!("Failed to execute command");
                         }
                     } else {
@@ -528,9 +552,9 @@ pub async fn download_and_execute_work_package(
                 }
             };
 
-            println!("Downloaded {} bytes from Crust's IPFS gateway.", response_bytes.len());
+            println!("Downloaded {} bytes from IPFS.", response_bytes.len());
 
-            let dir_path = Path::new("/var/lib/cyborg/worker-node/packages");
+            let dir_path = Path::new("/var/lib/cyborg/worker-node/zk-files");
             let file_path = dir_path.join(WORK_PACKAGE_DIR);
 
             if !dir_path.exists() {
@@ -592,16 +616,12 @@ pub async fn download_and_execute_work_package(
     }
 }
 
-async fn download_and_extract_zk_files(ipfs_cid: &str) -> Option<ZkFiles> {
+async fn download_and_extract_zk_files(ipfs_cid: &str) {
     let url = format!("https://ipfs.io/ipfs/{}", ipfs_cid);
 
     write_log("Retrieving ZK files...");
 
     let response = get(&url).await.unwrap();
-
-    if !response.status().is_success() {
-        return None;
-    }
 
     let bytes = response.bytes().await.unwrap();
 
@@ -609,31 +629,32 @@ async fn download_and_extract_zk_files(ipfs_cid: &str) -> Option<ZkFiles> {
 
     let mut archive = ZipArchive::new(reader).unwrap();
 
-    let mut unpacked_files = ZkFiles {
-        zk_public_input: None,
-        zk_circuit: None,
-    };
+    let save_path = Path::new("/var/lib/cyborg/worker-node/zk-files");
+
+    create_dir_all(save_path).unwrap();
 
     for i in 0..archive.len() {
         let mut file = archive.by_index(i).unwrap();
-
         let filename = file.name().to_string();
 
         let mut buffer = Vec::new();
         file.read_to_end(&mut buffer).unwrap();
 
-        match filename.as_str() {
-            "zk_public_input.json" => unpacked_files.zk_public_input = Some(String::from_utf8(buffer).unwrap()),
-            "zk_circuit.circom" => unpacked_files.zk_circuit = Some(String::from_utf8(buffer).unwrap()),
+        let file_path = match filename.as_str() {
+            "zk_public_input.json" => save_path.join("input.json"),
             _ => {
                 println!("Unexpected file in zip: {}", filename);
+                continue;
             }
-        }
+        };
+
+        // Write the contents to the file path
+        let mut output_file = fs::File::create(&file_path).unwrap();
+        output_file.write_all(&buffer).unwrap();
     }
 
     write_log("ZK files retrieved!");
 
-    Some(unpacked_files)
 }
 
 /// Can send stages 1-4 of the zk-verification process to the cyborg-agent, which will send it to the frontend
@@ -649,7 +670,7 @@ async fn emit_zk_update(stage: u8, connection: &Connection) -> Result<(), Box<dy
     Ok(())
 }
 
-async fn wait_and_send_update() -> zbus::Result<()> {
+/* async fn wait_and_send_update() -> zbus::Result<()> {
 
     let connection = Connection::system().await?;
 
@@ -667,7 +688,7 @@ async fn wait_and_send_update() -> zbus::Result<()> {
             sleep(Duration::from_secs(10)).await;
         }
     }
-}
+} */
 
 fn write_log(message: &str) {
     let file_path = Path::new(LOG_FILE_PATH);
