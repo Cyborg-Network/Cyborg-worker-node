@@ -1,5 +1,6 @@
 use crate::worker::{CyborgClient, WorkerData};
 use std::error::Error;
+use std::path::PathBuf;
 use subxt::utils::AccountId32;
 use subxt::{OnlineClient, PolkadotConfig};
 use subxt_signer::{SecretUri, sr25519::Keypair as SR25519Keypair};
@@ -20,6 +21,10 @@ pub struct CyborgClientBuilder<Keypair> {
     ipfs_client: Option<PinataApi>,
     identity: (AccountId32, u64),
     creator: AccountId32,
+    log_path: PathBuf,
+    config_path: PathBuf,
+    task_path: PathBuf,
+    task_owner_path: PathBuf,
 }
 
 /// Default implementation for the `CyborgClientBuilder` when no keypair is provided.
@@ -34,6 +39,10 @@ impl Default for CyborgClientBuilder<NoKeypair> {
             ipfs_client: None,
             identity: (AccountId32::from([0u8; 32]), 0),
             creator: AccountId32::from([0u8; 32]),
+            log_path: PathBuf::from("./"),
+            config_path: PathBuf::from("./"),
+            task_path: PathBuf::from("./"),
+            task_owner_path: PathBuf::from("./"),
         }
     }
 }
@@ -71,6 +80,10 @@ impl<Keypair> CyborgClientBuilder<Keypair> {
             ipfs_client: self.ipfs_client,
             identity: self.identity,
             creator: self.creator,
+            log_path: self.log_path,
+            config_path: self.config_path,
+            task_path: self.task_path,
+            task_owner_path: self.task_owner_path,
         })
     }
 
@@ -112,6 +125,21 @@ impl<Keypair> CyborgClientBuilder<Keypair> {
         self.creator = AccountId32::from_str(&config.worker_owner).unwrap();
         self
     }
+
+    /// Sets the paths for the log, config, and task files.
+    ///
+    /// # Arguments
+    /// * `log_path` - A string representing the path to the log file.
+    /// * `config_path` - A string representing the path to the config file.
+    /// * `task_path` - A string representing the path to the task file.
+    /// * `task_owner_path` - A string representing the path to the task owner file.
+    pub fn paths(mut self, log_path: String, config_path: String, task_path: String, task_owner_path: String) -> Self {
+        self.log_path = PathBuf::from(log_path);
+        self.config_path = PathBuf::from(config_path);
+        self.task_path = PathBuf::from(task_path);
+        self.task_owner_path = PathBuf::from(task_owner_path);
+        self
+    }
 }
 
 impl CyborgClientBuilder<AccountKeypair> {
@@ -132,6 +160,10 @@ impl CyborgClientBuilder<AccountKeypair> {
                     node_uri: self.parachain_url,
                     identity: self.identity,
                     creator: self.creator,
+                    log_path: self.log_path,
+                    config_path: self.config_path,
+                    task_path: self.task_path,
+                    task_owner_path: self.task_owner_path,
                 })
             }
             None => Err("No node URI provided. Please specify a node URI to connect.".into()),

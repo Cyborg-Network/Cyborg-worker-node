@@ -26,6 +26,11 @@ use cli::{Cli, Commands};
 use std::{error::Error, fs};
 //use subxt::ext::jsonrpsee::core::client::error;
 
+const CONFIG_PATH: &str = "/var/lib/cyborg/worker-node/config/worker_config.json";
+const LOG_PATH: &str = "/var/lib/cyborg/worker-node/logs/worker_log.txt";
+const TASK_PATH: &str = "/var/lib/cyborg/worker-node/task/current_task";
+const TASK_OWNER_PATH: &str = "/var/lib/cyborg/worker-node/task/task_owner.json";
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
@@ -43,6 +48,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let client = CyborgClientBuilder::default()
                 .parachain_url(parachain_url.to_string())
                 .keypair(account_seed)?
+                .paths(LOG_PATH.to_string(), CONFIG_PATH.to_string(), TASK_PATH.to_string(), TASK_OWNER_PATH.to_string())
                 .build()
                 .await?;
 
@@ -70,6 +76,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .keypair(account_seed)?
                 .ipfs_uri().await
                 .config(config)
+                .paths(LOG_PATH.to_string(), CONFIG_PATH.to_string(), TASK_PATH.to_string(), TASK_OWNER_PATH.to_string())
                 .build()
                 .await?;
 
