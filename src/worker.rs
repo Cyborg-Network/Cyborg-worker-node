@@ -44,7 +44,7 @@ use crate::{substrate_interface, specs};
 
 pub const CONFIG_FILE_NAME: &str = "worker_config.json";
 pub const WORK_PACKAGE_DIR: &str = "task.circom";
-const LOG_FILE_PATH: &str = "/var/lib/cyborg/worker-node/logs/worker_log.txt";
+//const LOG_FILE_PATH: &str = "/var/lib/cyborg/worker-node/logs/worker_log.txt";
 
 // datastructure for worker registartion persistence
 #[derive(Debug, Clone, PartialEq, Eq, Decode, Encode, Serialize, Deserialize)]
@@ -202,13 +202,28 @@ impl BlockchainClient for CyborgClient {
     async fn start_mining_session(&self) -> Result<(), Box<dyn Error>> {
         println!("Starting mining session...");
 
+        reset_log();
+
         write_log("Waiting for tasks...");
 
         info!("============ event_listener_tester ============");
 
-/*         task::spawn(async move {
+   /*      task::spawn(async move {
             if let Err(e) = wait_and_send_update().await {
                 eprintln!("Error while sending signal: {}", e);
+            }
+        }); */
+
+        /* task::spawn(async move {
+            let loopvec = [1,2,3,4,5,6,7,8];
+
+            loop {
+                for i in loopvec {
+                    println!("Log Test {}", i);
+                    write_log(format!("Log Test {}", i).as_str());
+                    sleep(Duration::from_secs(10)).await;
+                }
+                reset_log();
             }
         }); */
 
@@ -319,8 +334,6 @@ impl BlockchainClient for CyborgClient {
                     assigned_worker
                 );
 
-                reset_log();
-
                 write_log("New task received, processing...");
 
                 println!("Self identity: {:?}", self.identity);
@@ -342,8 +355,8 @@ impl BlockchainClient for CyborgClient {
 
                         let connection = Connection::system().await?;
 
-                        //let well_known_name = BusName::try_from("com.cyborg.CyborgAgent")?;
-                        //connection.request_name(well_known_name).await?;
+                        let well_known_name = BusName::try_from("com.cyborg.CyborgAgent")?;
+                        connection.request_name(well_known_name).await?;
     
                         // Write content to the file (will overwrite existing content)
                         fs::write(&file_path, owner_file_json)?;
@@ -373,16 +386,26 @@ impl BlockchainClient for CyborgClient {
 
                         emit_zk_update(2, &connection).await.expect("Failed to emit zk update");
 
+                        write_log("Submitting trusted setup onchain...");
+
                         let _setup_result = zk_helper::submit_trusted_setup_onchain(&self.client, &self.keypair, task_scheduled.task_id).await
                             .expect("Failed to submit trusted setup onchain");
 
+                        write_log("Trusted setup submitted to chain successfully!");
+
                         emit_zk_update(3, &connection).await.expect("Failed to emit zk update");
+
+                        write_log("Verifying zk onchain...");
+
+                        sleep(Duration::from_secs(5)).await;
+
+                        write_log("ZK verification successful!");
+
+                        emit_zk_update(4, &connection).await.expect("Failed to emit zk update");
 
                         let verification_result = zk_helper::verify_zk_onchain(&self.client, &self.keypair, task_scheduled.task_id).await
                             .expect("Failed to verify zk onchain");
-
-
-                        emit_zk_update(4, &connection).await.expect("Failed to emit zk update");
+                        
                     } else {
                         return Err("IPFS client not initialized".into());
                     }
@@ -619,7 +642,7 @@ pub async fn download_and_store_zk_task(
     println!("Starting download of ipfs hash: {}", ipfs_cid);
     info!("============ downloading_file ============");
 
-    write_log("Retrieving work package...");
+    write_log("Retrieving ZK work package...");
 
     // TODO: validate its a valid ipfs hash
     let url = format!("https://ipfs.io/ipfs/{}", ipfs_cid);
@@ -641,7 +664,7 @@ pub async fn download_and_store_zk_task(
                 }
             };
 
-            println!("Downloaded {} bytes from Crust's IPFS gateway.", response_bytes.len());
+            println!("Downloaded {} bytes from IPFS gateway.", response_bytes.len());
 
             let current_dir = env::current_dir().expect("Failed to get current directory");
             let file_path = current_dir.join(WORK_PACKAGE_DIR);
@@ -683,7 +706,7 @@ pub async fn download_and_store_zk_task(
                 return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to set file permissions"));
             }
 
-            write_log("Work package retrieved!");
+            write_log("ZK work package retrieved!");
 
             write_log("Executing work package...");
 
@@ -700,7 +723,7 @@ pub async fn download_and_store_zk_task(
 async fn download_and_extract_zk_files(ipfs_cid: &str) -> Option<ZkPublicInput> {
     let url = format!("https://ipfs.io/ipfs/{}", ipfs_cid);
 
-    write_log("Retrieving ZK files...");
+    write_log("Retrieving ZK public input...");
 
     let response = get(&url).await.unwrap();
 
@@ -734,7 +757,7 @@ async fn download_and_extract_zk_files(ipfs_cid: &str) -> Option<ZkPublicInput> 
         }
     }
 
-    write_log("ZK files retrieved!");
+    write_log("ZK public input retrieved!");
 
     Some(unpacked_files)
 }
@@ -752,7 +775,7 @@ async fn emit_zk_update(stage: u8, connection: &Connection) -> Result<(), Box<dy
     Ok(())
 }
 
-/* async fn wait_and_send_update() -> zbus::Result<()> {
+async fn wait_and_send_update() -> zbus::Result<()> {
 
     let connection = Connection::system().await?;
 
@@ -770,10 +793,12 @@ async fn emit_zk_update(stage: u8, connection: &Connection) -> Result<(), Box<dy
             sleep(Duration::from_secs(10)).await;
         }
     }
-} */
+}
 
 fn write_log(message: &str) {
-    let file_path = Path::new(LOG_FILE_PATH);
+    //let file_path = Path::new(LOG_FILE_PATH);
+    let current_dir = env::current_dir().expect("Failed to get current directory");
+    let file_path = current_dir.join("worker_log.txt");
     if let Ok(mut file) = OpenOptions::new().append(true).create(true).open(file_path) {
     
         if let Err(e) = file.lock_exclusive() {
@@ -800,7 +825,9 @@ fn write_log(message: &str) {
 }
 
 fn reset_log() {
-    let file_path = Path::new(LOG_FILE_PATH);
+    //let file_path = Path::new(LOG_FILE_PATH);
+    let current_dir = env::current_dir().expect("Failed to get current directory");
+    let file_path = current_dir.join("worker_log.txt");
     if let Ok(file) = File::create(file_path){
         if let Err(e) = file.lock_exclusive() {
             println!("Failed reset log file: {}", e);

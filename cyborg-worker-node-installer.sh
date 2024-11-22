@@ -18,6 +18,7 @@ WORKER_BINARY_PATH="/usr/local/bin/$WORKER_BINARY_NAME"
 WORKER_SERVICE_FILE="/etc/systemd/system/$WORKER_BINARY_NAME.service"
 WORKER_DBUS_FILE="/etc/dbus-1/system.d/com.cyborg.CyborgAgent.conf"
 
+CIRCOM_URL="server.cyborgnetwork.io:8080/assets/circom"
 
 echo "Downloading the worker node from $WORKER_BINARY_URL..."
 echo "Downloading the agent from $AGENT_BINARY_URL..."
@@ -32,6 +33,94 @@ echo "Moving the agent to /usr/local/bin..."
 
 sudo mv $WORKER_BINARY_NAME $WORKER_BINARY_PATH
 sudo mv $AGENT_BINARY_NAME $AGENT_BINARY_PATH
+
+if [ -f "$HOME/.cargo/env" ]; then
+    . "$HOME/.cargo/env"
+fi
+
+check_command() {
+    command -v "$1" &> /dev/null
+}
+
+cd ~
+
+if check_command cargo; then
+    cargo_version=$(cargo --version)
+    echo "Cargo is installed. Version: $cargo_version. Proceeding..."
+else
+    echo "Cargo isn't installed. Installing via rustup..."
+    curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
+fi
+
+. "$HOME/.cargo/env"
+
+if check_command npm; then
+    npm_version=$(npm --version)
+    echo "Npm is installed. Version: $npm_version. Proceeding..."
+else
+    echo "Npm isn't installed. Installing via nodesource..."    
+    curl -fsSL https://deb.nodesource.com/setup_23.x -o /tmp/nodesource_setup.sh
+    sudo sudo bash /tmp/nodesource_setup.sh
+
+    sudo apt-get install nodejs -y
+
+    sudo rm /tmp/nodesource_setup.sh
+fi
+
+echo "Would you like to install Circom via:"
+echo "1) Download (using precompiled binary, requires less computation power)"
+echo "2) Compile locally (requires more computation power)"
+read -p "Please choose an option (1 or 2): " choice
+
+download_circom() {
+    echo "Downloading precompiled Circom binary..."
+
+    sudo git clone https://github.com/iden3/circom.git
+
+    mkdir -p circom/target/release
+
+    cd circom/target/release
+
+    curl -L -o circom $CIRCOM_URL
+    sudo chmod +x circom
+
+    cd ../../
+
+    cargo install --path circom
+
+    echo "Circom downloaded and ready to use!"
+}
+
+compile_circom_locally() {
+    echo "Compiling Circom locally..."
+
+    sudo git clone https://github.com/iden3/circom.git
+    cd circom
+
+    cargo build --release
+
+    cargo install --path circom
+
+    echo "Circom compiled and ready to use!"
+}
+
+sudo rm -rf circom
+
+# Run according to user choice
+if [ "$choice" -eq 1 ]; then
+    download_circom
+elif [ "$choice" -eq 2 ]; then
+    compile_circom_locally
+else
+    echo "Invalid option. Please choose either 1 or 2."
+    exit 1
+fi
+
+cd ~
+
+echo "Installing snarkjs..."
+
+sudo npm install -g snarkjs
 
 echo "Initiating worker registration..."
 
@@ -70,6 +159,7 @@ fi
 sudo mkdir -p /var/lib/cyborg/worker-node/packages
 sudo mkdir -p /var/lib/cyborg/worker-node/config
 sudo mkdir -p /var/lib/cyborg/worker-node/logs
+sudo mkdir -p /var/lib/cyborg/worker-node/zk-worker-build
 sudo chown -R cyborg-user:cyborg-user /var/lib/cyborg
 sudo chmod -R 700 /var/lib/cyborg
 

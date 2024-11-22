@@ -56,7 +56,7 @@ pub async fn submit_trusted_setup_onchain(api: &OnlineClient<PolkadotConfig>, si
     -> Result<(), Box<dyn std::error::Error>> 
 {
     let json_verification_key = fs::read_to_string("./zk-worker/build/verification_key.json")?;
-    let json_pub_input = fs::read_to_string("./zk-worker/input.json")?;
+    let json_pub_input = fs::read_to_string("./zk-worker/build/input.json")?;
 
     let bytes_verification_key: Vec<u8> = json_verification_key.into_bytes();
     let bytes_pub_input: Vec<u8> = json_pub_input.into_bytes();
@@ -100,7 +100,7 @@ pub async fn submit_trusted_setup_onchain(api: &OnlineClient<PolkadotConfig>, si
 pub async fn verify_zk_onchain(api: &OnlineClient<PolkadotConfig>, signer_keypair: &Keypair, task_id: u64)
     -> Result<(), Box<dyn std::error::Error>> 
 {
-    let json_proof = fs::read_to_string("../zk-worker/build/proof.json")?;
+    let json_proof = fs::read_to_string("./zk-worker/build/proof.json")?;
 
     let bytes_proof: Vec<u8> = json_proof.into_bytes();
 
