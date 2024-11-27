@@ -1,5 +1,4 @@
-use crate::worker::{CyborgClient, WorkerData};
-use std::error::Error;
+use crate::{worker::{CyborgClient, WorkerData}, error::Result};
 use std::path::PathBuf;
 use subxt::utils::AccountId32;
 use subxt::{OnlineClient, PolkadotConfig};
@@ -10,6 +9,7 @@ use std::env;
 
 pub struct NoKeypair;
 pub struct AccountKeypair(SR25519Keypair);
+
 
 /// A builder pattern for constructing a `CyborgClient` instance.
 ///
@@ -29,7 +29,7 @@ pub struct CyborgClientBuilder<Keypair> {
 
 /// Default implementation for the `CyborgClientBuilder` when no keypair is provided.
 ///
-/// This initializes the builder with default values where node URI and IPFS URI are None
+/// This initializes the builder with default values where node URI IPFS URI, and current task are None
 /// and the keypair is set to `NoKeypair`.
 impl Default for CyborgClientBuilder<NoKeypair> {
     fn default() -> Self {
@@ -67,7 +67,7 @@ impl<Keypair> CyborgClientBuilder<Keypair> {
     pub fn keypair(
         self,
         seed: &str,
-    ) -> Result<CyborgClientBuilder<AccountKeypair>, Box<dyn Error>> {
+    ) -> Result<CyborgClientBuilder<AccountKeypair>> {
         println!("Keypair: {}", seed);
         let uri = SecretUri::from_str(seed)
             .expect("Keypair was not set correctly");
@@ -147,7 +147,7 @@ impl CyborgClientBuilder<AccountKeypair> {
     ///
     /// # Returns
     /// A `Result` that, if successful, contains the constructed `CyborgClient`.
-    pub async fn build(self) -> Result<CyborgClient, Box<dyn Error>> {
+    pub async fn build(self) -> Result<CyborgClient> {
         match &self.parachain_url {
             Some(url) => {
                 // Create an online client that connects to the specified Substrate node URL.
@@ -156,14 +156,15 @@ impl CyborgClientBuilder<AccountKeypair> {
                 Ok(CyborgClient {
                     client,
                     keypair: self.keypair.0,
-                    ipfs_client: self.ipfs_client,
-                    node_uri: self.parachain_url,
+                    ipfs_client: self.ipfs_client.expect("Failed to initialize IPFS client, cannot run worker without connection to IPFS."),
+                    node_uri: self.parachain_url.expect("Node URI was not set, cannot run worker without an endpoint connecting it to cyborg network."),
                     identity: self.identity,
                     creator: self.creator,
                     log_path: self.log_path,
                     config_path: self.config_path,
                     task_path: self.task_path,
                     task_owner_path: self.task_owner_path,
+                    current_task: None,
                 })
             }
             None => Err("No node URI provided. Please specify a node URI to connect.".into()),

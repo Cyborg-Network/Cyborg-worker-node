@@ -2,9 +2,13 @@ use std::str;
 use sysinfo::{System, MemoryRefreshKind, RefreshKind};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::{process::{Command, Stdio}, error::Error};
+use std::process::{Command, Stdio};
 
-use crate::{substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec, worker};
+use crate::{
+    substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec, 
+    worker,
+    error::Result
+};
 
 #[derive(Deserialize, Debug)]
 struct IpLocation {
@@ -18,7 +22,7 @@ pub struct Location {
     coordinates: Coordinates,
 }
 
-pub async fn gather_worker_spec() -> Result<worker::WorkerConfig, Box<dyn std::error::Error>> {
+pub async fn gather_worker_spec() -> Result<worker::WorkerConfig> {
 
     //let response = reqwest::get("https://api.ipify.org?format=json").await?.json::<worker::IpResponse>().await?;
 
@@ -78,7 +82,7 @@ fn f64_to_i32_coordinates(lat: f64, lon: f64) -> Coordinates {
     (lat_i32, lon_i32)
 }
 
-fn get_gps_location() -> Result<(f64, f64), Box<dyn Error>> {
+fn get_gps_location() -> Result<(f64, f64)> {
     // Use gpspipe to get single GPS datum
     let output = Command::new("gpspipe")
         .arg("-w") 
@@ -105,7 +109,7 @@ fn get_gps_location() -> Result<(f64, f64), Box<dyn Error>> {
     Err("Failed to extract latitude and longitude from GPS data".into())
 }
 
-async fn get_ip_location() -> Result<(f64, f64), Box<dyn Error>> {
+async fn get_ip_location() -> Result<(f64, f64)> {
     let url = "https://ipinfo.io/json";
     let response = reqwest::get(url).await?;
 
@@ -129,7 +133,7 @@ async fn get_ip_location() -> Result<(f64, f64), Box<dyn Error>> {
     }
 }
 
-pub async fn get_memory() -> Result<String, Box<dyn std::error::Error>> {
+pub async fn get_memory() -> Result<String> {
     let ps_child = Command::new("free") // `ps` command...
         .arg("-h") // with argument `axww`...
         .stdout(Stdio::piped()) // of which we will pipe the output.

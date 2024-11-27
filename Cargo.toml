@@ -18,6 +18,7 @@ chrono = "0.4.38"
 clap = { version = "4.5.3", features = ["derive"] }
 codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false }
 color-print = { version = "0.3.4" } 
+derive_more = { version = "1.0.0", features = ["from"] }
 dirs = "5.0.1"
 docify = { version = "0.2.8" }
 fs2 = "0.4.3"

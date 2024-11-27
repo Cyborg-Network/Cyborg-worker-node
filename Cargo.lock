@@ -1137,6 +1137,7 @@ dependencies = [
  "chrono",
  "clap",
  "color-print",
+ "derive_more 1.0.0",
  "dirs 5.0.1",
  "docify",
  "fs2",

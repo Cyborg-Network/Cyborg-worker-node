@@ -23,7 +23,11 @@ use crate::worker::BlockchainClient;
 use builder::CyborgClientBuilder;
 use clap::Parser;
 use cli::{Cli, Commands};
-use std::{error::Error, fs};
+use std::fs;
+mod utils;
+mod error;
+
+pub use self::error::{Error, Result};
 //use subxt::ext::jsonrpsee::core::client::error;
 
 const CONFIG_PATH: &str = "/var/lib/cyborg/worker-node/config/worker_config.json";
@@ -32,7 +36,7 @@ const TASK_PATH: &str = "/var/lib/cyborg/worker-node/task/current_task";
 const TASK_OWNER_PATH: &str = "/var/lib/cyborg/worker-node/task/task_owner.json";
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     // Match on the provided subcommand and execute the corresponding action.
@@ -71,7 +75,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             println!("Config: {config:?}");
 
             // Build the Cyborg client using the provided API URL, account seed, and IPFS URL.
-            let client = CyborgClientBuilder::default()
+            let mut client = CyborgClientBuilder::default()
                 .parachain_url(parachain_url.to_string())
                 .keypair(account_seed)?
                 .ipfs_uri().await
