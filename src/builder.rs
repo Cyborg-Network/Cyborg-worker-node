@@ -10,7 +10,6 @@ use std::env;
 pub struct NoKeypair;
 pub struct AccountKeypair(SR25519Keypair);
 
-
 /// A builder pattern for constructing a `CyborgClient` instance.
 ///
 /// This builder allows for flexible configuration of the Cyborg client,
@@ -91,19 +90,37 @@ impl<Keypair> CyborgClientBuilder<Keypair> {
     ///
     /// # Arguments
     /// * `url` - A string representing the IPFS server URL.
-    pub async fn ipfs_uri(mut self) -> Self {
-        let ipfs_url = env::var("CYBORG_WORKER_NODE_IPFS_API_URL")
-            .expect("Not able to process CYBORG_WORKER_NODE_IPFS_API_URL environment variable - please check if it is set.");
-        let ipfs_api_key = env::var("CYBORG_WORKER_NODE_IPFS_API_KEY")
-            .expect("Not able to process CYBORG_WORKER_NODE_IPFS_API_KEY environment variable - please check if it is set.");
-        let ipfs_api_secret = env::var("CYBORG_WORKER_NODE_IPFS_API_SECRET")
-            .expect("Not able to process CYBORG_WORKER_NODE_IPFS_API_SECRET environment variable - please check if it is set.");
+    pub async fn ipfs_uri(mut self, ipfs_url: Option<String>, ipfs_api_key: Option<String>, ipfs_api_secret: Option<String>) -> Self {
+        let url;
+        let key;
+        let secret;
 
-        println!("IPFS API URL: {}", ipfs_url);
-        println!("IPFS API KEY: {}", ipfs_api_key);
-        println!("IPFS API SECRET: {}", ipfs_api_secret);
+        if let Some(ipfs_url) = ipfs_url {
+            url = ipfs_url;
+        } else {
+            url = env::var("CYBORG_WORKER_NODE_IPFS_API_URL")
+                .expect("Not able to process CYBORG_WORKER_NODE_IPFS_URL environment variable - please check if it is set.");
+        }
 
-        let api = PinataApi::new(ipfs_api_key, ipfs_api_secret)
+        if let Some(ipfs_api_key) = ipfs_api_key {
+            key = ipfs_api_key;
+        } else {
+            key = env::var("CYBORG_WORKER_NODE_IPFS_API_KEY")
+                .expect("Not able to process CYBORG_WORKER_NODE_IPFS_API_KEY environment variable - please check if it is set.");
+        }
+
+        if let Some(ipfs_api_secret) = ipfs_api_secret {        
+            secret = ipfs_api_secret;
+        } else {
+            secret = env::var("CYBORG_WORKER_NODE_IPFS_API_SECRET")
+                .expect("Not able to process CYBORG_WORKER_NODE_IPFS_API_SECRET environment variable - please check if it is set.");
+        }
+
+        println!("IPFS API URL: {}", url);
+        println!("IPFS API KEY: {}", key);
+        println!("IPFS API SECRET: {}", secret);
+
+        let api = PinataApi::new(key, secret)
             .expect("Not able to create IPFS API client");
 
         let result = api.test_authentication().await;
@@ -113,8 +130,6 @@ impl<Keypair> CyborgClientBuilder<Keypair> {
         } else {
             panic!("IPFS authentication failed, therefore cannot start worker.");
         }
-
-        println!("IPFS URL: {}", ipfs_url);
 
         self.ipfs_client = Some(api);
         self

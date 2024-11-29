@@ -32,6 +32,18 @@ pub enum Commands {
         /// Account Seed for the worker registration.
         #[clap(long, value_name = "ACCOUNT_SEED")]
         account_seed: String,
+
+        /// IPFS URL for the worker.
+        #[clap(long, value_name = "IPFS_URL")]
+        ipfs_url: String,
+
+        /// IPFS API KEY for the worker.
+        #[clap(long, value_name = "IPFS_API_KEY")]
+        ipfs_api_key: String,
+
+        /// IPFS API SECRET for the worker.
+        #[clap(long, value_name = "IPFS_API_SECRET")]
+        ipfs_api_secret: String,
     },
     /// Start the worker with specified API URL and IPFS URL.
     Startmining {

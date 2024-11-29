@@ -10,6 +10,7 @@ use subxt::events::EventDetails;
 use subxt::utils::H256;
 use chrono::Local;
 use fs2::FileExt;
+use crate::substrate_interface::api::runtime_types::cyborg_primitives::worker::WorkerType;
 use crate::utils::{
     substrate_queries::{get_task, CyborgTask},
     substrate_transactions::{submit_result, submit_result_verification, submit_result_resolution},
@@ -211,6 +212,7 @@ impl BlockchainClient for CyborgClient {
         let worker_registration = substrate_interface::api::tx()
             .edge_connect()
             .register_worker(
+                WorkerType::Executable,
                 worker_specs.domain, 
                 worker_specs.latitude, 
                 worker_specs.longitude, 
@@ -425,6 +427,8 @@ impl BlockchainClient for CyborgClient {
                     } */
                     let task_cid_string = String::from_utf8(task_scheduled.task.0)?;
 
+                    self.write_log(format!("New task scheduled for worker: {}", task_cid_string).as_str());
+
                     self.prepare_for_task_execution(task_scheduled.task_id, task_cid_string, task_scheduled.task_owner)?;
 
                     match self.execute_task().await {
@@ -524,7 +528,6 @@ impl BlockchainClient for CyborgClient {
 
     async fn execute_task(&self) -> Result<()> {
         if let Some(task) = &self.current_task {
-
             self.write_log("New task assigned for execution, processing...");
 
             let task_result = self.process_task(&task.owner, &task.cid).await?;
@@ -543,7 +546,6 @@ impl BlockchainClient for CyborgClient {
 
     async fn verify_task(&self) -> Result<()> {
         if let Some(task) = &self.current_task {
-
             self.write_log("New task assigned for verification, processing...");
 
             let task_result = self.process_task(&task.owner, &task.cid).await?;
@@ -562,7 +564,6 @@ impl BlockchainClient for CyborgClient {
 
     async fn resolve_task(&self) -> Result<()> {
         if let Some(task) = &self.current_task {
-
             self.write_log("New task assigned for resolution, processing...");
 
             let task_result = self.process_task(&task.owner, &task.cid).await?;
@@ -720,6 +721,7 @@ impl BlockchainClient for CyborgClient {
     }
 
     fn write_log(&self, message: &str) {
+        println!("Log: {}", message);
         if let Ok(mut file) = OpenOptions::new().append(true).create(true).open(&self.log_path) {
         
             if let Err(e) = file.lock_exclusive() {

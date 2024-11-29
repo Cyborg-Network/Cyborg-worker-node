@@ -6,7 +6,7 @@ pub mod api {
     mod root_mod {
         pub use super::*;
     }
-    pub static PALLETS: [&str; 22usize] = [
+    pub static PALLETS: [&str; 23usize] = [
         "System",
         "ParachainSystem",
         "Timestamp",
@@ -29,6 +29,7 @@ pub mod api {
         "TaskManagement",
         "StatusAggregator",
         "Payment",
+        "ZKVerifier",
     ];
     pub static RUNTIME_APIS: [&str; 0usize] = [];
     #[doc = r" The error type that is returned when there is a runtime issue."]
@@ -94,6 +95,9 @@ pub mod api {
         }
         pub fn status_aggregator(&self) -> status_aggregator::constants::ConstantsApi {
             status_aggregator::constants::ConstantsApi
+        }
+        pub fn zk_verifier(&self) -> zk_verifier::constants::ConstantsApi {
+            zk_verifier::constants::ConstantsApi
         }
     }
     pub struct StorageApi;
@@ -161,6 +165,9 @@ pub mod api {
         pub fn payment(&self) -> payment::storage::StorageApi {
             payment::storage::StorageApi
         }
+        pub fn zk_verifier(&self) -> zk_verifier::storage::StorageApi {
+            zk_verifier::storage::StorageApi
+        }
     }
     pub struct TransactionApi;
     impl TransactionApi {
@@ -215,6 +222,9 @@ pub mod api {
         pub fn payment(&self) -> payment::calls::TransactionApi {
             payment::calls::TransactionApi
         }
+        pub fn zk_verifier(&self) -> zk_verifier::calls::TransactionApi {
+            zk_verifier::calls::TransactionApi
+        }
     }
     #[doc = r" check whether the metadata provided is aligned with this statically generated code."]
     pub fn is_codegen_valid_for(metadata: &::subxt::ext::subxt_core::Metadata) -> bool {
@@ -225,9 +235,9 @@ pub mod api {
             .hash();
         runtime_metadata_hash
             == [
-                181u8, 122u8, 220u8, 88u8, 102u8, 95u8, 18u8, 44u8, 39u8, 120u8, 248u8, 179u8,
-                94u8, 211u8, 99u8, 241u8, 44u8, 230u8, 74u8, 44u8, 118u8, 125u8, 46u8, 55u8, 180u8,
-                26u8, 204u8, 1u8, 232u8, 193u8, 214u8, 227u8,
+                246u8, 227u8, 156u8, 136u8, 202u8, 54u8, 152u8, 10u8, 152u8, 66u8, 64u8, 247u8,
+                170u8, 161u8, 26u8, 171u8, 224u8, 105u8, 55u8, 179u8, 217u8, 39u8, 252u8, 210u8,
+                64u8, 112u8, 216u8, 201u8, 217u8, 19u8, 71u8, 84u8,
             ]
     }
     pub mod system {
@@ -1386,9 +1396,9 @@ pub mod api {
                         "Events",
                         (),
                         [
-                            163u8, 71u8, 92u8, 137u8, 167u8, 100u8, 52u8, 107u8, 20u8, 218u8, 51u8,
-                            244u8, 75u8, 152u8, 148u8, 29u8, 152u8, 219u8, 81u8, 106u8, 218u8,
-                            147u8, 30u8, 218u8, 27u8, 146u8, 66u8, 86u8, 137u8, 149u8, 116u8, 86u8,
+                            239u8, 233u8, 154u8, 74u8, 80u8, 27u8, 225u8, 74u8, 51u8, 58u8, 10u8,
+                            246u8, 190u8, 208u8, 87u8, 16u8, 45u8, 34u8, 243u8, 16u8, 135u8, 151u8,
+                            39u8, 4u8, 228u8, 184u8, 208u8, 29u8, 113u8, 201u8, 239u8, 94u8,
                         ],
                     )
                 }
@@ -4987,9 +4997,10 @@ pub mod api {
                             call: ::subxt::ext::subxt_core::alloc::boxed::Box::new(call),
                         },
                         [
-                            189u8, 68u8, 8u8, 182u8, 66u8, 3u8, 122u8, 173u8, 38u8, 157u8, 94u8,
-                            218u8, 69u8, 136u8, 160u8, 201u8, 166u8, 120u8, 20u8, 133u8, 8u8,
-                            199u8, 79u8, 151u8, 172u8, 159u8, 211u8, 76u8, 95u8, 179u8, 55u8, 57u8,
+                            188u8, 246u8, 180u8, 59u8, 156u8, 50u8, 208u8, 224u8, 123u8, 82u8,
+                            183u8, 185u8, 156u8, 57u8, 121u8, 102u8, 143u8, 170u8, 42u8, 161u8,
+                            61u8, 116u8, 136u8, 28u8, 125u8, 52u8, 191u8, 201u8, 211u8, 224u8,
+                            212u8, 124u8,
                         ],
                     )
                 }
@@ -5012,9 +5023,10 @@ pub mod api {
                             weight,
                         },
                         [
-                            182u8, 1u8, 45u8, 103u8, 191u8, 239u8, 151u8, 216u8, 244u8, 162u8,
-                            141u8, 133u8, 74u8, 19u8, 79u8, 57u8, 103u8, 220u8, 77u8, 86u8, 55u8,
-                            58u8, 149u8, 217u8, 175u8, 132u8, 5u8, 26u8, 180u8, 100u8, 82u8, 191u8,
+                            144u8, 149u8, 146u8, 225u8, 14u8, 90u8, 208u8, 49u8, 54u8, 245u8, 15u8,
+                            175u8, 205u8, 221u8, 134u8, 159u8, 96u8, 170u8, 91u8, 107u8, 204u8,
+                            3u8, 227u8, 226u8, 148u8, 165u8, 99u8, 228u8, 200u8, 238u8, 130u8,
+                            10u8,
                         ],
                     )
                 }
@@ -5054,10 +5066,10 @@ pub mod api {
                             call: ::subxt::ext::subxt_core::alloc::boxed::Box::new(call),
                         },
                         [
-                            114u8, 206u8, 143u8, 242u8, 202u8, 239u8, 101u8, 117u8, 25u8, 202u8,
-                            43u8, 105u8, 29u8, 227u8, 33u8, 63u8, 14u8, 123u8, 28u8, 17u8, 242u8,
-                            238u8, 144u8, 72u8, 136u8, 212u8, 165u8, 187u8, 113u8, 99u8, 254u8,
-                            63u8,
+                            59u8, 250u8, 73u8, 236u8, 218u8, 226u8, 213u8, 83u8, 139u8, 108u8,
+                            223u8, 60u8, 151u8, 151u8, 160u8, 12u8, 243u8, 70u8, 41u8, 88u8, 249u8,
+                            130u8, 211u8, 129u8, 120u8, 61u8, 169u8, 227u8, 186u8, 214u8, 243u8,
+                            245u8,
                         ],
                     )
                 }
@@ -11851,6 +11863,7 @@ pub mod api {
                 )]
                 #[doc = "Registers a Worker with either a domain and initialize it with an inactive status."]
                 pub struct RegisterWorker {
+                    pub worker_type: register_worker::WorkerType,
                     pub domain: register_worker::Domain,
                     pub latitude: register_worker::Latitude,
                     pub longitude: register_worker::Longitude,
@@ -11860,6 +11873,7 @@ pub mod api {
                 }
                 pub mod register_worker {
                     use super::runtime_types;
+                    pub type WorkerType = runtime_types::cyborg_primitives::worker::WorkerType;
                     pub type Domain = runtime_types::bounded_collections::bounded_vec::BoundedVec<
                         ::core::primitive::u8,
                     >;
@@ -11891,10 +11905,12 @@ pub mod api {
                 #[doc = "Remove a worker from storage an deactivates it"]
                 pub struct RemoveWorker {
                     pub worker_id: remove_worker::WorkerId,
+                    pub worker_type: remove_worker::WorkerType,
                 }
                 pub mod remove_worker {
                     use super::runtime_types;
                     pub type WorkerId = ::core::primitive::u64;
+                    pub type WorkerType = runtime_types::cyborg_primitives::worker::WorkerType;
                 }
                 impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for RemoveWorker {
                     const PALLET: &'static str = "EdgeConnect";
@@ -11935,6 +11951,7 @@ pub mod api {
                 #[doc = "Registers a Worker with either a domain and initialize it with an inactive status."]
                 pub fn register_worker(
                     &self,
+                    worker_type: types::register_worker::WorkerType,
                     domain: types::register_worker::Domain,
                     latitude: types::register_worker::Latitude,
                     longitude: types::register_worker::Longitude,
@@ -11947,6 +11964,7 @@ pub mod api {
                         "EdgeConnect",
                         "register_worker",
                         types::RegisterWorker {
+                            worker_type,
                             domain,
                             latitude,
                             longitude,
@@ -11955,10 +11973,9 @@ pub mod api {
                             cpu,
                         },
                         [
-                            222u8, 43u8, 103u8, 250u8, 92u8, 119u8, 239u8, 164u8, 54u8, 31u8, 96u8,
-                            151u8, 40u8, 116u8, 198u8, 226u8, 250u8, 91u8, 241u8, 147u8, 164u8,
-                            118u8, 113u8, 111u8, 115u8, 61u8, 131u8, 88u8, 184u8, 126u8, 188u8,
-                            65u8,
+                            126u8, 20u8, 230u8, 96u8, 249u8, 183u8, 245u8, 108u8, 201u8, 234u8,
+                            115u8, 2u8, 139u8, 30u8, 62u8, 254u8, 214u8, 120u8, 7u8, 220u8, 150u8,
+                            170u8, 54u8, 32u8, 76u8, 112u8, 81u8, 36u8, 140u8, 12u8, 1u8, 23u8,
                         ],
                     )
                 }
@@ -11966,16 +11983,20 @@ pub mod api {
                 pub fn remove_worker(
                     &self,
                     worker_id: types::remove_worker::WorkerId,
+                    worker_type: types::remove_worker::WorkerType,
                 ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::RemoveWorker>
                 {
                     ::subxt::ext::subxt_core::tx::payload::StaticPayload::new_static(
                         "EdgeConnect",
                         "remove_worker",
-                        types::RemoveWorker { worker_id },
+                        types::RemoveWorker {
+                            worker_id,
+                            worker_type,
+                        },
                         [
-                            121u8, 152u8, 4u8, 73u8, 56u8, 53u8, 37u8, 90u8, 182u8, 138u8, 164u8,
-                            125u8, 180u8, 122u8, 61u8, 14u8, 71u8, 61u8, 104u8, 166u8, 235u8,
-                            243u8, 174u8, 197u8, 253u8, 8u8, 64u8, 74u8, 142u8, 84u8, 7u8, 9u8,
+                            88u8, 199u8, 100u8, 78u8, 120u8, 225u8, 43u8, 249u8, 85u8, 9u8, 187u8,
+                            115u8, 152u8, 128u8, 237u8, 167u8, 117u8, 42u8, 72u8, 177u8, 72u8,
+                            218u8, 40u8, 57u8, 89u8, 60u8, 122u8, 143u8, 186u8, 176u8, 203u8, 82u8,
                         ],
                     )
                 }
@@ -12124,6 +12145,16 @@ pub mod api {
                     pub type Param0 = ::subxt::ext::subxt_core::utils::AccountId32;
                     pub type Param1 = ::core::primitive::u64;
                 }
+                pub mod executable_workers {
+                    use super::runtime_types;
+                    pub type ExecutableWorkers = runtime_types::cyborg_primitives::worker::Worker<
+                        ::subxt::ext::subxt_core::utils::AccountId32,
+                        ::core::primitive::u32,
+                        ::core::primitive::u64,
+                    >;
+                    pub type Param0 = ::subxt::ext::subxt_core::utils::AccountId32;
+                    pub type Param1 = ::core::primitive::u64;
+                }
             }
             pub struct StorageApi;
             impl StorageApi {
@@ -12265,6 +12296,90 @@ pub mod api {
                         ],
                     )
                 }
+                #[doc = " Execultable Worker information, Storage map to keep track of detailed worker cluster information for each (account ID, worker ID) pair."]
+                pub fn executable_workers_iter(
+                    &self,
+                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
+                    (),
+                    types::executable_workers::ExecutableWorkers,
+                    (),
+                    (),
+                    ::subxt::ext::subxt_core::utils::Yes,
+                > {
+                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
+                        "EdgeConnect",
+                        "ExecutableWorkers",
+                        (),
+                        [
+                            52u8, 96u8, 231u8, 114u8, 117u8, 224u8, 44u8, 236u8, 30u8, 48u8, 212u8,
+                            198u8, 40u8, 123u8, 22u8, 182u8, 175u8, 51u8, 247u8, 13u8, 160u8, 98u8,
+                            102u8, 35u8, 241u8, 3u8, 182u8, 188u8, 38u8, 42u8, 0u8, 107u8,
+                        ],
+                    )
+                }
+                #[doc = " Execultable Worker information, Storage map to keep track of detailed worker cluster information for each (account ID, worker ID) pair."]
+                pub fn executable_workers_iter1(
+                    &self,
+                    _0: impl ::core::borrow::Borrow<types::executable_workers::Param0>,
+                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
+                    ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
+                        types::executable_workers::Param0,
+                    >,
+                    types::executable_workers::ExecutableWorkers,
+                    (),
+                    (),
+                    ::subxt::ext::subxt_core::utils::Yes,
+                > {
+                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
+                        "EdgeConnect",
+                        "ExecutableWorkers",
+                        ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
+                            _0.borrow(),
+                        ),
+                        [
+                            52u8, 96u8, 231u8, 114u8, 117u8, 224u8, 44u8, 236u8, 30u8, 48u8, 212u8,
+                            198u8, 40u8, 123u8, 22u8, 182u8, 175u8, 51u8, 247u8, 13u8, 160u8, 98u8,
+                            102u8, 35u8, 241u8, 3u8, 182u8, 188u8, 38u8, 42u8, 0u8, 107u8,
+                        ],
+                    )
+                }
+                #[doc = " Execultable Worker information, Storage map to keep track of detailed worker cluster information for each (account ID, worker ID) pair."]
+                pub fn executable_workers(
+                    &self,
+                    _0: impl ::core::borrow::Borrow<types::executable_workers::Param0>,
+                    _1: impl ::core::borrow::Borrow<types::executable_workers::Param1>,
+                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
+                    (
+                        ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
+                            types::executable_workers::Param0,
+                        >,
+                        ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
+                            types::executable_workers::Param1,
+                        >,
+                    ),
+                    types::executable_workers::ExecutableWorkers,
+                    ::subxt::ext::subxt_core::utils::Yes,
+                    (),
+                    (),
+                > {
+                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
+                        "EdgeConnect",
+                        "ExecutableWorkers",
+                        (
+                            ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
+                                _0.borrow(),
+                            ),
+                            ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
+                                _1.borrow(),
+                            ),
+                        ),
+                        [
+                            52u8, 96u8, 231u8, 114u8, 117u8, 224u8, 44u8, 236u8, 30u8, 48u8, 212u8,
+                            198u8, 40u8, 123u8, 22u8, 182u8, 175u8, 51u8, 247u8, 13u8, 160u8, 98u8,
+                            102u8, 35u8, 241u8, 3u8, 182u8, 188u8, 38u8, 42u8, 0u8, 107u8,
+                        ],
+                    )
+                }
             }
         }
     }
@@ -12299,6 +12414,7 @@ pub mod api {
                 )]
                 #[doc = "Creates a new task and assigns it to a randomly selected worker."]
                 pub struct TaskScheduler {
+                    pub task_type: task_scheduler::TaskType,
                     pub task_data: task_scheduler::TaskData,
                     pub zk_files_cid: task_scheduler::ZkFilesCid,
                     pub worker_owner: task_scheduler::WorkerOwner,
@@ -12307,13 +12423,15 @@ pub mod api {
                 }
                 pub mod task_scheduler {
                     use super::runtime_types;
+                    pub type TaskType = runtime_types::cyborg_primitives::task::TaskType;
                     pub type TaskData = runtime_types::bounded_collections::bounded_vec::BoundedVec<
                         ::core::primitive::u8,
                     >;
-                    pub type ZkFilesCid =
+                    pub type ZkFilesCid = ::core::option::Option<
                         runtime_types::bounded_collections::bounded_vec::BoundedVec<
                             ::core::primitive::u8,
-                        >;
+                        >,
+                    >;
                     pub type WorkerOwner = ::subxt::ext::subxt_core::utils::AccountId32;
                     pub type WorkerId = ::core::primitive::u64;
                     pub type ComputeHoursDeposit = ::core::option::Option<::core::primitive::u32>;
@@ -12420,6 +12538,7 @@ pub mod api {
                 #[doc = "Creates a new task and assigns it to a randomly selected worker."]
                 pub fn task_scheduler(
                     &self,
+                    task_type: types::task_scheduler::TaskType,
                     task_data: types::task_scheduler::TaskData,
                     zk_files_cid: types::task_scheduler::ZkFilesCid,
                     worker_owner: types::task_scheduler::WorkerOwner,
@@ -12431,6 +12550,7 @@ pub mod api {
                         "TaskManagement",
                         "task_scheduler",
                         types::TaskScheduler {
+                            task_type,
                             task_data,
                             zk_files_cid,
                             worker_owner,
@@ -12438,10 +12558,10 @@ pub mod api {
                             compute_hours_deposit,
                         },
                         [
-                            58u8, 248u8, 183u8, 100u8, 167u8, 244u8, 178u8, 36u8, 230u8, 169u8,
-                            213u8, 124u8, 22u8, 251u8, 199u8, 2u8, 100u8, 47u8, 209u8, 118u8,
-                            138u8, 125u8, 59u8, 138u8, 61u8, 231u8, 13u8, 75u8, 195u8, 6u8, 155u8,
-                            34u8,
+                            19u8, 117u8, 54u8, 46u8, 115u8, 8u8, 174u8, 243u8, 140u8, 242u8, 183u8,
+                            211u8, 142u8, 122u8, 187u8, 39u8, 87u8, 215u8, 100u8, 12u8, 45u8,
+                            230u8, 197u8, 207u8, 186u8, 236u8, 35u8, 129u8, 176u8, 94u8, 108u8,
+                            127u8,
                         ],
                     )
                 }
@@ -12533,6 +12653,7 @@ pub mod api {
             #[doc = "A task has been scheduled and assigned to a worker."]
             pub struct TaskScheduled {
                 pub assigned_worker: task_scheduled::AssignedWorker,
+                pub task_type: task_scheduled::TaskType,
                 pub task_owner: task_scheduled::TaskOwner,
                 pub task_id: task_scheduled::TaskId,
                 pub task: task_scheduled::Task,
@@ -12544,13 +12665,16 @@ pub mod api {
                     ::subxt::ext::subxt_core::utils::AccountId32,
                     ::core::primitive::u64,
                 );
+                pub type TaskType = runtime_types::cyborg_primitives::task::TaskType;
                 pub type TaskOwner = ::subxt::ext::subxt_core::utils::AccountId32;
                 pub type TaskId = ::core::primitive::u64;
                 pub type Task = runtime_types::bounded_collections::bounded_vec::BoundedVec<
                     ::core::primitive::u8,
                 >;
-                pub type ZkFilesCid = runtime_types::bounded_collections::bounded_vec::BoundedVec<
-                    ::core::primitive::u8,
+                pub type ZkFilesCid = ::core::option::Option<
+                    runtime_types::bounded_collections::bounded_vec::BoundedVec<
+                        ::core::primitive::u8,
+                    >,
                 >;
             }
             impl ::subxt::ext::subxt_core::events::StaticEvent for TaskScheduled {
@@ -12915,9 +13039,10 @@ pub mod api {
                         "Tasks",
                         (),
                         [
-                            247u8, 74u8, 176u8, 120u8, 87u8, 6u8, 138u8, 182u8, 55u8, 227u8, 69u8,
-                            51u8, 58u8, 72u8, 59u8, 83u8, 110u8, 129u8, 23u8, 199u8, 112u8, 34u8,
-                            215u8, 127u8, 141u8, 37u8, 58u8, 132u8, 64u8, 141u8, 132u8, 162u8,
+                            178u8, 186u8, 252u8, 119u8, 221u8, 251u8, 118u8, 41u8, 128u8, 176u8,
+                            3u8, 31u8, 95u8, 50u8, 114u8, 73u8, 93u8, 104u8, 28u8, 44u8, 71u8,
+                            72u8, 122u8, 190u8, 192u8, 121u8, 94u8, 169u8, 162u8, 75u8, 168u8,
+                            207u8,
                         ],
                     )
                 }
@@ -12941,9 +13066,10 @@ pub mod api {
                             _0.borrow(),
                         ),
                         [
-                            247u8, 74u8, 176u8, 120u8, 87u8, 6u8, 138u8, 182u8, 55u8, 227u8, 69u8,
-                            51u8, 58u8, 72u8, 59u8, 83u8, 110u8, 129u8, 23u8, 199u8, 112u8, 34u8,
-                            215u8, 127u8, 141u8, 37u8, 58u8, 132u8, 64u8, 141u8, 132u8, 162u8,
+                            178u8, 186u8, 252u8, 119u8, 221u8, 251u8, 118u8, 41u8, 128u8, 176u8,
+                            3u8, 31u8, 95u8, 50u8, 114u8, 73u8, 93u8, 104u8, 28u8, 44u8, 71u8,
+                            72u8, 122u8, 190u8, 192u8, 121u8, 94u8, 169u8, 162u8, 75u8, 168u8,
+                            207u8,
                         ],
                     )
                 }
@@ -14000,6 +14126,434 @@ pub mod api {
             }
         }
     }
+    pub mod zk_verifier {
+        use super::root_mod;
+        use super::runtime_types;
+        #[doc = "The `Error` enum of this pallet."]
+        pub type Error = runtime_types::pallet_zk_verifier::pallet::Error;
+        #[doc = "Contains a variant per dispatchable extrinsic that this pallet has."]
+        pub type Call = runtime_types::pallet_zk_verifier::pallet::Call;
+        pub mod calls {
+            use super::root_mod;
+            use super::runtime_types;
+            type DispatchError = runtime_types::sp_runtime::DispatchError;
+            pub mod types {
+                use super::runtime_types;
+                #[derive(
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                    Debug,
+                )]
+                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+                #[codec(dumb_trait_bound)]
+                #[decode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
+                )]
+                #[encode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
+                )]
+                #[doc = "Store a verification key."]
+                pub struct SetupVerification {
+                    pub task_id: setup_verification::TaskId,
+                    pub pub_input: setup_verification::PubInput,
+                    pub vec_vk: setup_verification::VecVk,
+                }
+                pub mod setup_verification {
+                    use super::runtime_types;
+                    pub type TaskId = ::core::primitive::u64;
+                    pub type PubInput =
+                        ::subxt::ext::subxt_core::alloc::vec::Vec<::core::primitive::u8>;
+                    pub type VecVk =
+                        ::subxt::ext::subxt_core::alloc::vec::Vec<::core::primitive::u8>;
+                }
+                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for SetupVerification {
+                    const PALLET: &'static str = "ZKVerifier";
+                    const CALL: &'static str = "setup_verification";
+                }
+                #[derive(
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                    Debug,
+                )]
+                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+                #[codec(dumb_trait_bound)]
+                #[decode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
+                )]
+                #[encode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
+                )]
+                #[doc = "Verify a proof."]
+                pub struct Verify {
+                    pub task_id: verify::TaskId,
+                    pub vec_proof: verify::VecProof,
+                }
+                pub mod verify {
+                    use super::runtime_types;
+                    pub type TaskId = ::core::primitive::u64;
+                    pub type VecProof =
+                        ::subxt::ext::subxt_core::alloc::vec::Vec<::core::primitive::u8>;
+                }
+                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for Verify {
+                    const PALLET: &'static str = "ZKVerifier";
+                    const CALL: &'static str = "verify";
+                }
+            }
+            pub struct TransactionApi;
+            impl TransactionApi {
+                #[doc = "Store a verification key."]
+                pub fn setup_verification(
+                    &self,
+                    task_id: types::setup_verification::TaskId,
+                    pub_input: types::setup_verification::PubInput,
+                    vec_vk: types::setup_verification::VecVk,
+                ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::SetupVerification>
+                {
+                    ::subxt::ext::subxt_core::tx::payload::StaticPayload::new_static(
+                        "ZKVerifier",
+                        "setup_verification",
+                        types::SetupVerification {
+                            task_id,
+                            pub_input,
+                            vec_vk,
+                        },
+                        [
+                            177u8, 72u8, 115u8, 185u8, 50u8, 165u8, 218u8, 8u8, 159u8, 96u8, 59u8,
+                            158u8, 129u8, 196u8, 31u8, 230u8, 81u8, 199u8, 159u8, 65u8, 236u8,
+                            72u8, 45u8, 102u8, 36u8, 73u8, 121u8, 96u8, 36u8, 51u8, 180u8, 35u8,
+                        ],
+                    )
+                }
+                #[doc = "Verify a proof."]
+                pub fn verify(
+                    &self,
+                    task_id: types::verify::TaskId,
+                    vec_proof: types::verify::VecProof,
+                ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::Verify>
+                {
+                    ::subxt::ext::subxt_core::tx::payload::StaticPayload::new_static(
+                        "ZKVerifier",
+                        "verify",
+                        types::Verify { task_id, vec_proof },
+                        [
+                            146u8, 41u8, 132u8, 126u8, 27u8, 213u8, 107u8, 110u8, 104u8, 73u8,
+                            138u8, 70u8, 212u8, 11u8, 29u8, 97u8, 64u8, 96u8, 113u8, 3u8, 23u8,
+                            95u8, 160u8, 26u8, 56u8, 11u8, 67u8, 132u8, 205u8, 239u8, 96u8, 25u8,
+                        ],
+                    )
+                }
+            }
+        }
+        #[doc = "The `Event` enum of this pallet"]
+        pub type Event = runtime_types::pallet_zk_verifier::pallet::Event;
+        pub mod events {
+            use super::runtime_types;
+            #[derive(
+                :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                Debug,
+            )]
+            # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+            #[codec(dumb_trait_bound)]
+            #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
+            #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
+            pub struct VerificationSetupCompleted;
+            impl ::subxt::ext::subxt_core::events::StaticEvent for VerificationSetupCompleted {
+                const PALLET: &'static str = "ZKVerifier";
+                const EVENT: &'static str = "VerificationSetupCompleted";
+            }
+            #[derive(
+                :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                Debug,
+            )]
+            # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+            #[codec(dumb_trait_bound)]
+            #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
+            #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
+            pub struct VerificationProofSet;
+            impl ::subxt::ext::subxt_core::events::StaticEvent for VerificationProofSet {
+                const PALLET: &'static str = "ZKVerifier";
+                const EVENT: &'static str = "VerificationProofSet";
+            }
+            #[derive(
+                :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                Debug,
+            )]
+            # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+            #[codec(dumb_trait_bound)]
+            #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
+            #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
+            pub struct VerificationSuccess {
+                pub who: verification_success::Who,
+            }
+            pub mod verification_success {
+                use super::runtime_types;
+                pub type Who = ::subxt::ext::subxt_core::utils::AccountId32;
+            }
+            impl ::subxt::ext::subxt_core::events::StaticEvent for VerificationSuccess {
+                const PALLET: &'static str = "ZKVerifier";
+                const EVENT: &'static str = "VerificationSuccess";
+            }
+            #[derive(
+                :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                Debug,
+            )]
+            # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+            #[codec(dumb_trait_bound)]
+            #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
+            #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
+            pub struct VerificationFailed;
+            impl ::subxt::ext::subxt_core::events::StaticEvent for VerificationFailed {
+                const PALLET: &'static str = "ZKVerifier";
+                const EVENT: &'static str = "VerificationFailed";
+            }
+        }
+        pub mod storage {
+            use super::runtime_types;
+            pub mod types {
+                use super::runtime_types;
+                pub mod public_input_storage {
+                    use super::runtime_types;
+                    pub type PublicInputStorage =
+                        runtime_types::bounded_collections::bounded_vec::BoundedVec<
+                            ::core::primitive::u8,
+                        >;
+                    pub type Param0 = ::core::primitive::u64;
+                }
+                pub mod proof_storage {
+                    use super::runtime_types;
+                    pub type ProofStorage =
+                        runtime_types::bounded_collections::bounded_vec::BoundedVec<
+                            ::core::primitive::u8,
+                        >;
+                    pub type Param0 = ::core::primitive::u64;
+                }
+                pub mod verification_key_storage {
+                    use super::runtime_types;
+                    pub type VerificationKeyStorage =
+                        runtime_types::bounded_collections::bounded_vec::BoundedVec<
+                            ::core::primitive::u8,
+                        >;
+                    pub type Param0 = ::core::primitive::u64;
+                }
+            }
+            pub struct StorageApi;
+            impl StorageApi {
+                #[doc = " Storing a public input."]
+                pub fn public_input_storage_iter(
+                    &self,
+                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
+                    (),
+                    types::public_input_storage::PublicInputStorage,
+                    (),
+                    (),
+                    ::subxt::ext::subxt_core::utils::Yes,
+                > {
+                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
+                        "ZKVerifier",
+                        "PublicInputStorage",
+                        (),
+                        [
+                            249u8, 4u8, 35u8, 14u8, 165u8, 80u8, 102u8, 240u8, 80u8, 149u8, 141u8,
+                            143u8, 38u8, 181u8, 39u8, 36u8, 171u8, 156u8, 209u8, 244u8, 108u8,
+                            69u8, 185u8, 119u8, 109u8, 111u8, 97u8, 153u8, 5u8, 249u8, 2u8, 63u8,
+                        ],
+                    )
+                }
+                #[doc = " Storing a public input."]
+                pub fn public_input_storage(
+                    &self,
+                    _0: impl ::core::borrow::Borrow<types::public_input_storage::Param0>,
+                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
+                    ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
+                        types::public_input_storage::Param0,
+                    >,
+                    types::public_input_storage::PublicInputStorage,
+                    ::subxt::ext::subxt_core::utils::Yes,
+                    (),
+                    (),
+                > {
+                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
+                        "ZKVerifier",
+                        "PublicInputStorage",
+                        ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
+                            _0.borrow(),
+                        ),
+                        [
+                            249u8, 4u8, 35u8, 14u8, 165u8, 80u8, 102u8, 240u8, 80u8, 149u8, 141u8,
+                            143u8, 38u8, 181u8, 39u8, 36u8, 171u8, 156u8, 209u8, 244u8, 108u8,
+                            69u8, 185u8, 119u8, 109u8, 111u8, 97u8, 153u8, 5u8, 249u8, 2u8, 63u8,
+                        ],
+                    )
+                }
+                #[doc = " Storing a proof."]
+                pub fn proof_storage_iter(
+                    &self,
+                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
+                    (),
+                    types::proof_storage::ProofStorage,
+                    (),
+                    (),
+                    ::subxt::ext::subxt_core::utils::Yes,
+                > {
+                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
+                        "ZKVerifier",
+                        "ProofStorage",
+                        (),
+                        [
+                            74u8, 59u8, 210u8, 179u8, 82u8, 140u8, 173u8, 39u8, 1u8, 238u8, 39u8,
+                            31u8, 39u8, 89u8, 58u8, 232u8, 191u8, 41u8, 184u8, 100u8, 125u8, 109u8,
+                            252u8, 129u8, 128u8, 251u8, 12u8, 172u8, 100u8, 159u8, 124u8, 179u8,
+                        ],
+                    )
+                }
+                #[doc = " Storing a proof."]
+                pub fn proof_storage(
+                    &self,
+                    _0: impl ::core::borrow::Borrow<types::proof_storage::Param0>,
+                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
+                    ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
+                        types::proof_storage::Param0,
+                    >,
+                    types::proof_storage::ProofStorage,
+                    ::subxt::ext::subxt_core::utils::Yes,
+                    (),
+                    (),
+                > {
+                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
+                        "ZKVerifier",
+                        "ProofStorage",
+                        ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
+                            _0.borrow(),
+                        ),
+                        [
+                            74u8, 59u8, 210u8, 179u8, 82u8, 140u8, 173u8, 39u8, 1u8, 238u8, 39u8,
+                            31u8, 39u8, 89u8, 58u8, 232u8, 191u8, 41u8, 184u8, 100u8, 125u8, 109u8,
+                            252u8, 129u8, 128u8, 251u8, 12u8, 172u8, 100u8, 159u8, 124u8, 179u8,
+                        ],
+                    )
+                }
+                #[doc = " Storing a verification key."]
+                pub fn verification_key_storage_iter(
+                    &self,
+                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
+                    (),
+                    types::verification_key_storage::VerificationKeyStorage,
+                    (),
+                    (),
+                    ::subxt::ext::subxt_core::utils::Yes,
+                > {
+                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
+                        "ZKVerifier",
+                        "VerificationKeyStorage",
+                        (),
+                        [
+                            165u8, 213u8, 217u8, 59u8, 220u8, 114u8, 59u8, 94u8, 35u8, 150u8, 51u8,
+                            15u8, 230u8, 85u8, 96u8, 109u8, 196u8, 249u8, 12u8, 28u8, 240u8, 112u8,
+                            178u8, 244u8, 215u8, 159u8, 225u8, 142u8, 131u8, 193u8, 37u8, 170u8,
+                        ],
+                    )
+                }
+                #[doc = " Storing a verification key."]
+                pub fn verification_key_storage(
+                    &self,
+                    _0: impl ::core::borrow::Borrow<types::verification_key_storage::Param0>,
+                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
+                    ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
+                        types::verification_key_storage::Param0,
+                    >,
+                    types::verification_key_storage::VerificationKeyStorage,
+                    ::subxt::ext::subxt_core::utils::Yes,
+                    (),
+                    (),
+                > {
+                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
+                        "ZKVerifier",
+                        "VerificationKeyStorage",
+                        ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
+                            _0.borrow(),
+                        ),
+                        [
+                            165u8, 213u8, 217u8, 59u8, 220u8, 114u8, 59u8, 94u8, 35u8, 150u8, 51u8,
+                            15u8, 230u8, 85u8, 96u8, 109u8, 196u8, 249u8, 12u8, 28u8, 240u8, 112u8,
+                            178u8, 244u8, 215u8, 159u8, 225u8, 142u8, 131u8, 193u8, 37u8, 170u8,
+                        ],
+                    )
+                }
+            }
+        }
+        pub mod constants {
+            use super::runtime_types;
+            pub struct ConstantsApi;
+            impl ConstantsApi {
+                pub fn max_public_inputs_length(
+                    &self,
+                ) -> ::subxt::ext::subxt_core::constants::address::StaticAddress<
+                    ::core::primitive::u32,
+                > {
+                    ::subxt::ext::subxt_core::constants::address::StaticAddress::new_static(
+                        "ZKVerifier",
+                        "MaxPublicInputsLength",
+                        [
+                            98u8, 252u8, 116u8, 72u8, 26u8, 180u8, 225u8, 83u8, 200u8, 157u8,
+                            125u8, 151u8, 53u8, 76u8, 168u8, 26u8, 10u8, 9u8, 98u8, 68u8, 9u8,
+                            178u8, 197u8, 113u8, 31u8, 79u8, 200u8, 90u8, 203u8, 100u8, 41u8,
+                            145u8,
+                        ],
+                    )
+                }
+                #[doc = " The maximum length of the proof."]
+                pub fn max_proof_length(
+                    &self,
+                ) -> ::subxt::ext::subxt_core::constants::address::StaticAddress<
+                    ::core::primitive::u32,
+                > {
+                    ::subxt::ext::subxt_core::constants::address::StaticAddress::new_static(
+                        "ZKVerifier",
+                        "MaxProofLength",
+                        [
+                            98u8, 252u8, 116u8, 72u8, 26u8, 180u8, 225u8, 83u8, 200u8, 157u8,
+                            125u8, 151u8, 53u8, 76u8, 168u8, 26u8, 10u8, 9u8, 98u8, 68u8, 9u8,
+                            178u8, 197u8, 113u8, 31u8, 79u8, 200u8, 90u8, 203u8, 100u8, 41u8,
+                            145u8,
+                        ],
+                    )
+                }
+                #[doc = " The maximum length of the verification key."]
+                pub fn max_verification_key_length(
+                    &self,
+                ) -> ::subxt::ext::subxt_core::constants::address::StaticAddress<
+                    ::core::primitive::u32,
+                > {
+                    ::subxt::ext::subxt_core::constants::address::StaticAddress::new_static(
+                        "ZKVerifier",
+                        "MaxVerificationKeyLength",
+                        [
+                            98u8, 252u8, 116u8, 72u8, 26u8, 180u8, 225u8, 83u8, 200u8, 157u8,
+                            125u8, 151u8, 53u8, 76u8, 168u8, 26u8, 10u8, 9u8, 98u8, 68u8, 9u8,
+                            178u8, 197u8, 113u8, 31u8, 79u8, 200u8, 90u8, 203u8, 100u8, 41u8,
+                            145u8,
+                        ],
+                    )
+                }
+            }
+        }
+    }
     pub mod runtime_types {
         use super::runtime_types;
         pub mod bounded_collections {
@@ -14631,8 +15185,10 @@ pub mod api {
                     pub metadata: runtime_types::bounded_collections::bounded_vec::BoundedVec<
                         ::core::primitive::u8,
                     >,
-                    pub zk_files_cid: runtime_types::bounded_collections::bounded_vec::BoundedVec<
-                        ::core::primitive::u8,
+                    pub zk_files_cid: ::core::option::Option<
+                        runtime_types::bounded_collections::bounded_vec::BoundedVec<
+                            ::core::primitive::u8,
+                        >,
                     >,
                     pub time_elapsed: ::core::option::Option<_1>,
                     pub average_cpu_percentage_use: ::core::option::Option<::core::primitive::u8>,
@@ -14688,6 +15244,10 @@ pub mod api {
                 pub enum TaskType {
                     #[codec(index = 0)]
                     Docker,
+                    #[codec(index = 1)]
+                    Executable,
+                    #[codec(index = 2)]
+                    ZK,
                 }
                 #[derive(
                     :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -14845,6 +15405,27 @@ pub mod api {
                     #[codec(index = 2)]
                     Inactive,
                 }
+                #[derive(
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                    Debug,
+                )]
+                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+                #[codec(dumb_trait_bound)]
+                #[decode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
+                )]
+                #[encode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
+                )]
+                pub enum WorkerType {
+                    #[codec(index = 0)]
+                    Docker,
+                    #[codec(index = 1)]
+                    Executable,
+                }
             }
         }
         pub mod cyborg_runtime {
@@ -14907,6 +15488,8 @@ pub mod api {
                 TaskManagement(runtime_types::pallet_task_management::pallet::Call),
                 #[codec(index = 45)]
                 Payment(runtime_types::pallet_payment::pallet::Call),
+                #[codec(index = 46)]
+                ZKVerifier(runtime_types::pallet_zk_verifier::pallet::Call),
             }
             #[derive(
                 :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -14948,6 +15531,8 @@ pub mod api {
                 TaskManagement(runtime_types::pallet_task_management::pallet::Error),
                 #[codec(index = 45)]
                 Payment(runtime_types::pallet_payment::pallet::Error),
+                #[codec(index = 46)]
+                ZKVerifier(runtime_types::pallet_zk_verifier::pallet::Error),
             }
             #[derive(
                 :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -14995,6 +15580,8 @@ pub mod api {
                 StatusAggregator(runtime_types::pallet_status_aggregator::pallet::Event),
                 #[codec(index = 45)]
                 Payment(runtime_types::pallet_payment::pallet::Event),
+                #[codec(index = 46)]
+                ZKVerifier(runtime_types::pallet_zk_verifier::pallet::Event),
             }
             #[derive(
                 :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -16654,6 +17241,7 @@ pub mod api {
                     #[codec(index = 0)]
                     #[doc = "Registers a Worker with either a domain and initialize it with an inactive status."]
                     register_worker {
+                        worker_type: runtime_types::cyborg_primitives::worker::WorkerType,
                         domain: runtime_types::bounded_collections::bounded_vec::BoundedVec<
                             ::core::primitive::u8,
                         >,
@@ -16665,7 +17253,10 @@ pub mod api {
                     },
                     #[codec(index = 1)]
                     #[doc = "Remove a worker from storage an deactivates it"]
-                    remove_worker { worker_id: ::core::primitive::u64 },
+                    remove_worker {
+                        worker_id: ::core::primitive::u64,
+                        worker_type: runtime_types::cyborg_primitives::worker::WorkerType,
+                    },
                     #[codec(index = 2)]
                     #[doc = "Switches the visibility of a worker between active and inactive."]
                     toggle_worker_visibility {
@@ -17575,11 +18166,14 @@ pub mod api {
                     #[codec(index = 0)]
                     #[doc = "Creates a new task and assigns it to a randomly selected worker."]
                     task_scheduler {
+                        task_type: runtime_types::cyborg_primitives::task::TaskType,
                         task_data: runtime_types::bounded_collections::bounded_vec::BoundedVec<
                             ::core::primitive::u8,
                         >,
-                        zk_files_cid: runtime_types::bounded_collections::bounded_vec::BoundedVec<
-                            ::core::primitive::u8,
+                        zk_files_cid: ::core::option::Option<
+                            runtime_types::bounded_collections::bounded_vec::BoundedVec<
+                                ::core::primitive::u8,
+                            >,
                         >,
                         worker_owner: ::subxt::ext::subxt_core::utils::AccountId32,
                         worker_id: ::core::primitive::u64,
@@ -17662,6 +18256,9 @@ pub mod api {
                     #[codec(index = 11)]
                     #[doc = "The user has insufficient compute hours balance for the requested deposit."]
                     InsufficientComputeHours,
+                    #[codec(index = 12)]
+                    #[doc = "The user submitted a ZK task, but has not provided the required files for proof generation"]
+                    ZkFilesMissing,
                 }
                 #[derive(
                     :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -17688,13 +18285,16 @@ pub mod api {
                             ::subxt::ext::subxt_core::utils::AccountId32,
                             ::core::primitive::u64,
                         ),
+                        task_type: runtime_types::cyborg_primitives::task::TaskType,
                         task_owner: ::subxt::ext::subxt_core::utils::AccountId32,
                         task_id: ::core::primitive::u64,
                         task: runtime_types::bounded_collections::bounded_vec::BoundedVec<
                             ::core::primitive::u8,
                         >,
-                        zk_files_cid: runtime_types::bounded_collections::bounded_vec::BoundedVec<
-                            ::core::primitive::u8,
+                        zk_files_cid: ::core::option::Option<
+                            runtime_types::bounded_collections::bounded_vec::BoundedVec<
+                                ::core::primitive::u8,
+                            >,
                         >,
                     },
                     #[codec(index = 1)]
@@ -18255,6 +18855,131 @@ pub mod api {
                     ),
                     #[codec(index = 3)]
                     MigrateAndNotifyOldTargets,
+                }
+            }
+        }
+        pub mod pallet_zk_verifier {
+            use super::runtime_types;
+            pub mod pallet {
+                use super::runtime_types;
+                #[derive(
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                    Debug,
+                )]
+                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+                #[codec(dumb_trait_bound)]
+                #[decode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
+                )]
+                #[encode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
+                )]
+                #[doc = "Contains a variant per dispatchable extrinsic that this pallet has."]
+                pub enum Call {
+                    #[codec(index = 0)]
+                    #[doc = "Store a verification key."]
+                    setup_verification {
+                        task_id: ::core::primitive::u64,
+                        pub_input: ::subxt::ext::subxt_core::alloc::vec::Vec<::core::primitive::u8>,
+                        vec_vk: ::subxt::ext::subxt_core::alloc::vec::Vec<::core::primitive::u8>,
+                    },
+                    #[codec(index = 1)]
+                    #[doc = "Verify a proof."]
+                    verify {
+                        task_id: ::core::primitive::u64,
+                        vec_proof: ::subxt::ext::subxt_core::alloc::vec::Vec<::core::primitive::u8>,
+                    },
+                }
+                #[derive(
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                    Debug,
+                )]
+                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+                #[codec(dumb_trait_bound)]
+                #[decode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
+                )]
+                #[encode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
+                )]
+                #[doc = "The `Error` enum of this pallet."]
+                pub enum Error {
+                    #[codec(index = 0)]
+                    #[doc = "Public inputs mismatch"]
+                    PublicInputsMismatch,
+                    #[codec(index = 1)]
+                    #[doc = "Public inputs vector is to long."]
+                    TooLongPublicInputs,
+                    #[codec(index = 2)]
+                    #[doc = "The verification key is to long."]
+                    TooLongVerificationKey,
+                    #[codec(index = 3)]
+                    #[doc = "The proof is too long."]
+                    TooLongProof,
+                    #[codec(index = 4)]
+                    #[doc = "The proof is too short."]
+                    ProofIsEmpty,
+                    #[codec(index = 5)]
+                    #[doc = "Verification key, not set."]
+                    VerificationKeyIsNotSet,
+                    #[codec(index = 6)]
+                    #[doc = "Malformed key"]
+                    MalformedVerificationKey,
+                    #[codec(index = 7)]
+                    #[doc = "Malformed proof"]
+                    MalformedProof,
+                    #[codec(index = 8)]
+                    #[doc = "Malformed public inputs"]
+                    MalformedPublicInputs,
+                    #[codec(index = 9)]
+                    #[doc = "Curve is not supported"]
+                    NotSupportedCurve,
+                    #[codec(index = 10)]
+                    #[doc = "Protocol is not supported"]
+                    NotSupportedProtocol,
+                    #[codec(index = 11)]
+                    #[doc = "There was error during proof verification"]
+                    ProofVerificationError,
+                    #[codec(index = 12)]
+                    #[doc = "Proof creation error"]
+                    ProofCreationError,
+                    #[codec(index = 13)]
+                    #[doc = "Verification Key creation error"]
+                    VerificationKeyCreationError,
+                }
+                #[derive(
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                    Debug,
+                )]
+                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+                #[codec(dumb_trait_bound)]
+                #[decode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
+                )]
+                #[encode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
+                )]
+                #[doc = "The `Event` enum of this pallet"]
+                pub enum Event {
+                    #[codec(index = 0)]
+                    VerificationSetupCompleted,
+                    #[codec(index = 1)]
+                    VerificationProofSet,
+                    #[codec(index = 2)]
+                    VerificationSuccess {
+                        who: ::subxt::ext::subxt_core::utils::AccountId32,
+                    },
+                    #[codec(index = 3)]
+                    VerificationFailed,
                 }
             }
         }

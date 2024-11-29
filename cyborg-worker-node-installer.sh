@@ -18,7 +18,6 @@ WORKER_BINARY_PATH="/usr/local/bin/$WORKER_BINARY_NAME"
 WORKER_SERVICE_FILE="/etc/systemd/system/$WORKER_BINARY_NAME.service"
 WORKER_DBUS_FILE="/etc/dbus-1/system.d/com.cyborg.CyborgAgent.conf"
 
-
 echo "Downloading the worker node from $WORKER_BINARY_URL..."
 echo "Downloading the agent from $AGENT_BINARY_URL..."
 curl -L -o $WORKER_BINARY_NAME $WORKER_BINARY_URL
@@ -45,24 +44,6 @@ read -p "Please enter the API key of the IPFS API you want to use: " IPFS_KEY
 
 read -p "Please enter the API secret of the IPFS API you want to use: " IPFS_SECRET
 
-export CYBORG_WORKER_NODE_IPFS_API_URL="$IPFS_URL"
-export CYBORG_WORKER_NODE_IPFS_API_KEY="$IPFS_KEY"
-export CYBORG_WORKER_NODE_IPFS_API_SECRET="$IPFS_SECRET"
-
-echo $CYBORG_WORKER_NODE_IPFS_API_URL
-echo $CYBORG_WORKER_NODE_IPFS_API_KEY
-echo $CYBORG_WORKER_NODE_IPFS_API_SECRET
-
-sed -i '/CYBORG_WORKER_NODE_IPFS_API_URL/d' ~/.bashrc
-sed -i '/CYBORG_WORKER_NODE_IPFS_API_KEY/d' ~/.bashrc
-sed -i '/CYBORG_WORKER_NODE_IPFS_API_SECRET/d' ~/.bashrc
-
-echo "export CYBORG_WORKER_NODE_IPFS_API_URL=\"$IPFS_URL\"" >> ~/.bashrc
-echo "export CYBORG_WORKER_NODE_IPFS_API_KEY=\"$IPFS_KEY\"" >> ~/.bashrc
-echo "export CYBORG_WORKER_NODE_IPFS_API_SECRET=\"$IPFS_SECRET\"" >> ~/.bashrc
-
-source ~/.bashrc
-
 if ! id "cyborg-user" &>/dev/null; then
     sudo useradd -r -s /bin/false cyborg-user
 fi
@@ -73,7 +54,7 @@ sudo mkdir -p /var/lib/cyborg/worker-node/logs
 sudo chown -R cyborg-user:cyborg-user /var/lib/cyborg
 sudo chmod -R 700 /var/lib/cyborg
 
-sudo $WORKER_BINARY_PATH registration --parachain-url "$PARACHAIN_URL" --account-seed "$ACCOUNT_SEED"
+sudo $WORKER_BINARY_PATH registration --parachain-url "$PARACHAIN_URL" --account-seed "$ACCOUNT_SEED" --ipfs-url "$IPFS_URL" --ipfs-api-key "$IPFS_KEY" --ipfs-api-secret "$IPFS_SECRET"
 
 echo "Creating dbus configuration file for worker node..."
 sudo bash -c "cat > $WORKER_DBUS_FILE" << EOL
@@ -145,7 +126,6 @@ sudo systemctl start $AGENT_BINARY_NAME
 
 sudo systemctl status $WORKER_BINARY_NAME --no-pager
 sudo systemctl status $AGENT_BINARY_NAME --no-pager
-
 
 echo "Cyborg Worker Node and Agent are installed and running. Binaries are located at $WORKER_BINARY_PATH and $AGENT_BINARY_PATH. Now attempting to open Port $HTTP_PORT and $WS_PORT to enable communication with Cyborg Connect."
 
