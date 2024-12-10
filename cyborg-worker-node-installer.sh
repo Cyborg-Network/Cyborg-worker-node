@@ -34,15 +34,11 @@ sudo mv $AGENT_BINARY_NAME $AGENT_BINARY_PATH
 
 echo "Initiating worker registration..."
 
-read -p "Please provide an endpoint to the parachain that the worker will be registered on: " PARACHAIN_URL
-
-read -p "Please enter the seed phrase of the account that will be managing the worker node: " ACCOUNT_SEED
-
-read -p "Please enter the URL of the IPFS API you want to use: " IPFS_URL
-
-read -p "Please enter the API key of the IPFS API you want to use: " IPFS_KEY
-
-read -p "Please enter the API secret of the IPFS API you want to use: " IPFS_SECRET
+PARACHAIN_URL=${PARACHAIN_URL:-$(read -p "Please provide an endpoint to the parachain that the worker will be registered on: " && echo $REPLY)}
+ACCOUNT_SEED=${ACCOUNT_SEED:-$(read -p "Please enter the seed phrase of the account that will be managing the worker node: " && echo $REPLY)}
+IPFS_URL=${IPFS_URL:-$(read -p "Please enter the URL of the IPFS API you want to use: " && echo $REPLY)}
+IPFS_KEY=${IPFS_KEY:-$(read -p "Please enter the API key of the IPFS API you want to use: " && echo $REPLY)}
+IPFS_SECRET=${IPFS_SECRET:-$(read -p "Please enter the API secret of the IPFS API you want to use: " && echo $REPLY)}
 
 if ! id "cyborg-user" &>/dev/null; then
     sudo useradd -r -s /bin/false cyborg-user
