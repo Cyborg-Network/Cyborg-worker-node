@@ -2,8 +2,8 @@ use async_trait::async_trait;
 use pinata_sdk::PinByJson;
 use pinata_sdk::PinataApi;
 use sp_core::blake2_256;
-use zip::unstable::write;
-use std::path;
+//use zip::unstable::write;
+//use std::path;
 use std::path::PathBuf;
 use std::process::Output;
 use subxt::events::EventDetails;
@@ -373,58 +373,7 @@ impl BlockchainClient for CyborgClient {
                 let assigned_worker = &task_scheduled.assigned_worker;
 
                 if *assigned_worker == self.identity {
-                    /* if let Some(ipfs_client) = &self.ipfs_client {
-                        self.reset_log();
 
-                        self.write_log("New task assigned for execution, processing...");
-
-                        let task_owner = &task_scheduled.task_owner;
-
-                        let owner_file_json = serde_json::to_string(&TaskOwner {
-                            task_owner: task_owner.clone().to_string(),
-                        })?;
-    
-                        let config_dir_path = Path::new("/var/lib/cyborg/worker-node/config");
-                        let file_path = config_dir_path.join("task_owner.json");
-    
-                        if !fs::metadata(&config_dir_path).is_ok() {
-                            fs::create_dir_all(&config_dir_path)?;
-                        }
-    
-                        // Write content to the file (will overwrite existing content)
-                        fs::write(&file_path, owner_file_json)?;
-
-                        let task_ipfs_hash_bounded: &Vec<u8> = &task_scheduled.task.0;
-                        
-                        let task_ipfs_hash = String::from_utf8_lossy(&task_ipfs_hash_bounded);
-
-                        println!("Ipfs hash: {:?}", task_ipfs_hash);
-
-                        let zk_files_ipfs_hash_bounded: &Vec<u8> = &task_scheduled.zk_files_cid.0;
-
-                        let zk_files_ipfs_hash = String::from_utf8_lossy(&zk_files_ipfs_hash_bounded);
-
-                        println!("Ipfs hash: {:?}", zk_files_ipfs_hash);
-                        
-                        println!("New task scheduled for worker: {:?}", task_scheduled);
-
-                        let result = self.download_and_execute_work_package(&task_ipfs_hash).await;
-
-                        if let Ok(output) = result {
-                            println!("Operation sucessful: {:?}", output);
-
-                            if let Ok(()) = self.submit_result_onchain(&ipfs_client, output, task_scheduled.task_id).await {
-                                println!("Result submitted to chain successfully");
-                            } else {
-                                println!("Failed to submit result to chain");
-                            }
-                        } else {
-                            println!("result: {:?}", result);
-                            println!("Failed to execute command");
-                        }
-                    } else {
-                        return Err("IPFS client not initialized".into());
-                    } */
                     let task_cid_string = String::from_utf8(task_scheduled.task.0)?;
 
                     self.write_log(format!("New task scheduled for worker: {}", task_cid_string).as_str());
@@ -776,19 +725,11 @@ impl BlockchainClient for CyborgClient {
     }
 }
 
-// TODO: Write unit tests (also write integration tests for broader funcitonality)
-
-// Unit Tests
-// Most of the tests require a local zombienet instance with the worker registered on it
-// The functions marked with "ZOMBIENET" are the ones that require a local zombienet instance
-#[cfg(test)]
-mod test{
-    use super::*;
-}
+// TODO: Add integration tests as unit tests aren't appropriate here
 
 /*
 
-TODO Implement function for verifying worker registration once edge-connect pallet is updated, might look something like this
+TODO: Implement function for verifying worker registration once edge-connect pallet is updated, might look something like this
 
 pub async fn verify_worker_registration(
     api: &OnlineClient<PolkadotConfig>, 

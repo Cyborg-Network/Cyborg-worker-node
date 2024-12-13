@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 #[derive(Debug, Parser, PartialEq)]
 #[command(
     name = "cyborg-worker",                  // Name of the CLI tool.
-    about = "A standalone off-chain worker", // Description shown in the CLI help.
+    about = "A Worker Node for the Cyborg Network", // Description shown in the CLI help.
     version = "1.0"                          // Version number of the CLI tool.
 )]
 
@@ -61,15 +61,6 @@ pub enum Commands {
     },
 }
 
-// // Implementation block for the `Cli` struct, adding a helper function to parse arguments.
-// impl Cli {
-//     pub fn parse_args() -> Self {
-//         // Parses command-line arguments into the `Cli` struct.
-//         Cli::parse()
-//     }
-// }
-
-/* 
 //Unit tests
 #[cfg(test)]
 mod test {
@@ -81,10 +72,16 @@ mod test {
         let args = [
             "cyborg-worker",
             "registration",
-            "--api-url",
+            "--parachain-url",
             "http://example.com",
             "--account-seed",
             "12345678",
+            "--ipfs-url",
+            "ipfs_url",
+            "--ipfs-api-key",
+            "ipfs_api_key",
+            "--ipfs-api-secret",
+            "ipfs_api_secret",
         ];
 
         // Parse the arguments and check if they match the expected `Cli` struct.
@@ -94,8 +91,11 @@ mod test {
             cli,
             Cli {
                 command: Some(Commands::Registration {
-                    api_url: "http://example.com".to_string(),
+                    parachain_url: "http://example.com".to_string(),
                     account_seed: "12345678".to_string(),
+                    ipfs_url: "ipfs_url".to_string(),
+                    ipfs_api_key: "ipfs_api_key".to_string(),
+                    ipfs_api_secret: "ipfs_api_secret".to_string(),
                 })
             }
         );
@@ -107,12 +107,10 @@ mod test {
         let args = [
             "cyborg-worker",
             "startmining",
-            "--api-url",
+            "--parachain-url",
             "http://example.com",
             "--account-seed",
             "12345678",
-            "--ipfs-url",
-            "http://ipfs.example.com",
         ];
 
         // Parse the arguments and verify they match the expected `Cli` struct.
@@ -122,9 +120,8 @@ mod test {
             cli,
             Cli {
                 command: Some(Commands::Startmining {
-                    api_url: "http://example.com".to_string(),
+                    parachain_url: "http://example.com".to_string(),
                     account_seed: "12345678".to_string(),
-                    ipfs_url: "http://ipfs.example.com".to_string(),
                 })
             }
         );
@@ -150,4 +147,3 @@ mod test {
         assert!(result.is_err());
     }
 }
-     */

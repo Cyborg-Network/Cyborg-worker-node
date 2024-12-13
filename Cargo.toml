@@ -47,6 +47,9 @@ zip = "2.2.0"
 
 [build-dependencies]
 
+[dev-dependencies]
+mockall = "0.13.1"
+
 [features]
 default = []
 runtime-benchmarks = [

@@ -12,7 +12,7 @@ pub enum Error {
 
     // -- Externals
     #[from]
-    Io(std::io::Error), // as example
+    Io(std::io::Error),
 
     #[from]
     Serialization(serde_json::Error),

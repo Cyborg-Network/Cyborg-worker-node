@@ -55,7 +55,7 @@ async fn main() -> Result<()> {
             let client = CyborgClientBuilder::default()
                 .parachain_url(parachain_url.to_string())
                 .keypair(account_seed)?
-                .ipfs_uri(Some(ipfs_url.to_string()), Some(ipfs_api_key.to_string()), Some(ipfs_api_secret.to_string())).await
+                .ipfs_api(Some(ipfs_url.to_string()), Some(ipfs_api_key.to_string()), Some(ipfs_api_secret.to_string())).await
                 .paths(LOG_PATH.to_string(), CONFIG_PATH.to_string(), TASK_PATH.to_string(), TASK_OWNER_PATH.to_string())
                 .build()
                 .await?;
@@ -82,7 +82,7 @@ async fn main() -> Result<()> {
             let mut client = CyborgClientBuilder::default()
                 .parachain_url(parachain_url.to_string())
                 .keypair(account_seed)?
-                .ipfs_uri(None, None, None).await
+                .ipfs_api(None, None, None).await
                 .config(config)
                 .paths(LOG_PATH.to_string(), CONFIG_PATH.to_string(), TASK_PATH.to_string(), TASK_OWNER_PATH.to_string())
                 .build()
