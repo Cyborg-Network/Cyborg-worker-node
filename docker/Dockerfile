@@ -3,13 +3,11 @@ FROM ubuntu:24.04
 LABEL maintainer="tom@cyborgnetwork.io"
 LABEL description="Demo container for the Cyborg Worker Node"
 
-# For testnet: wss://fraa-dancebox-3131-rpc.a.dancebox.tanssi.network
-# For local zombienet: ws://127.0.0.1:9988
-ENV PARACHAIN_URL=ws://127.0.0.1:9988
-ENV ACCOUNT_SEED="bottom drive obey lake curtain smoke basket hold race lonely fit walk//Alice"
-ENV CYBORG_WORKER_NODE_IPFS_API_URL=https://fuchsia-academic-stoat-866.mypinata.cloud
-ENV CYBORG_WORKER_NODE_IPFS_API_KEY=21021fa56da65b48c301
-ENV CYBORG_WORKER_NODE_IPFS_API_SECRET=6df0a896d2c37606f53ae39f02333484be86d429a898e7c38fb8e4f67da16cb2
+ENV PARACHAIN_URL=
+ENV ACCOUNT_SEED=
+ENV CYBORG_WORKER_NODE_IPFS_API_URL=
+ENV CYBORG_WORKER_NODE_IPFS_API_KEY=
+ENV CYBORG_WORKER_NODE_IPFS_API_SECRET=
 
 WORKDIR /root
 
