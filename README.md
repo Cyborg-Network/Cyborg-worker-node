@@ -8,9 +8,27 @@ The Cyborg Worker Node is the one of the Cyborg Worker types, contributing compu
 #### Installation
 
 ##### Method 1: Docker
-1. Clone the GitHub repository for the Cyborg Worker Node and navigate into it:
+1. Clone the repository and navigate into the docker directory
 ```
-git clone
+git clone https://github.com/Cyborg-Network/Cyborg-worker-node.git
+cd Cyborg-worker-node/docker
+```
+2. Open the Dockerfile and replace the empty environment variables with the following data
+```
+ENV PARACHAIN_URL=ws://127.0.0.1:9988
+ENV ACCOUNT_SEED="bottom drive obey lake curtain smoke basket hold race lonely fit walk//Alice"
+ENV CYBORG_WORKER_NODE_IPFS_API_URL=https://fuchsia-academic-stoat-866.mypinata.cloud
+ENV CYBORG_WORKER_NODE_IPFS_API_KEY=21021fa56da65b48c301
+ENV CYBORG_WORKER_NODE_IPFS_API_SECRET=6df0a896d2c37606f53ae39f02333484be86d429a898e7c38fb8e4f67da16cb2
+```
+3. Build the Docker image
+	Since this step will already register the worker, the zombienet parachain testnet will need to be running at this point. We are using the `--network="host"` flag here to avoid having to open additional ports to the docker container, since the worker will be sending requests to the parachain. If the worker needs to be registered again for some reason after this image has been built (for example because the zombienet parachain testnet was restarted), it can be done via the `Provide Compute` section of Cyborg Connect
+```
+docker build -t cyborg-worker-node:local --network="host" .
+```
+4. Run the docker image
+```
+docker run <image-id> --network="host"
 ```
 ##### Method 2: Via Installation Script
 1. Download the installation script from: https://github.com/Cyborg-Network/Cyborg-worker-node/blob/tom/standalone-worker-subxt/cyborg-worker-node-installer.sh
