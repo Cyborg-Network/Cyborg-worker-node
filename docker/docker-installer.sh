@@ -54,10 +54,3 @@ sudo bash -c "cat > $WORKER_DBUS_FILE" << EOL
 
 </busconfig>
 EOL
-
-# Run worker registration
-echo "Initiating worker registration..."
-/usr/local/bin/cyborg-worker-node registration --parachain-url "$PARACHAIN_URL" --account-seed "$ACCOUNT_SEED" --ipfs-url "$CYBORG_WORKER_NODE_IPFS_API_URL" --ipfs-api-key "$CYBORG_WORKER_NODE_IPFS_API_KEY" --ipfs-api-secret "$CYBORG_WORKER_NODE_IPFS_API_SECRET"
-
-echo "Worker and agent binaries installed and configured successfully!"
-
