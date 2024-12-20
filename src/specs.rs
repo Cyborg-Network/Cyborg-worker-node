@@ -1,4 +1,4 @@
-use std::str;
+use std::{env, str};
 use sysinfo::{System, MemoryRefreshKind, RefreshKind};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -24,9 +24,11 @@ pub struct Location {
 
 pub async fn gather_worker_spec() -> Result<worker::WorkerConfig> {
 
-    //let response = reqwest::get("https://api.ipify.org?format=json").await?.json::<worker::IpResponse>().await?;
+    let response = env::var("CYBORG_WORKER_NODE_TEST_IP").unwrap_or(
+     reqwest::get("https://api.ipify.org?format=json").await?.json::<worker::IpResponse>().await?.ip
+    );
 
-    let response = worker::IpResponse { ip: String::from("127.0.0.1") };
+    //let response = worker::IpResponse { ip: String::from("127.0.0.1") };
 
     let location = Location::get_location().await;
 
@@ -37,7 +39,7 @@ pub async fn gather_worker_spec() -> Result<worker::WorkerConfig> {
     let storage = return_total_storage();
 
     Ok(worker::WorkerConfig {
-        domain: BoundedVec::from(BoundedVec(response.ip.as_bytes().to_vec())),
+        domain: BoundedVec::from(BoundedVec(response.as_bytes().to_vec())),
         latitude: location.coordinates.0,
         longitude: location.coordinates.1,
         ram,
