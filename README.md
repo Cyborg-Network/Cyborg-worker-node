@@ -1,3 +1,5 @@
+## ⚠️ Note
+For testing the whole network, please refer to [Local Testing](https://github.com/Cyborg-Network/cyborg-parachain/blob/master/Local%20Testing.md#local-setup)
 ## Overview
 The Cyborg Worker Node is the one of the Cyborg Worker types, contributing compute resources to Cyborg Network, a decentralized compute platform designed to harness computational resources from distributed nodes around the world. By joining the network, users can either provide computational power to contribute to the network's infrastructure or consume computational resources for task execution.
 ## Usage 
