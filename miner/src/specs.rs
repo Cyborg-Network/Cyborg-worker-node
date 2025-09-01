@@ -133,7 +133,14 @@ impl Location {
                 };
             }
             Err(e) => {
-                panic!("Failed to get the location: {}", e);
+                println!("Error getting WiFi based location: {}", e);
+                if let Ok((lat, lon)) = get_ip_location().await {
+                    return Location {
+                        coordinates: f64_to_i32_coordinates(lat, lon),
+                    }
+                } else {
+                    panic!("Failed to get the location: {}", e);
+                }
             }
         }
     }
