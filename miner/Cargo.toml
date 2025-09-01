@@ -55,6 +55,7 @@ subxt-signer = "0.38.0"
 sys-info = { version = "0.9.1" }
 sysinfo = "0.32.0"
 tar = { version = "0.4.44" }
+tokio-stream = { version = "0.1.17" }
 url = { version = "2.5.2" }
 zbus = "5.1.1"
 zbus_names = "4.1.0"

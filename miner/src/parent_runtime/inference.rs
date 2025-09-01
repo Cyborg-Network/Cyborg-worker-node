@@ -16,7 +16,7 @@ use futures::{SinkExt, StreamExt};
 use neuro_zk_runtime::NeuroZKEngine;
 use flash_infer_runtime::FlashInferEngine;
 use once_cell::sync::Lazy;
-use tokio::sync::oneshot;
+use tokio::sync::{mpsc, oneshot};
 use std::{
     net::SocketAddr, 
     path::{PathBuf, Path}, 
@@ -28,6 +28,7 @@ use tokio::{
     net::TcpListener,
     sync::{watch, Mutex},
 };
+use tokio_stream::wrappers::ReceiverStream;
 use open_inference_runtime::TritonClient;
 
 #[derive(Clone)]
@@ -299,7 +300,7 @@ async fn ws_handler(
 }
 
 async fn handle_socket(socket: WebSocket, state: AppState) -> Result<()> {
-    let (mut sender, mut receiver) = socket.split();
+    let (mut ws_sender, mut ws_receiver) = socket.split();
     let mut shutdown_rx = state.shutdown.clone();
     let current_status = state.status.borrow().clone();
 
@@ -310,33 +311,29 @@ async fn handle_socket(socket: WebSocket, state: AppState) -> Result<()> {
             EngineStatus::Idle => "Inference engine is idle.".to_string(),
             EngineStatus::Ready => unreachable!(),
         };
-        let _ = sender.send(Message::Text(msg.into())).await;
+        let _ = ws_sender.send(Message::Text(msg.into())).await;
         return Ok(());
     }
 
-    let sender = Arc::new(Mutex::new(sender));
+    let ws_sender = Arc::new(Mutex::new(ws_sender));
+    
+    let (tx, rx) = mpsc::channel::<String>(32);
+    let request_stream = ReceiverStream::new(rx);
 
     let engine_task = {
         let state = state.clone();
-        let sender = Arc::clone(&sender);
+        let ws_sender = Arc::clone(&ws_sender);
 
         tokio::spawn(async move {
-            let request_stream = Box::pin(async_stream::stream! {
-                while let Some(msg) = receiver.next().await {
-                    if let Ok(Message::Text(text)) = msg {
-                        yield text.to_string();
-                    } else {
-                        break;
-                    }
-                }
-            });
+
+
 
             let response_stream = {
-                let sender = Arc::clone(&sender);
+                let ws_sender = Arc::clone(&ws_sender);
                 move |response: String| {
-                    let sender = Arc::clone(&sender);
+                    let ws_sender = Arc::clone(&ws_sender);
                     async move {
-                        let _ = sender
+                        let _ = ws_sender
                             .lock()
                             .await
                             .send(Message::Text(response.into()))
@@ -365,10 +362,29 @@ async fn handle_socket(socket: WebSocket, state: AppState) -> Result<()> {
         })
     };
 
-    shutdown_rx.changed().await.ok();
-    println!("Shutdown signal received, closing WebSocket immediately");
+   loop {
+        tokio::select! {
+            _ = shutdown_rx.changed() => {
+                println!("Shutdown signal received, closing WebSocket immediately");
+                let _ = ws_sender.lock().await.send(Message::Close(None)).await;
+                break;
+            }
 
-    let _ = sender.lock().await.send(Message::Close(None)).await;
+            msg = ws_receiver.next() => {
+                match msg {
+                    Some(Ok(Message::Text(text))) => {
+                        let _ = tx.send(text.to_string()).await;
+                    }
+                    Some(Ok(Message::Close(_))) | None => break,
+                    Some(Err(err)) => {
+                        eprintln!("WebSocket error: {:?}", err);
+                        break;
+                    }
+                    _ => {}
+                }
+            }
+        }
+    } 
 
     engine_task.abort();
 
