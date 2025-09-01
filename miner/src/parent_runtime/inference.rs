@@ -301,7 +301,7 @@ async fn ws_handler(
 
 async fn handle_socket(socket: WebSocket, state: AppState) -> Result<()> {
     let (mut ws_sender, mut ws_receiver) = socket.split();
-    let mut shutdown_rx = state.shutdown.clone();
+    let shutdown_rx = state.shutdown.clone();
     let current_status = state.status.borrow().clone();
 
     if current_status != EngineStatus::Ready {
@@ -325,9 +325,6 @@ async fn handle_socket(socket: WebSocket, state: AppState) -> Result<()> {
         let ws_sender = Arc::clone(&ws_sender);
 
         tokio::spawn(async move {
-
-
-
             let response_stream = {
                 let ws_sender = Arc::clone(&ws_sender);
                 move |response: String| {
@@ -362,34 +359,30 @@ async fn handle_socket(socket: WebSocket, state: AppState) -> Result<()> {
         })
     };
 
-   loop {
-        tokio::select! {
-            _ = shutdown_rx.changed() => {
-                println!("Shutdown signal received, closing WebSocket immediately");
-                let _ = ws_sender.lock().await.send(Message::Close(None)).await;
+    {
+        let ws_sender_clone = Arc::clone(&ws_sender);
+        let engine_task_clone = engine_task;
+        let mut shutdown_rx_clone = shutdown_rx.clone();
+        tokio::spawn(async move {
+            shutdown_rx_clone.changed().await.ok();
+            println!("Shutdown signal received, closing WebSocket immediately");
+            let _ = ws_sender_clone.lock().await.send(Message::Close(None)).await;
+            engine_task_clone.abort();
+        });
+    }
 
-                drop(tx);
-
-                break;
+    while let Some(msg) = ws_receiver.next().await {
+        match msg {
+            Ok(Message::Text(text)) => {
+                // Forward to engine
+                let _ = tx.send(text.to_string()).await;
             }
-
-            msg = ws_receiver.next() => {
-                match msg {
-                    Some(Ok(Message::Text(text))) => {
-                        let _ = tx.send(text.to_string()).await;
-                    }
-                    Some(Ok(Message::Close(_))) | None => break,
-                    Some(Err(err)) => {
-                        eprintln!("WebSocket error: {:?}", err);
-                        break;
-                    }
-                    _ => {}
-                }
-            }
+            Ok(Message::Close(_)) | Err(_) => break,
+            _ => {}
         }
-    } 
+    }
 
-    engine_task.abort();
+    drop(tx);
 
     Ok(())
 }
