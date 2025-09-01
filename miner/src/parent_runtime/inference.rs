@@ -319,30 +319,16 @@ async fn handle_socket(socket: WebSocket, state: AppState) -> Result<()> {
     let engine_task = {
         let state = state.clone();
         let sender = Arc::clone(&sender);
-        let mut shutdown_rx = shutdown_rx.clone();
 
         tokio::spawn(async move {
             let request_stream = Box::pin(async_stream::stream! {
-               loop {
-                    tokio::select! {
-                        _ = shutdown_rx.changed() => {
-                            println!("Shutdown signal received inside request_stream");
-                            break;
-                        }
-
-                        msg = receiver.next() => {
-                            match msg {
-                                Some(Ok(Message::Text(text))) => {
-                                    yield text.to_string();
-                                }
-                                Some(Ok(Message::Close(_))) | None => {
-                                    break;
-                                }
-                                _ => {}
-                            }
-                        }
-                    } 
-               }
+                while let Some(msg) = receiver.next().await {
+                    if let Ok(Message::Text(text)) = msg {
+                        yield text.to_string();
+                    } else {
+                        break;
+                    }
+                }
             });
 
             let response_stream = {
