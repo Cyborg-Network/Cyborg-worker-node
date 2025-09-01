@@ -367,6 +367,9 @@ async fn handle_socket(socket: WebSocket, state: AppState) -> Result<()> {
             _ = shutdown_rx.changed() => {
                 println!("Shutdown signal received, closing WebSocket immediately");
                 let _ = ws_sender.lock().await.send(Message::Close(None)).await;
+
+                drop(tx);
+
                 break;
             }
 
