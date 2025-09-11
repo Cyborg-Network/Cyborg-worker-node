@@ -56,8 +56,8 @@ pub async fn run_config(parachain_url: &str, _account: Keypair) {
 
     let storage_location = String::from(env::var("STORAGE_LOCATION").expect("STORAGE_LOCATION must be set"));
     let log_path = PathBuf::from(env::var("LOG_FILE_PATH").expect("LOG_PATH must be set"));
-    let operator_log_path = PathBuf::from(env::var("OPERATOR_LOG_PATH").unwrap_or("miner/logs/operator/miner_operator.log".to_string()));  // NEW
-    let user_log_path = PathBuf::from(env::var("USER_LOG_PATH").unwrap_or("miner/logs/user/miner_user.log".to_string()));  // NEW
+    let operator_log_path = PathBuf::from(env::var("OPERATOR_LOG_PATH").unwrap_or("miner/logs/operator/miner_operator.log".to_string()));
+    let user_log_path = PathBuf::from(env::var("USER_LOG_PATH").unwrap_or("miner/logs/user/miner_user.log".to_string()));
     let task_file_name = String::from(env::var("TASK_FILE_NAME").expect("TASK_FILE_NAME must be set"));
     let task_dir_path = String::from(env::var("TASK_DIR_PATH").expect("TASK_DIR_PATH must be set"));
     let identity_path = String::from(env::var("IDENTITY_FILE_PATH").expect("IDENTITY_PATH must be set"));
