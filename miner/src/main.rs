@@ -30,14 +30,17 @@ use clap::Parser;
 use cli::{Cli, Commands};
 use config::run_config;
 use error::Result;
+use std::str::FromStr;
+use subxt_signer::sr25519::Keypair;
 use subxt_signer::SecretUri;
 use traits::ParachainInteractor;
-use subxt_signer::sr25519::Keypair;
-use std::str::FromStr;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
+
+    // Initialize logger first
+    log::init_logger().expect("Failed to initialize logger");
 
     // Match on the provided subcommand and execute the corresponding action.
     match &cli.command {
@@ -46,8 +49,6 @@ async fn main() -> Result<()> {
             parachain_url,
             account_seed,
         }) => {
-            let _log_guard = log::init_logger();
-
             let uri = SecretUri::from_str(account_seed).expect("Keypair was not set correctly");
             let keypair = Keypair::from_uri(&uri).expect("Keypair from URI failed");
 

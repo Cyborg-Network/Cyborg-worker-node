@@ -22,11 +22,14 @@ use crate::utils::tx_queue::TRANSACTION_QUEUE;
 #[derive(Debug)]
 pub struct Paths {
     pub log_path: PathBuf,
+    pub operator_log_path: PathBuf,
+    pub user_log_path: PathBuf,
     pub task_file_name: String,
     pub task_dir_path: String,
     pub task_owner_path: String,
     pub identity_path: String,
 }
+
 
 #[derive(Deserialize, Debug)]
 #[allow(dead_code)]
@@ -53,13 +56,12 @@ pub async fn run_config(parachain_url: &str, _account: Keypair) {
 
     let storage_location = String::from(env::var("STORAGE_LOCATION").expect("STORAGE_LOCATION must be set"));
     let log_path = PathBuf::from(env::var("LOG_FILE_PATH").expect("LOG_PATH must be set"));
-    let task_file_name =
-        String::from(env::var("TASK_FILE_NAME").expect("TASK_FILE_NAME must be set"));
+    let operator_log_path = PathBuf::from(env::var("OPERATOR_LOG_PATH").unwrap_or("miner/logs/operator/miner_operator.log".to_string()));  // NEW
+    let user_log_path = PathBuf::from(env::var("USER_LOG_PATH").unwrap_or("miner/logs/user/miner_user.log".to_string()));  // NEW
+    let task_file_name = String::from(env::var("TASK_FILE_NAME").expect("TASK_FILE_NAME must be set"));
     let task_dir_path = String::from(env::var("TASK_DIR_PATH").expect("TASK_DIR_PATH must be set"));
-    let identity_path =
-        String::from(env::var("IDENTITY_FILE_PATH").expect("IDENTITY_PATH must be set"));
-    let task_owner_path =
-        String::from(env::var("TASK_OWNER_FILE_PATH").expect("TASK_OWNER_PATH must be set"));
+    let identity_path = String::from(env::var("IDENTITY_FILE_PATH").expect("IDENTITY_PATH must be set"));
+    let task_owner_path = String::from(env::var("TASK_OWNER_FILE_PATH").expect("TASK_OWNER_PATH must be set"));
     let parachain_url = if let Ok(parachain_url_env) = env::var("PARACHAIN_URL") {
         parachain_url_env
     } else {
@@ -71,6 +73,8 @@ pub async fn run_config(parachain_url: &str, _account: Keypair) {
     PATHS
         .set(Paths {
             log_path,
+            operator_log_path, 
+            user_log_path,
             task_file_name,
             task_dir_path,
             task_owner_path,
