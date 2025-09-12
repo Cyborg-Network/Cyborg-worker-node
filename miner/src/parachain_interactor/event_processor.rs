@@ -1,21 +1,22 @@
 use crate::config::{self, get_paths, get_tx_queue};
 use crate::parachain_interactor::identity::update_identity_file;
 use crate::substrate_interface;
-use crate::traits::{InferenceServer};
+use crate::substrate_interface::api::runtime_types::cyborg_primitives::worker::WorkerType;
+use crate::traits::InferenceServer;
 use crate::types::{CurrentTask, TaskType};
+use crate::utils::tx_builder::confirm_task_reception;
 use crate::utils::tx_builder::{confirm_miner_vacation, submit_proof};
 use crate::utils::tx_queue::TxOutput;
 use crate::{
     error::{Error, Result},
     types::{Miner, MinerData},
 };
-use std::path::PathBuf;
-use std::sync::Arc;
 use serde::Serialize;
 use std::fs;
+use std::path::PathBuf;
+use std::sync::Arc;
 use subxt::utils::AccountId32;
 use subxt::{events::EventDetails, PolkadotConfig};
-use crate::utils::tx_builder::confirm_task_reception;
 
 #[derive(Serialize)]
 struct TaskOwner {
@@ -88,27 +89,62 @@ pub async fn process_event(miner: &mut Miner, event: &EventDetails<PolkadotConfi
             let file_content = fs::read_to_string(identity_path)?;
             let miner_data: MinerData = serde_json::from_str(&file_content)?;
 
-             // Immediately confirm task reception
-             let tx_queue = config::get_tx_queue()?;
-             let keypair = miner.keypair.clone();
-             let task_id = task_scheduled.task_id;
-             
-             let rx = tx_queue.enqueue(move || {
-                 let keypair = keypair.clone();
-                 async move {
-                     let _ = confirm_task_reception(keypair, task_id).await?;
-                     Ok(TxOutput::Success)
-                 }
-             }).await?;
-             
-             // Handle response 
-             match rx.await {
-                 Ok(Ok(TxOutput::Success)) => println!("Task reception confirmed immediately"),
-                 Ok(Err(e)) => println!("Error confirming task reception: {}", e),
-                 _ => println!("Unexpected response for task confirmation"),
-             }
+            // Immediately confirm task reception
+            let tx_queue = config::get_tx_queue()?;
+            let keypair = miner.keypair.clone();
+            let task_id = task_scheduled.task_id;
+
+            let rx = tx_queue
+                .enqueue(move || {
+                    let keypair = keypair.clone();
+                    async move {
+                        let _ = confirm_task_reception(keypair, task_id).await?;
+                        Ok(TxOutput::Success)
+                    }
+                })
+                .await?;
+
+            // Handle response
+            match rx.await {
+                Ok(Ok(TxOutput::Success)) => println!("Task reception confirmed immediately"),
+                Ok(Err(e)) => println!("Error confirming task reception: {}", e),
+                _ => println!("Unexpected response for task confirmation"),
+            }
 
             if assigned_miner == &miner_data.miner_identity {
+                // Mark miner as busy
+                let tx_queue = config::get_tx_queue()?;
+                let keypair = miner.keypair.clone();
+                let miner_identity = miner_data.miner_identity.clone();
+
+                let rx = tx_queue
+                    .enqueue(move || {
+                        let keypair = keypair.clone();
+                        async move {
+                            let client = config::get_parachain_client()?;
+                            let tx = substrate_interface::api::tx()
+                                .edge_connect()
+                                .set_worker_busy_status(
+                                    WorkerType::Executable,
+                                    miner_identity.1,
+                                    true, // is_busy = true
+                                );
+
+                            client
+                                .tx()
+                                .sign_and_submit_then_watch_default(&tx, &keypair)
+                                .await?
+                                .wait_for_finalized_success()
+                                .await?;
+
+                            Ok(TxOutput::Success)
+                        }
+                    })
+                    .await?;
+
+                // Handle response if needed
+                let _ = rx.await;
+
                 //TODO uncomment this and remove the hardcoded cipher after subxt is regen
                 //let storage_encryption_cipher = &task_scheduled.cipher;
                 let storage_encryption_cipher = "password";
@@ -168,9 +204,44 @@ pub async fn process_event(miner: &mut Miner, event: &EventDetails<PolkadotConfi
     }
 
     if let Some(current_task) = &miner.current_task {
-        match event.as_event::<substrate_interface::api::task_management::events::TaskStopRequested>() {
+        match event
+            .as_event::<substrate_interface::api::task_management::events::TaskStopRequested>()
+        {
             Ok(Some(task_stop_requested)) => {
                 if current_task.id == task_stop_requested.task_id {
+                    // Mark miner as not busy
+                    let tx_queue = config::get_tx_queue()?;
+                    let keypair = miner.keypair.clone();
+                    let miner_identity = miner.miner_identity.clone().unwrap();
+
+                    let rx = tx_queue
+                        .enqueue(move || {
+                            let keypair = keypair.clone();
+                            async move {
+                                let client = config::get_parachain_client()?;
+                                let tx = substrate_interface::api::tx()
+                                    .edge_connect()
+                                    .set_worker_busy_status(
+                                        WorkerType::Executable,
+                                        miner_identity.1,
+                                        false, // is_busy = false
+                                    );
+
+                                client
+                                    .tx()
+                                    .sign_and_submit_then_watch_default(&tx, &keypair)
+                                    .await?
+                                    .wait_for_finalized_success()
+                                    .await?;
+
+                                Ok(TxOutput::Success)
+                            }
+                        })
+                        .await?;
+
+                    // Handle response if needed
+                    let _ = rx.await;
+                    
                     let paths = get_paths()?;
                     let keypair = miner.keypair.clone();
                     let tx_que = get_tx_queue()?;
@@ -180,26 +251,27 @@ pub async fn process_event(miner: &mut Miner, event: &EventDetails<PolkadotConfi
                         fs::remove_dir_all(dir)?;
                     };
                     if let Some(dir) = PathBuf::from(&paths.task_owner_path).parent() {
-                        fs::remove_dir_all(dir)?; 
+                        fs::remove_dir_all(dir)?;
                     };
 
                     let current_task_id = current_task.id.clone();
                     miner.current_task = None;
 
-                    let rx = tx_que.enqueue( move || {
-                        let keypair = keypair.clone();
-                        async move {
-                            let _ = confirm_miner_vacation(keypair, current_task_id).await?;
-                            Ok(TxOutput::Success)
-                        }
-                    })
-                    .await?;
+                    let rx = tx_que
+                        .enqueue(move || {
+                            let keypair = keypair.clone();
+                            async move {
+                                let _ = confirm_miner_vacation(keypair, current_task_id).await?;
+                                Ok(TxOutput::Success)
+                            }
+                        })
+                        .await?;
 
                     match rx.await {
                         Ok(Ok(TxOutput::Success)) => println!("Miner vacated."),
                         Ok(Err(e)) => println!("Error vacating miner: {}", e),
                         Err(_) => println!("Response channel dropped on miner vacation."),
-                        _ => println!("Unexpected response from miner vacation event.")
+                        _ => println!("Unexpected response from miner vacation event."),
                     }
                 }
             }
@@ -220,21 +292,22 @@ pub async fn process_event(miner: &mut Miner, event: &EventDetails<PolkadotConfi
                 if task_id == current_task.id {
                     let proof = miner.parent_runtime.read().await.generate_proof().await?;
                     let keypair = miner.keypair.clone();
-                    let rx = tx_queue.enqueue( move || {
-                        let keypair = keypair.clone();
-                        let proof = proof.clone();
-                        async move {
-                            let _ = submit_proof(proof, keypair, task_id).await?;
-                            Ok(TxOutput::Success)
-                        }
-                    })
-                    .await?;
+                    let rx = tx_queue
+                        .enqueue(move || {
+                            let keypair = keypair.clone();
+                            let proof = proof.clone();
+                            async move {
+                                let _ = submit_proof(proof, keypair, task_id).await?;
+                                Ok(TxOutput::Success)
+                            }
+                        })
+                        .await?;
 
                     match rx.await {
                         Ok(Ok(TxOutput::Success)) => println!("Proof submitted."),
                         Ok(Err(e)) => println!("Error submitting proof: {}", e),
                         Err(_) => println!("Response channel dropped on proof submission."),
-                        _ => println!("Unexpected response from proof submission.")
+                        _ => println!("Unexpected response from proof submission."),
                     }
                 }
             }
