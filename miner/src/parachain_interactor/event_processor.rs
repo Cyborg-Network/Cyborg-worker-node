@@ -137,6 +137,10 @@ pub async fn process_event(miner: &mut Miner, event: &EventDetails<PolkadotConfi
                                 .wait_for_finalized_success()
                                 .await?;
 
+                            println!(
+                                "Worker marked as busy - will prevent automatic status activation"
+                            );
+
                             Ok(TxOutput::Success)
                         }
                     })
@@ -234,6 +238,8 @@ pub async fn process_event(miner: &mut Miner, event: &EventDetails<PolkadotConfi
                                     .wait_for_finalized_success()
                                     .await?;
 
+                                println!("Worker marked as active");
+
                                 Ok(TxOutput::Success)
                             }
                         })
@@ -241,7 +247,7 @@ pub async fn process_event(miner: &mut Miner, event: &EventDetails<PolkadotConfi
 
                     // Handle response if needed
                     let _ = rx.await;
-                    
+
                     let paths = get_paths()?;
                     let keypair = miner.keypair.clone();
                     let tx_que = get_tx_queue()?;
