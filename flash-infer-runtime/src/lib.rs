@@ -87,7 +87,7 @@ impl FlashInferEngine {
                 image: Some(image.to_string()),
                 host_config: Some(HostConfig {
                     port_bindings: Some(port_bindings),
-                    //runtime: Some("nvidia".to_string()),
+                    runtime: Some("nvidia".to_string()),
                     ..Default::default()
                 }),
                 env: Some(vec![
