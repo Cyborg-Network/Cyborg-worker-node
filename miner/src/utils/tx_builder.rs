@@ -5,7 +5,9 @@ use crate::config;
 use crate::error::Error;
 use crate::specs;
 use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
+use crate::types::Miner;
 use crate::utils::substrate_queries::get_miner_by_domain;
+use crate::utils::tx_queue::TxOutput;
 use subxt::utils::AccountId32;
 use subxt_signer::sr25519::Keypair;
 use substrate_interface::api::neuro_zk::{Error as NzkError};
@@ -138,13 +140,13 @@ pub async fn submit_proof(proof: Vec<u8>, keypair: Keypair, current_task: u64) -
     Ok(())
 }
 
-pub async fn confirm_task_reception(keypair: Keypair, current_task: u64) -> Result<()> {
+async fn confirm_task_reception(keypair: Keypair, current_task: &u64) -> Result<()> {
     let client = config::get_parachain_client()?;
 
     let tx = substrate_interface::api::tx()
         .task_management()
         .confirm_task_reception(
-            current_task
+            *current_task
         );
 
     println!("Transaction Details:");
@@ -180,6 +182,27 @@ pub async fn confirm_task_reception(keypair: Keypair, current_task: u64) -> Resu
         },
     }
 
+    Ok(())
+}
+
+pub async fn pub_confirm_task_reception(keypair: Keypair, current_task_id: &u64) -> Result<()> {
+    let tx_queue = config::get_tx_queue()?;
+    let current_task_id_copy = *current_task_id;
+
+    let rx = tx_queue.enqueue(move || {
+        let keypair = keypair.clone();
+        async move {
+            let _ = confirm_task_reception(keypair, &current_task_id_copy).await?;
+            Ok(TxOutput::Success)
+        }
+    }).await?;
+
+    match rx.await {
+        Ok(Ok(TxOutput::Success)) => println!("Task reception confirmed"),
+        Ok(Err(e)) => println!("Error confirming task reception: {}", e),
+        _ => println!("Unexpected response for task confirmation"),
+    }
+    
     Ok(())
 }
 

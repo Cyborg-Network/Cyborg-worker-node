@@ -36,6 +36,14 @@ pub static PARACHAIN_CLIENT: OnceCell<OnlineClient<PolkadotConfig>> = OnceCell::
 pub static CESS_GATEWAY: Lazy<Arc<RwLock<String>>> =
     Lazy::new(|| Arc::new(RwLock::new(String::from("https://deoss-sgp.cess.network"))));
 
+/// The metadata for the current task in case the miner shuts down unexpectedly and has to restart a running task
+pub static CURRENT_TASK_PATH: Lazy<PathBuf> = Lazy::new(|| {
+    env::var("CURRENT_TASK_PATH").expect("CURRENT_TASK_PATH must be set").into()
+});
+
+/// Prefix used for container names so that all containers with this prefix can be managed at once by the miner
+pub static CONTAINER_PREFIX: &str = "cy-miner-task-container-";
+
 /// Runs the configuration for the miner, everything in this function will fail fast to ensure correct setup when starting the miner
 ///
 /// # Arguments
@@ -59,6 +67,8 @@ pub async fn run_config(parachain_url: &str) {
         parachain_url.to_string()
     };
     let tailscale_net = env::var("TAILSCALE_NET").expect("TAILSCALE_NET must be set");
+
+    Lazy::force(&CURRENT_TASK_PATH);
 
     TAILSCALE_NET
         .set(tailscale_net)

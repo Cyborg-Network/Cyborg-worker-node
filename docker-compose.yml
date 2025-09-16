@@ -36,6 +36,7 @@ services:
       - TAILSCALE_NET=tail78ea2b.ts.net
       - CYBORG_MINER_TEST_IP=127.0.0.1
       - FLASH_INFER_PORT=3005
+      - CURRENT_TASK_PATH=miner/config/current_task.json
 
 volumes:
   zk-artifacts:

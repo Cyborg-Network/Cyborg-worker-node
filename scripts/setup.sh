@@ -232,6 +232,7 @@ install() {
     Environment=TASK_DIR_PATH=$MINER_TASK_DIR
     Environment=IDENTITY_FILE_PATH=$MINER_CONFIG_DIR/miner_identity.json
     Environment=TASK_OWNER_FILE_PATH=$MINER_CONFIG_DIR/task_owner.json
+    Environment=CURRENT_TASK_PATH=$MINER_CONFIG_DIR/current_task.json
     Environment=UPDATE_STAGER_PATH=$MINER_UPDATE_PATH
     Environment=TAILSCALE_NET=$TAILSCALE_NET
     Environment=FLASH_INFER_PORT=$FLASH_INFER_PORT

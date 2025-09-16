@@ -151,7 +151,7 @@ pub async fn spawn_inference_server(
                 FlashInferTask::Huggingface(hf) => {
                     let hf_identifier = String::from_utf8(hf.hf_identifier.0.clone())?;
                     let flash_infer_port = get_flash_infer_port()?;
-                    let fi_engine = FlashInferEngine::new(&hf_identifier, *flash_infer_port)
+                    let fi_engine = FlashInferEngine::new(&hf_identifier, *flash_infer_port, &task.container_name)
                         .map_err(|e| Error::Custom(format!("Failed to create engine: {}", e.to_string())))?;
                     InferenceEngine::FlashInference(Arc::new(Mutex::new(fi_engine)))
                 }
@@ -365,7 +365,7 @@ async fn handle_socket(socket: WebSocket, state: AppState) -> Result<()> {
         let mut shutdown_rx_clone = shutdown_rx.clone();
         tokio::spawn(async move {
             shutdown_rx_clone.changed().await.ok();
-            println!("Shutdown signal received, closing WebSocket immediately");
+            println!("Shutdown signal received, closing WebSocket");
             let _ = ws_sender_clone.lock().await.send(Message::Close(None)).await;
             engine_task_clone.abort();
         });

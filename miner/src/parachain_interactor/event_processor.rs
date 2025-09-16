@@ -1,25 +1,15 @@
-use crate::config::{self, get_paths};
-use crate::parachain_interactor::identity::update_identity_file;
-use crate::parent_runtime::inference::CURRENT_SERVER;
+use crate::config::get_paths;
 use crate::substrate_interface;
 use crate::traits::{InferenceServer, ParachainInteractor};
 use crate::types::CurrentTask;
-use crate::utils::tx_builder::{confirm_miner_vacation, confirm_task_reception};
-use crate::utils::tx_queue::TxOutput;
+use crate::utils::task_handling::{self, return_task_container_name, set_current_task};
+use crate::utils::tx_builder::pub_confirm_task_reception;
 use crate::{
     error::{Error, Result},
     types::{Miner, MinerData},
 };
-use std::sync::Arc;
-use serde::Serialize;
-use subxt::utils::AccountId32;
 use subxt::{events::EventDetails, PolkadotConfig};
 use std::fs;
-
-#[derive(Serialize)]
-struct TaskOwner {
-    address: AccountId32,
-}
 
 pub async fn process_event(miner: &mut Miner, event: &EventDetails<PolkadotConfig>) -> Result<()> {
     // Check for WorkerRegistered event
@@ -90,67 +80,23 @@ pub async fn process_event(miner: &mut Miner, event: &EventDetails<PolkadotConfi
             if assigned_miner == &miner_data.miner_identity {
                 println!("New task scheduled: {:?}", task_scheduled.task_id);
 
-                let task_owner_string = serde_json::to_string(&TaskOwner{
-                    address: task_scheduled.task_owner,
-                })?;
-
-                let task_owner_path = &get_paths()?.task_owner_path;
-
-                update_identity_file(
-                    task_owner_path,
-                    &task_owner_string,
-                )?;
-
-                miner.current_task = Some(CurrentTask {
-                    id: task_scheduled.task_id,
+                let current_task = CurrentTask {
+                    task_owner: task_scheduled.task_owner,
                     task_type: task_scheduled.task_kind,
+                    container_name: return_task_container_name(task_scheduled.task_id),
+                    id: task_scheduled.task_id,
+                };
+
+                let (current_task_id, _handle) = set_current_task(miner, current_task).await?;
+
+                
+                let keypair = miner.keypair.clone();
+                tokio::spawn(async move {
+                    if let Err(e) = pub_confirm_task_reception(keypair, &current_task_id).await {
+                        println!("Critical error encountered, please contact the support: {}", e);
+                    }
                 });
 
-                let parent_runtime_clone = Arc::clone(&miner.parent_runtime);
-                let current_task_clone = miner.current_task.clone();
-
-                if let Some(current_task) = current_task_clone {
-                    tokio::spawn(async move {
-                        if let Err(e) = parent_runtime_clone
-                            .read()
-                            .await
-                            .process_task(current_task.clone().task_type)
-                            .await
-                        {
-                            println!("Error downloading model archive: {}", e);
-                        };
-
-                        if let Err(e) = parent_runtime_clone
-                            .read()
-                            .await
-                            .spawn_inference_server(&current_task)
-                            .await
-                        {
-                            println!("Error performing inference: {}", e)
-                        };
-                    });
-                } else {
-                    return Err(Error::Custom("No current task".to_string()));
-                }
-
-                let tx_queue = config::get_tx_queue()?;
-                let keypair = miner.keypair.clone();
-                let task_id = task_scheduled.task_id;
-
-                let rx = tx_queue.enqueue(move || {
-                    let keypair = keypair.clone();
-                    async move {
-                        let _ = confirm_task_reception(keypair, task_id).await?;
-                        Ok(TxOutput::Success)
-                    }
-                }).await?;
-
-                // Handle response 
-                match rx.await {
-                    Ok(Ok(TxOutput::Success)) => println!("Task reception confirmed"),
-                    Ok(Err(e)) => println!("Error confirming task reception: {}", e),
-                    _ => println!("Unexpected response for task confirmation"),
-                }
             }
         }
         Err(e) => {
@@ -168,41 +114,7 @@ pub async fn process_event(miner: &mut Miner, event: &EventDetails<PolkadotConfi
                 let task_id = &requested_task_stop.task_id;
 
                 if *task_id == current_task_id {
-                    let server_control = CURRENT_SERVER
-                        .lock()
-                        .await
-                        .take()
-                        .ok_or(Error::Custom("There is no inference server initialized in CURRENT_SERVER!".to_string()))?;
-
-                    let task_dir = &config::PATHS
-                        .get()
-                        .ok_or(Error::config_paths_not_initialized())?
-                        .task_dir_path;
-                    
-                    server_control.shutdown(task_dir).await?;
-
-                    let task_owner_path = &get_paths()?.task_owner_path;
-                    update_identity_file(task_owner_path, "")?;
-
-                    miner.current_task = None;
-
-                    let tx_queue = config::get_tx_queue()?;
-                    let keypair = miner.keypair.clone();
-                    let current_task_id_copy = current_task_id;
-
-                    let rx = tx_queue.enqueue(move || {
-                        let keypair = keypair.clone();
-                        async move {
-                            let _ = confirm_miner_vacation(keypair, current_task_id_copy).await?;
-                            Ok(TxOutput::Success)
-                        }
-                    }).await?;
-
-                    match rx.await {
-                        Ok(Ok(TxOutput::Success)) => println!("Miner vacation confirmed!"),
-                        Ok(Err(e)) => println!("Error confirming miner vacation: {}", e),
-                        _ => println!("Unexpected response for miner vacation confirmation"),
-                    }
+                    task_handling::clean_up_current_task_and_vacate(miner).await?;
                 }
             }
             Err(e) => {

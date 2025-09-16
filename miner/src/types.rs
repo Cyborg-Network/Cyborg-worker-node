@@ -18,6 +18,8 @@ pub struct MinerData {
 pub struct CurrentTask {
     pub id: u64,
     pub task_type: TaskKind<u32>,
+    pub container_name: String,
+    pub task_owner: AccountId32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

@@ -2,7 +2,7 @@ use bollard::Docker;
 use serde_json::json;
 use std::collections::HashMap;
 use bollard::query_parameters::{
-    CreateContainerOptionsBuilder, RemoveContainerOptions, StartContainerOptions
+    CreateContainerOptionsBuilder, InspectContainerOptions, RemoveContainerOptions, StartContainerOptions
 };
 use bollard::models::{HostConfig, PortBinding, ContainerCreateBody};
 use futures::{stream::StreamExt, Future, Stream};
@@ -13,6 +13,9 @@ const PORT: u16 = 3005;
 pub struct FlashInferEngine {
     hf_id: String,
     torch_infer_port: u16,
+    // Identifier for naming the container, to be able to nuke it from outside the engine
+    container_name: String,
+    // Identifier for the running container, used internally by the engine
     container_id: Option<String>,
     client: reqwest::Client,
 }
@@ -25,12 +28,13 @@ impl FlashInferEngine {
     ///
     /// # Returns
     /// A new `FlashInferEngine` instance
-    pub fn new(hf_id: &str, port: u16) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(hf_id: &str, port: u16, containe_name: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let client = reqwest::Client::new();
 
         Ok(Self {
             hf_id: hf_id.to_string(),
             torch_infer_port: port,
+            container_name: containe_name.to_string(),
             container_id: None,
             client,
         })
@@ -58,48 +62,63 @@ impl FlashInferEngine {
         }
         */
 
-        let container_name = "torch-infer";
-
-        let mut port_bindings = HashMap::new();
-        port_bindings.insert(
-            format!("{}/tcp", PORT),
-            Some(vec![PortBinding {
-                host_ip: Some("0.0.0.0".to_string()),
-                host_port: Some(PORT.to_string()),
-            }]),
-        );
-
-        let config = ContainerCreateBody {
-            image: Some(image.to_string()),
-            host_config: Some(HostConfig {
-                port_bindings: Some(port_bindings),
-                runtime: Some("nvidia".to_string()),
-                ..Default::default()
-            }),
-            env: Some(vec![
-                format!("HF_ID={}", self.hf_id),
-            ]),
-            ..Default::default()
-        };
-
-        let create_contaienr_options = CreateContainerOptionsBuilder::new()
-            .name(container_name)
-            .build();
-
         let container = docker
-            .create_container(
-                Some(create_contaienr_options),
-                config
-            )
-            .await?;
-        println!("Created container {}", container.id);
+            .inspect_container(&self.container_name, None::<InspectContainerOptions>) 
+            .await.ok();
+
+        let container_id: String;
+        // Extract ID option without further nesting
+        if let Some((_c, id)) = container.as_ref()
+            .and_then(|c| c.id.as_ref().map(|id| (c, id))) 
+        { 
+            container_id = id.to_string();
+            println!("Found existing container {}", id);
+        } else {
+            let mut port_bindings = HashMap::new();
+            port_bindings.insert(
+                format!("{}/tcp", PORT),
+                Some(vec![PortBinding {
+                    host_ip: Some("0.0.0.0".to_string()),
+                    host_port: Some(PORT.to_string()),
+                }]),
+            );
+
+            let config = ContainerCreateBody {
+                image: Some(image.to_string()),
+                host_config: Some(HostConfig {
+                    port_bindings: Some(port_bindings),
+                    //runtime: Some("nvidia".to_string()),
+                    ..Default::default()
+                }),
+                env: Some(vec![
+                    format!("HF_ID={}", self.hf_id),
+                ]),
+                ..Default::default()
+            };
+
+            let create_contaienr_options = CreateContainerOptionsBuilder::new()
+                .name(&self.container_name)
+                .build();
+
+            let container = docker
+                .create_container(
+                    Some(create_contaienr_options),
+                    config
+                )
+                .await?;
+
+            println!("Created new container {}", container.id);
+
+            container_id = container.id;
+        }
 
         docker
-            .start_container(&container.id, None::<StartContainerOptions>)
+            .start_container(&container_id, None::<StartContainerOptions>)
             .await?;
-        println!("Started container {}", container.id);
 
-        self.container_id = Some(container.id);
+        println!("Started container {}", container_id);
+
+        self.container_id = Some(container_id);
 
         Ok(())
     }
@@ -185,18 +204,28 @@ impl FlashInferEngine {
 
         let docker = Docker::connect_with_local_defaults()?;
 
-        docker
-            .remove_container(
-                container_id,
-                Some(RemoveContainerOptions {
-                    force: true,
-                    ..Default::default()
-                }),
-            )
-            .await?;
-        println!("Force-removed container {}", container_id);
+        let container = docker
+            .inspect_container(&self.container_name, None::<InspectContainerOptions>) 
+            .await.ok();
 
-        Ok(())
+        if let Some(container) = container {
+            docker
+                .remove_container(
+                    container_id,
+                    Some(RemoveContainerOptions {
+                        force: true,
+                        ..Default::default()
+                    }),
+                )
+                .await?;
+            println!("Force-removed container {}", container_id);
+
+            return Ok(())
+        } else {
+            println!("Could not find container {}, likely already removed.", container_id);
+
+            return Ok(())
+        }
     }
 }
 

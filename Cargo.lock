@@ -3292,6 +3292,7 @@ dependencies = [
  "async-trait 0.1.88 (git+https://github.com/dtolnay/async-trait.git)",
  "axum",
  "axum-macros",
+ "bollard",
  "cess-rust-sdk",
  "chrono",
  "clap",

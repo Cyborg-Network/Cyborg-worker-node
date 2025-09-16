@@ -42,7 +42,7 @@ pub fn init_logger() -> Result<()> {
     Ok(())
 }
 
-fn reset_log_file() -> Result<()> {
+pub fn reset_log_file() -> Result<()> {
     *LOG_GUARD.lock().map_err(|_| Error::Custom("Failed to lock log guard => poisoned".to_string()))? = None;
 
     let log_file_path = &config::PATHS.get()

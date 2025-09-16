@@ -2,10 +2,11 @@ use crate::config;
 use crate::error::{Error, Result};
 use crate::self_update::try_apply_update_if_available;
 use crate::substrate_interface;
+use crate::utils::task_handling::pick_up_task;
 use crate::utils::tx_builder::register;
 use crate::utils::tx_queue::TxOutput;
 use crate::traits::ParachainInteractor;
-use crate::types::{Miner, MinerData};
+use crate::types::{Miner, MinerData, ParentRuntime};
 use serde::Deserialize;
 use std::fs;
 use subxt::utils::AccountId32;
@@ -118,6 +119,10 @@ pub async fn start_miner(miner: &mut Miner) -> Result<()> {
                 _ => println!("Missing identity data from registration event"),
             }
         }
+    }
+
+    if let Err(e) = pick_up_task(miner).await {
+        println!("No task to pick up, performing clean startup: {}", e);        
     }
 
     let mut blocks = client.blocks().subscribe_finalized().await?;

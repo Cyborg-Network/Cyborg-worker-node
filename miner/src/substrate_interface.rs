@@ -2026,9 +2026,9 @@ pub mod api {
             .hash();
         runtime_metadata_hash
             == [
-                88u8, 161u8, 98u8, 199u8, 97u8, 172u8, 47u8, 204u8, 193u8, 227u8, 15u8, 65u8,
-                146u8, 64u8, 74u8, 9u8, 147u8, 118u8, 160u8, 104u8, 78u8, 59u8, 22u8, 208u8, 237u8,
-                11u8, 179u8, 80u8, 211u8, 97u8, 227u8, 19u8,
+                10u8, 162u8, 131u8, 222u8, 12u8, 35u8, 221u8, 63u8, 105u8, 191u8, 29u8, 254u8,
+                249u8, 126u8, 245u8, 201u8, 145u8, 235u8, 10u8, 92u8, 116u8, 187u8, 199u8, 178u8,
+                223u8, 231u8, 85u8, 152u8, 193u8, 139u8, 183u8, 38u8,
             ]
     }
     pub mod system {
@@ -15135,9 +15135,9 @@ pub mod api {
                         "WorkerClusters",
                         (),
                         [
-                            116u8, 87u8, 232u8, 44u8, 214u8, 71u8, 38u8, 211u8, 65u8, 88u8, 28u8,
-                            226u8, 149u8, 29u8, 210u8, 121u8, 196u8, 46u8, 37u8, 5u8, 187u8, 38u8,
-                            58u8, 214u8, 226u8, 251u8, 173u8, 24u8, 88u8, 199u8, 177u8, 71u8,
+                            242u8, 98u8, 210u8, 153u8, 122u8, 64u8, 69u8, 89u8, 232u8, 142u8, 11u8,
+                            62u8, 12u8, 5u8, 249u8, 141u8, 60u8, 76u8, 230u8, 192u8, 225u8, 202u8,
+                            119u8, 230u8, 253u8, 158u8, 141u8, 249u8, 227u8, 181u8, 7u8, 12u8,
                         ],
                     )
                 }
@@ -15161,9 +15161,9 @@ pub mod api {
                             _0.borrow(),
                         ),
                         [
-                            116u8, 87u8, 232u8, 44u8, 214u8, 71u8, 38u8, 211u8, 65u8, 88u8, 28u8,
-                            226u8, 149u8, 29u8, 210u8, 121u8, 196u8, 46u8, 37u8, 5u8, 187u8, 38u8,
-                            58u8, 214u8, 226u8, 251u8, 173u8, 24u8, 88u8, 199u8, 177u8, 71u8,
+                            242u8, 98u8, 210u8, 153u8, 122u8, 64u8, 69u8, 89u8, 232u8, 142u8, 11u8,
+                            62u8, 12u8, 5u8, 249u8, 141u8, 60u8, 76u8, 230u8, 192u8, 225u8, 202u8,
+                            119u8, 230u8, 253u8, 158u8, 141u8, 249u8, 227u8, 181u8, 7u8, 12u8,
                         ],
                     )
                 }
@@ -15198,9 +15198,9 @@ pub mod api {
                             ),
                         ),
                         [
-                            116u8, 87u8, 232u8, 44u8, 214u8, 71u8, 38u8, 211u8, 65u8, 88u8, 28u8,
-                            226u8, 149u8, 29u8, 210u8, 121u8, 196u8, 46u8, 37u8, 5u8, 187u8, 38u8,
-                            58u8, 214u8, 226u8, 251u8, 173u8, 24u8, 88u8, 199u8, 177u8, 71u8,
+                            242u8, 98u8, 210u8, 153u8, 122u8, 64u8, 69u8, 89u8, 232u8, 142u8, 11u8,
+                            62u8, 12u8, 5u8, 249u8, 141u8, 60u8, 76u8, 230u8, 192u8, 225u8, 202u8,
+                            119u8, 230u8, 253u8, 158u8, 141u8, 249u8, 227u8, 181u8, 7u8, 12u8,
                         ],
                     )
                 }
@@ -15219,10 +15219,9 @@ pub mod api {
                         "ExecutableWorkers",
                         (),
                         [
-                            153u8, 115u8, 65u8, 106u8, 104u8, 23u8, 100u8, 174u8, 250u8, 180u8,
-                            55u8, 108u8, 127u8, 1u8, 162u8, 165u8, 221u8, 163u8, 130u8, 184u8,
-                            16u8, 194u8, 17u8, 173u8, 42u8, 50u8, 179u8, 234u8, 219u8, 143u8,
-                            230u8, 58u8,
+                            185u8, 174u8, 106u8, 241u8, 11u8, 47u8, 47u8, 126u8, 247u8, 196u8, 5u8,
+                            106u8, 45u8, 207u8, 60u8, 20u8, 4u8, 253u8, 19u8, 32u8, 132u8, 27u8,
+                            93u8, 112u8, 36u8, 171u8, 161u8, 71u8, 137u8, 215u8, 228u8, 158u8,
                         ],
                     )
                 }
@@ -15246,10 +15245,9 @@ pub mod api {
                             _0.borrow(),
                         ),
                         [
-                            153u8, 115u8, 65u8, 106u8, 104u8, 23u8, 100u8, 174u8, 250u8, 180u8,
-                            55u8, 108u8, 127u8, 1u8, 162u8, 165u8, 221u8, 163u8, 130u8, 184u8,
-                            16u8, 194u8, 17u8, 173u8, 42u8, 50u8, 179u8, 234u8, 219u8, 143u8,
-                            230u8, 58u8,
+                            185u8, 174u8, 106u8, 241u8, 11u8, 47u8, 47u8, 126u8, 247u8, 196u8, 5u8,
+                            106u8, 45u8, 207u8, 60u8, 20u8, 4u8, 253u8, 19u8, 32u8, 132u8, 27u8,
+                            93u8, 112u8, 36u8, 171u8, 161u8, 71u8, 137u8, 215u8, 228u8, 158u8,
                         ],
                     )
                 }
@@ -15284,10 +15282,9 @@ pub mod api {
                             ),
                         ),
                         [
-                            153u8, 115u8, 65u8, 106u8, 104u8, 23u8, 100u8, 174u8, 250u8, 180u8,
-                            55u8, 108u8, 127u8, 1u8, 162u8, 165u8, 221u8, 163u8, 130u8, 184u8,
-                            16u8, 194u8, 17u8, 173u8, 42u8, 50u8, 179u8, 234u8, 219u8, 143u8,
-                            230u8, 58u8,
+                            185u8, 174u8, 106u8, 241u8, 11u8, 47u8, 47u8, 126u8, 247u8, 196u8, 5u8,
+                            106u8, 45u8, 207u8, 60u8, 20u8, 4u8, 253u8, 19u8, 32u8, 132u8, 27u8,
+                            93u8, 112u8, 36u8, 171u8, 161u8, 71u8, 137u8, 215u8, 228u8, 158u8,
                         ],
                     )
                 }
@@ -20516,6 +20513,7 @@ pub mod api {
                     pub location: runtime_types::cyborg_primitives::worker::Location,
                     pub specs: runtime_types::cyborg_primitives::worker::WorkerSpecs,
                     pub reputation: runtime_types::cyborg_primitives::worker::WorkerReputation<_1>,
+                    pub current_task: ::core::option::Option<_2>,
                     pub start_block: _1,
                     pub status: runtime_types::cyborg_primitives::worker::WorkerStatusType,
                     pub status_last_updated: _1,
@@ -21700,7 +21698,7 @@ pub mod api {
                     #[doc = "Sender does not have permission"]
                     NoPermission,
                     #[codec(index = 1)]
-                    #[doc = "Feeder has already feeded at this block"]
+                    #[doc = "Feeder has already fed at this block"]
                     AlreadyFeeded,
                 }
                 #[derive(
@@ -22663,6 +22661,12 @@ pub mod api {
                     #[codec(index = 4)]
                     #[doc = "Worker reputation is too low"]
                     InsufficientReputation,
+                    #[codec(index = 5)]
+                    #[doc = "Miner is busy"]
+                    MinerIsBusy,
+                    #[codec(index = 6)]
+                    #[doc = "Miner is inactive"]
+                    MinerIsInactive,
                 }
                 #[derive(
                     :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -24082,11 +24086,11 @@ pub mod api {
                     #[codec(index = 6)]
                     InvalidModelId,
                     #[codec(index = 7)]
-                    RequireComputeHoursDeposit,
+                    NotAssignedMiner,
                     #[codec(index = 8)]
-                    ZkFilesMissing,
+                    RequireComputeHoursDeposit,
                     #[codec(index = 9)]
-                    NoWorkersAvailable,
+                    ZkFilesMissing,
                     #[codec(index = 10)]
                     UnassignedTaskId,
                     #[codec(index = 11)]
@@ -24101,10 +24105,8 @@ pub mod api {
                     #[doc = "Account has exceeded task submission rate limit"]
                     RateLimitExceeded,
                     #[codec(index = 16)]
-                    WorkerDoesNotExist,
-                    #[codec(index = 17)]
                     ModelAlreadyRegistered,
-                    #[codec(index = 18)]
+                    #[codec(index = 17)]
                     ModelNotFound,
                 }
                 #[derive(
