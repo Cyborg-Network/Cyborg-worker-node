@@ -1,4 +1,9 @@
+use std::sync::Arc;
+
+use tokio::sync::RwLock;
+
 use crate::substrate_interface::api::runtime_types::cyborg_primitives::task::FlashInferTask;
+use crate::types::CurrentTask;
 use crate::{
     error::Result, 
     parent_runtime::storage_interactor, 
@@ -8,8 +13,8 @@ use crate::{
     }
 };
 
-pub async fn process_task(task_kind: TaskKind) -> Result<()> {
-    match task_kind {
+pub async fn process_task(task: Arc<RwLock<CurrentTask>>) -> Result<()> {
+    match &task.read().await.task_type {
         TaskKind::OpenInference(oi_task) => {
             match oi_task {
                 OpenInferenceTask::Onnx(onnx_task) => {
@@ -30,6 +35,10 @@ pub async fn process_task(task_kind: TaskKind) -> Result<()> {
                     Ok(())
                 }
             }
+        }
+        TaskKind::CyCloud => {
+            println!("Received CyCloud task, passing responsibility to docker container.");
+            Ok(())
         }
     }
 }

@@ -5,26 +5,18 @@ use reqwest::header::{RANGE, CONTENT_LENGTH};
 use std::path::Path;
 use regex::Regex;
 
-use crate::config;
-use crate::error::{Result, Error};
+use crate::global_config::PATHS;
+use crate::error::Result;
 use crate::substrate_interface::api::runtime_types::cyborg_primitives::task::OnnxTask;
 
 const CHUNK_SIZE: u64 = 100 * 1024 * 1024;
 
-pub async fn download_onnx_model(onnx_task: OnnxTask) -> Result<()> {
-    let model_url = String::from_utf8(onnx_task.storage_location_identifier.0)?;
+pub async fn download_onnx_model(onnx_task: &OnnxTask) -> Result<()> {
+    let model_url = String::from_utf8(onnx_task.storage_location_identifier.0.clone())?;
 
     tracing::info!("Downloading onnx model from: {}", &model_url);
 
-    let task_file_name = &config::PATHS
-        .get()
-        .ok_or(Error::config_paths_not_initialized())?
-        .task_file_name;
-
-    let task_dir = &config::PATHS
-        .get()
-        .ok_or(Error::config_paths_not_initialized())?
-        .task_dir_path;
+    let (task_file_name, task_dir) = (&PATHS.task_file_name, &PATHS.task_dir_path);
 
     // Required to make model repository structure as nvidia triton server expects
     let save_path = format!("{}/{}", task_dir, task_file_name);

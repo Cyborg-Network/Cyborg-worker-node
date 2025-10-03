@@ -1,19 +1,18 @@
 use std::{
     env,
     fs,
-    io,
     os::unix::fs::PermissionsExt,
     process::Command,
 };
 
 use std::os::unix::process::CommandExt;
 
-use crate::config;
+use crate::global_config;
 use crate::error::{Error, Result};
 
 pub fn try_apply_update_if_available() -> Result<()> {
     let current_exe = env::current_exe()?;
-    let staged_update = config::get_update_path()?;
+    let staged_update = &global_config::PATHS.update_path;
 
     if staged_update.exists() {
         println!("New version detected. Attempting self-update...");
@@ -46,6 +45,8 @@ pub fn try_apply_update_if_available() -> Result<()> {
             .exec();
 
         unreachable!("exec failed: {e}");
+    } else { 
+        println!("No update available.");
     }
 
     Ok(())

@@ -1347,9 +1347,10 @@ pub mod api {
                         "query_call_info",
                         types::QueryCallInfo { call, len },
                         [
-                            58u8, 165u8, 16u8, 204u8, 49u8, 69u8, 164u8, 217u8, 179u8, 155u8,
-                            167u8, 118u8, 39u8, 128u8, 147u8, 6u8, 102u8, 42u8, 84u8, 124u8, 34u8,
-                            122u8, 203u8, 212u8, 58u8, 91u8, 187u8, 35u8, 69u8, 155u8, 228u8, 45u8,
+                            116u8, 125u8, 39u8, 46u8, 35u8, 222u8, 165u8, 217u8, 197u8, 14u8,
+                            196u8, 48u8, 44u8, 192u8, 172u8, 175u8, 182u8, 141u8, 234u8, 68u8,
+                            200u8, 144u8, 176u8, 181u8, 75u8, 213u8, 88u8, 58u8, 173u8, 147u8,
+                            60u8, 200u8,
                         ],
                     )
                 }
@@ -1367,9 +1368,9 @@ pub mod api {
                         "query_call_fee_details",
                         types::QueryCallFeeDetails { call, len },
                         [
-                            104u8, 46u8, 161u8, 49u8, 187u8, 171u8, 61u8, 176u8, 156u8, 198u8,
-                            45u8, 240u8, 172u8, 218u8, 87u8, 81u8, 57u8, 89u8, 42u8, 101u8, 23u8,
-                            199u8, 18u8, 4u8, 251u8, 121u8, 231u8, 57u8, 246u8, 186u8, 8u8, 85u8,
+                            58u8, 197u8, 22u8, 123u8, 145u8, 4u8, 246u8, 132u8, 46u8, 92u8, 192u8,
+                            91u8, 111u8, 51u8, 229u8, 239u8, 158u8, 58u8, 216u8, 62u8, 33u8, 210u8,
+                            141u8, 245u8, 22u8, 5u8, 122u8, 27u8, 174u8, 180u8, 110u8, 177u8,
                         ],
                     )
                 }
@@ -1793,10 +1794,10 @@ pub mod api {
                         "get_recent_events",
                         types::GetRecentEvents {},
                         [
-                            152u8, 161u8, 71u8, 104u8, 232u8, 80u8, 94u8, 221u8, 135u8, 102u8,
-                            78u8, 168u8, 171u8, 145u8, 225u8, 212u8, 204u8, 39u8, 120u8, 230u8,
-                            91u8, 164u8, 29u8, 174u8, 70u8, 198u8, 37u8, 77u8, 210u8, 248u8, 40u8,
-                            51u8,
+                            250u8, 220u8, 101u8, 165u8, 173u8, 17u8, 90u8, 155u8, 17u8, 129u8,
+                            210u8, 106u8, 237u8, 193u8, 193u8, 64u8, 56u8, 52u8, 110u8, 19u8, 78u8,
+                            249u8, 201u8, 133u8, 247u8, 11u8, 81u8, 246u8, 250u8, 101u8, 27u8,
+                            86u8,
                         ],
                     )
                 }
@@ -2026,9 +2027,9 @@ pub mod api {
             .hash();
         runtime_metadata_hash
             == [
-                10u8, 162u8, 131u8, 222u8, 12u8, 35u8, 221u8, 63u8, 105u8, 191u8, 29u8, 254u8,
-                249u8, 126u8, 245u8, 201u8, 145u8, 235u8, 10u8, 92u8, 116u8, 187u8, 199u8, 178u8,
-                223u8, 231u8, 85u8, 152u8, 193u8, 139u8, 183u8, 38u8,
+                29u8, 11u8, 37u8, 42u8, 50u8, 202u8, 31u8, 54u8, 207u8, 136u8, 97u8, 63u8, 191u8,
+                17u8, 202u8, 139u8, 65u8, 225u8, 50u8, 85u8, 234u8, 131u8, 241u8, 2u8, 157u8,
+                175u8, 65u8, 183u8, 129u8, 160u8, 90u8, 49u8,
             ]
     }
     pub mod system {
@@ -3236,10 +3237,9 @@ pub mod api {
                         "Events",
                         (),
                         [
-                            13u8, 121u8, 77u8, 24u8, 42u8, 220u8, 162u8, 165u8, 236u8, 229u8,
-                            104u8, 207u8, 40u8, 71u8, 146u8, 144u8, 171u8, 84u8, 224u8, 255u8,
-                            97u8, 26u8, 28u8, 178u8, 83u8, 110u8, 241u8, 208u8, 104u8, 235u8, 1u8,
-                            40u8,
+                            126u8, 162u8, 156u8, 16u8, 233u8, 82u8, 177u8, 191u8, 249u8, 29u8,
+                            155u8, 31u8, 173u8, 171u8, 67u8, 247u8, 121u8, 58u8, 97u8, 199u8, 0u8,
+                            193u8, 41u8, 117u8, 223u8, 211u8, 119u8, 93u8, 90u8, 86u8, 191u8, 42u8,
                         ],
                     )
                 }
@@ -6787,10 +6787,10 @@ pub mod api {
                             call: ::subxt::ext::subxt_core::alloc::boxed::Box::new(call),
                         },
                         [
-                            165u8, 105u8, 104u8, 183u8, 156u8, 224u8, 191u8, 84u8, 59u8, 158u8,
-                            14u8, 203u8, 77u8, 106u8, 202u8, 82u8, 83u8, 102u8, 207u8, 203u8,
-                            229u8, 115u8, 134u8, 71u8, 122u8, 20u8, 244u8, 112u8, 71u8, 59u8,
-                            161u8, 134u8,
+                            14u8, 68u8, 122u8, 235u8, 254u8, 140u8, 143u8, 192u8, 173u8, 217u8,
+                            71u8, 179u8, 22u8, 164u8, 241u8, 12u8, 182u8, 41u8, 63u8, 74u8, 255u8,
+                            95u8, 79u8, 220u8, 235u8, 175u8, 176u8, 139u8, 125u8, 248u8, 96u8,
+                            204u8,
                         ],
                     )
                 }
@@ -6813,9 +6813,10 @@ pub mod api {
                             weight,
                         },
                         [
-                            103u8, 106u8, 68u8, 112u8, 132u8, 135u8, 200u8, 1u8, 207u8, 211u8,
-                            179u8, 92u8, 113u8, 45u8, 78u8, 192u8, 193u8, 44u8, 243u8, 0u8, 20u8,
-                            49u8, 254u8, 27u8, 2u8, 171u8, 83u8, 0u8, 127u8, 179u8, 161u8, 248u8,
+                            43u8, 213u8, 128u8, 223u8, 75u8, 114u8, 16u8, 94u8, 219u8, 221u8,
+                            183u8, 39u8, 31u8, 204u8, 238u8, 6u8, 168u8, 61u8, 241u8, 60u8, 227u8,
+                            170u8, 168u8, 232u8, 105u8, 7u8, 172u8, 22u8, 118u8, 213u8, 244u8,
+                            201u8,
                         ],
                     )
                 }
@@ -6855,9 +6856,9 @@ pub mod api {
                             call: ::subxt::ext::subxt_core::alloc::boxed::Box::new(call),
                         },
                         [
-                            116u8, 150u8, 108u8, 114u8, 67u8, 4u8, 181u8, 60u8, 139u8, 25u8, 220u8,
-                            244u8, 148u8, 167u8, 39u8, 224u8, 127u8, 90u8, 138u8, 8u8, 76u8, 59u8,
-                            78u8, 157u8, 78u8, 213u8, 39u8, 63u8, 188u8, 7u8, 59u8, 165u8,
+                            226u8, 251u8, 242u8, 161u8, 160u8, 194u8, 182u8, 97u8, 54u8, 44u8,
+                            83u8, 95u8, 154u8, 126u8, 66u8, 141u8, 8u8, 145u8, 221u8, 18u8, 123u8,
+                            166u8, 21u8, 212u8, 254u8, 31u8, 73u8, 89u8, 184u8, 106u8, 50u8, 71u8,
                         ],
                     )
                 }
@@ -13356,10 +13357,10 @@ pub mod api {
                         "feed_values",
                         types::FeedValues { values },
                         [
-                            104u8, 239u8, 31u8, 26u8, 244u8, 144u8, 194u8, 239u8, 143u8, 98u8,
-                            64u8, 234u8, 8u8, 119u8, 173u8, 208u8, 21u8, 180u8, 234u8, 250u8,
-                            218u8, 94u8, 64u8, 255u8, 136u8, 96u8, 153u8, 131u8, 14u8, 141u8, 94u8,
-                            70u8,
+                            241u8, 212u8, 123u8, 247u8, 88u8, 30u8, 55u8, 197u8, 232u8, 246u8,
+                            134u8, 202u8, 34u8, 87u8, 144u8, 140u8, 227u8, 122u8, 188u8, 33u8,
+                            228u8, 31u8, 145u8, 27u8, 3u8, 204u8, 153u8, 6u8, 243u8, 6u8, 184u8,
+                            248u8,
                         ],
                     )
                 }
@@ -13450,10 +13451,10 @@ pub mod api {
                         "RawValues",
                         (),
                         [
-                            162u8, 193u8, 254u8, 182u8, 182u8, 192u8, 88u8, 254u8, 210u8, 109u8,
-                            20u8, 102u8, 144u8, 184u8, 226u8, 59u8, 17u8, 79u8, 131u8, 125u8,
-                            161u8, 208u8, 69u8, 213u8, 235u8, 142u8, 186u8, 119u8, 205u8, 232u8,
-                            183u8, 248u8,
+                            217u8, 3u8, 237u8, 202u8, 67u8, 123u8, 247u8, 255u8, 221u8, 38u8,
+                            132u8, 248u8, 135u8, 168u8, 56u8, 157u8, 202u8, 101u8, 171u8, 204u8,
+                            209u8, 195u8, 76u8, 168u8, 31u8, 30u8, 191u8, 64u8, 49u8, 248u8, 26u8,
+                            228u8,
                         ],
                     )
                 }
@@ -13477,10 +13478,10 @@ pub mod api {
                             _0.borrow(),
                         ),
                         [
-                            162u8, 193u8, 254u8, 182u8, 182u8, 192u8, 88u8, 254u8, 210u8, 109u8,
-                            20u8, 102u8, 144u8, 184u8, 226u8, 59u8, 17u8, 79u8, 131u8, 125u8,
-                            161u8, 208u8, 69u8, 213u8, 235u8, 142u8, 186u8, 119u8, 205u8, 232u8,
-                            183u8, 248u8,
+                            217u8, 3u8, 237u8, 202u8, 67u8, 123u8, 247u8, 255u8, 221u8, 38u8,
+                            132u8, 248u8, 135u8, 168u8, 56u8, 157u8, 202u8, 101u8, 171u8, 204u8,
+                            209u8, 195u8, 76u8, 168u8, 31u8, 30u8, 191u8, 64u8, 49u8, 248u8, 26u8,
+                            228u8,
                         ],
                     )
                 }
@@ -13515,10 +13516,10 @@ pub mod api {
                             ),
                         ),
                         [
-                            162u8, 193u8, 254u8, 182u8, 182u8, 192u8, 88u8, 254u8, 210u8, 109u8,
-                            20u8, 102u8, 144u8, 184u8, 226u8, 59u8, 17u8, 79u8, 131u8, 125u8,
-                            161u8, 208u8, 69u8, 213u8, 235u8, 142u8, 186u8, 119u8, 205u8, 232u8,
-                            183u8, 248u8,
+                            217u8, 3u8, 237u8, 202u8, 67u8, 123u8, 247u8, 255u8, 221u8, 38u8,
+                            132u8, 248u8, 135u8, 168u8, 56u8, 157u8, 202u8, 101u8, 171u8, 204u8,
+                            209u8, 195u8, 76u8, 168u8, 31u8, 30u8, 191u8, 64u8, 49u8, 248u8, 26u8,
+                            228u8,
                         ],
                     )
                 }
@@ -13537,10 +13538,10 @@ pub mod api {
                         "Values",
                         (),
                         [
-                            84u8, 248u8, 242u8, 84u8, 105u8, 144u8, 225u8, 115u8, 151u8, 114u8,
-                            112u8, 241u8, 81u8, 59u8, 133u8, 42u8, 235u8, 10u8, 95u8, 154u8, 230u8,
-                            41u8, 125u8, 101u8, 175u8, 166u8, 77u8, 246u8, 70u8, 227u8, 244u8,
-                            243u8,
+                            124u8, 141u8, 209u8, 166u8, 21u8, 56u8, 218u8, 39u8, 229u8, 95u8,
+                            245u8, 96u8, 97u8, 99u8, 161u8, 87u8, 44u8, 166u8, 93u8, 140u8, 251u8,
+                            123u8, 63u8, 107u8, 208u8, 167u8, 179u8, 159u8, 240u8, 52u8, 159u8,
+                            165u8,
                         ],
                     )
                 }
@@ -13564,10 +13565,10 @@ pub mod api {
                             _0.borrow(),
                         ),
                         [
-                            84u8, 248u8, 242u8, 84u8, 105u8, 144u8, 225u8, 115u8, 151u8, 114u8,
-                            112u8, 241u8, 81u8, 59u8, 133u8, 42u8, 235u8, 10u8, 95u8, 154u8, 230u8,
-                            41u8, 125u8, 101u8, 175u8, 166u8, 77u8, 246u8, 70u8, 227u8, 244u8,
-                            243u8,
+                            124u8, 141u8, 209u8, 166u8, 21u8, 56u8, 218u8, 39u8, 229u8, 95u8,
+                            245u8, 96u8, 97u8, 99u8, 161u8, 87u8, 44u8, 166u8, 93u8, 140u8, 251u8,
+                            123u8, 63u8, 107u8, 208u8, 167u8, 179u8, 159u8, 240u8, 52u8, 159u8,
+                            165u8,
                         ],
                     )
                 }
@@ -14250,19 +14251,19 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                #[doc = "Registers a Worker with either a domain and initialize it with an inactive status."]
-                pub struct RegisterWorker {
-                    pub worker_type: register_worker::WorkerType,
-                    pub domain: register_worker::Domain,
-                    pub latitude: register_worker::Latitude,
-                    pub longitude: register_worker::Longitude,
-                    pub ram: register_worker::Ram,
-                    pub storage: register_worker::Storage,
-                    pub cpu: register_worker::Cpu,
+                #[doc = "Registers a Miner with either a domain and initialize it with an inactive status."]
+                pub struct RegisterMiner {
+                    pub miner_type: register_miner::MinerType,
+                    pub domain: register_miner::Domain,
+                    pub latitude: register_miner::Latitude,
+                    pub longitude: register_miner::Longitude,
+                    pub ram: register_miner::Ram,
+                    pub storage: register_miner::Storage,
+                    pub cpu: register_miner::Cpu,
                 }
-                pub mod register_worker {
+                pub mod register_miner {
                     use super::runtime_types;
-                    pub type WorkerType = runtime_types::cyborg_primitives::worker::WorkerType;
+                    pub type MinerType = runtime_types::cyborg_primitives::miner::MinerType;
                     pub type Domain = runtime_types::bounded_collections::bounded_vec::BoundedVec<
                         ::core::primitive::u8,
                     >;
@@ -14272,9 +14273,9 @@ pub mod api {
                     pub type Storage = ::core::primitive::u64;
                     pub type Cpu = ::core::primitive::u16;
                 }
-                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for RegisterWorker {
+                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for RegisterMiner {
                     const PALLET: &'static str = "EdgeConnect";
-                    const CALL: &'static str = "register_worker";
+                    const CALL: &'static str = "register_miner";
                 }
                 #[derive(
                     :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -14292,19 +14293,19 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                #[doc = "Remove a worker from storage an deactivates it"]
-                pub struct RemoveWorker {
-                    pub worker_type: remove_worker::WorkerType,
-                    pub worker_id: remove_worker::WorkerId,
+                #[doc = "Remove a miner from storage an deactivates it"]
+                pub struct RemoveMiner {
+                    pub miner_type: remove_miner::MinerType,
+                    pub miner_id: remove_miner::MinerId,
                 }
-                pub mod remove_worker {
+                pub mod remove_miner {
                     use super::runtime_types;
-                    pub type WorkerType = runtime_types::cyborg_primitives::worker::WorkerType;
-                    pub type WorkerId = ::core::primitive::u64;
+                    pub type MinerType = runtime_types::cyborg_primitives::miner::MinerType;
+                    pub type MinerId = ::core::primitive::u64;
                 }
-                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for RemoveWorker {
+                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for RemoveMiner {
                     const PALLET: &'static str = "EdgeConnect";
-                    const CALL: &'static str = "remove_worker";
+                    const CALL: &'static str = "remove_miner";
                 }
                 #[derive(
                     :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -14322,21 +14323,21 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                #[doc = "Switches the visibility of a worker between active and inactive."]
-                pub struct ToggleWorkerVisibility {
-                    pub worker_type: toggle_worker_visibility::WorkerType,
-                    pub worker_id: toggle_worker_visibility::WorkerId,
-                    pub visibility: toggle_worker_visibility::Visibility,
+                #[doc = "Switches the visibility of a miner between active and inactive."]
+                pub struct ToggleMinerVisibility {
+                    pub miner_type: toggle_miner_visibility::MinerType,
+                    pub miner_id: toggle_miner_visibility::MinerId,
+                    pub visibility: toggle_miner_visibility::Visibility,
                 }
-                pub mod toggle_worker_visibility {
+                pub mod toggle_miner_visibility {
                     use super::runtime_types;
-                    pub type WorkerType = runtime_types::cyborg_primitives::worker::WorkerType;
-                    pub type WorkerId = ::core::primitive::u64;
+                    pub type MinerType = runtime_types::cyborg_primitives::miner::MinerType;
+                    pub type MinerId = ::core::primitive::u64;
                     pub type Visibility = ::core::primitive::bool;
                 }
-                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for ToggleWorkerVisibility {
+                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for ToggleMinerVisibility {
                     const PALLET: &'static str = "EdgeConnect";
-                    const CALL: &'static str = "toggle_worker_visibility";
+                    const CALL: &'static str = "toggle_miner_visibility";
                 }
                 #[derive(
                     :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -14354,24 +14355,24 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                pub struct PenalizeWorker {
-                    pub worker_owner: penalize_worker::WorkerOwner,
-                    pub worker_id: penalize_worker::WorkerId,
-                    pub worker_type: penalize_worker::WorkerType,
-                    pub penalty: penalize_worker::Penalty,
-                    pub reason: penalize_worker::Reason,
+                pub struct PenalizeMiner {
+                    pub miner_owner: penalize_miner::MinerOwner,
+                    pub miner_id: penalize_miner::MinerId,
+                    pub miner_type: penalize_miner::MinerType,
+                    pub penalty: penalize_miner::Penalty,
+                    pub reason: penalize_miner::Reason,
                 }
-                pub mod penalize_worker {
+                pub mod penalize_miner {
                     use super::runtime_types;
-                    pub type WorkerOwner = ::subxt::ext::subxt_core::utils::AccountId32;
-                    pub type WorkerId = ::core::primitive::u64;
-                    pub type WorkerType = runtime_types::cyborg_primitives::worker::WorkerType;
+                    pub type MinerOwner = ::subxt::ext::subxt_core::utils::AccountId32;
+                    pub type MinerId = ::core::primitive::u64;
+                    pub type MinerType = runtime_types::cyborg_primitives::miner::MinerType;
                     pub type Penalty = ::core::primitive::i32;
                     pub type Reason = runtime_types::pallet_edge_connect::pallet::PenaltyReason;
                 }
-                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for PenalizeWorker {
+                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for PenalizeMiner {
                     const PALLET: &'static str = "EdgeConnect";
-                    const CALL: &'static str = "penalize_worker";
+                    const CALL: &'static str = "penalize_miner";
                 }
                 #[derive(
                     :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -14389,25 +14390,25 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                #[doc = "Manually suspend a worker (root only)"]
-                pub struct SuspendWorker {
-                    pub worker_owner: suspend_worker::WorkerOwner,
-                    pub worker_id: suspend_worker::WorkerId,
-                    pub worker_type: suspend_worker::WorkerType,
-                    pub blocks: suspend_worker::Blocks,
-                    pub reason: suspend_worker::Reason,
+                #[doc = "Manually suspend a miner (root only)"]
+                pub struct SuspendMiner {
+                    pub miner_owner: suspend_miner::MinerOwner,
+                    pub miner_id: suspend_miner::MinerId,
+                    pub miner_type: suspend_miner::MinerType,
+                    pub blocks: suspend_miner::Blocks,
+                    pub reason: suspend_miner::Reason,
                 }
-                pub mod suspend_worker {
+                pub mod suspend_miner {
                     use super::runtime_types;
-                    pub type WorkerOwner = ::subxt::ext::subxt_core::utils::AccountId32;
-                    pub type WorkerId = ::core::primitive::u64;
-                    pub type WorkerType = runtime_types::cyborg_primitives::worker::WorkerType;
+                    pub type MinerOwner = ::subxt::ext::subxt_core::utils::AccountId32;
+                    pub type MinerId = ::core::primitive::u64;
+                    pub type MinerType = runtime_types::cyborg_primitives::miner::MinerType;
                     pub type Blocks = ::core::primitive::u32;
-                    pub type Reason = runtime_types::cyborg_primitives::worker::SuspensionReason;
+                    pub type Reason = runtime_types::cyborg_primitives::miner::SuspensionReason;
                 }
-                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for SuspendWorker {
+                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for SuspendMiner {
                     const PALLET: &'static str = "EdgeConnect";
-                    const CALL: &'static str = "suspend_worker";
+                    const CALL: &'static str = "suspend_miner";
                 }
                 #[derive(
                     :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -14425,23 +14426,23 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                #[doc = "Manually ban a worker (root only)"]
-                pub struct BanWorker {
-                    pub worker_owner: ban_worker::WorkerOwner,
-                    pub worker_id: ban_worker::WorkerId,
-                    pub worker_type: ban_worker::WorkerType,
-                    pub reason: ban_worker::Reason,
+                #[doc = "Manually ban a miner (root only)"]
+                pub struct BanMiner {
+                    pub miner_owner: ban_miner::MinerOwner,
+                    pub miner_id: ban_miner::MinerId,
+                    pub miner_type: ban_miner::MinerType,
+                    pub reason: ban_miner::Reason,
                 }
-                pub mod ban_worker {
+                pub mod ban_miner {
                     use super::runtime_types;
-                    pub type WorkerOwner = ::subxt::ext::subxt_core::utils::AccountId32;
-                    pub type WorkerId = ::core::primitive::u64;
-                    pub type WorkerType = runtime_types::cyborg_primitives::worker::WorkerType;
-                    pub type Reason = runtime_types::cyborg_primitives::worker::SuspensionReason;
+                    pub type MinerOwner = ::subxt::ext::subxt_core::utils::AccountId32;
+                    pub type MinerId = ::core::primitive::u64;
+                    pub type MinerType = runtime_types::cyborg_primitives::miner::MinerType;
+                    pub type Reason = runtime_types::cyborg_primitives::miner::SuspensionReason;
                 }
-                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for BanWorker {
+                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for BanMiner {
                     const PALLET: &'static str = "EdgeConnect";
-                    const CALL: &'static str = "ban_worker";
+                    const CALL: &'static str = "ban_miner";
                 }
                 #[derive(
                     :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -14459,42 +14460,42 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                #[doc = "Lift suspension from a worker (root only)"]
-                pub struct UnsuspendWorker {
-                    pub worker_owner: unsuspend_worker::WorkerOwner,
-                    pub worker_id: unsuspend_worker::WorkerId,
-                    pub worker_type: unsuspend_worker::WorkerType,
+                #[doc = "Lift suspension from a miner (root only)"]
+                pub struct UnsuspendMiner {
+                    pub miner_owner: unsuspend_miner::MinerOwner,
+                    pub miner_id: unsuspend_miner::MinerId,
+                    pub miner_type: unsuspend_miner::MinerType,
                 }
-                pub mod unsuspend_worker {
+                pub mod unsuspend_miner {
                     use super::runtime_types;
-                    pub type WorkerOwner = ::subxt::ext::subxt_core::utils::AccountId32;
-                    pub type WorkerId = ::core::primitive::u64;
-                    pub type WorkerType = runtime_types::cyborg_primitives::worker::WorkerType;
+                    pub type MinerOwner = ::subxt::ext::subxt_core::utils::AccountId32;
+                    pub type MinerId = ::core::primitive::u64;
+                    pub type MinerType = runtime_types::cyborg_primitives::miner::MinerType;
                 }
-                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for UnsuspendWorker {
+                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for UnsuspendMiner {
                     const PALLET: &'static str = "EdgeConnect";
-                    const CALL: &'static str = "unsuspend_worker";
+                    const CALL: &'static str = "unsuspend_miner";
                 }
             }
             pub struct TransactionApi;
             impl TransactionApi {
-                #[doc = "Registers a Worker with either a domain and initialize it with an inactive status."]
-                pub fn register_worker(
+                #[doc = "Registers a Miner with either a domain and initialize it with an inactive status."]
+                pub fn register_miner(
                     &self,
-                    worker_type: types::register_worker::WorkerType,
-                    domain: types::register_worker::Domain,
-                    latitude: types::register_worker::Latitude,
-                    longitude: types::register_worker::Longitude,
-                    ram: types::register_worker::Ram,
-                    storage: types::register_worker::Storage,
-                    cpu: types::register_worker::Cpu,
-                ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::RegisterWorker>
+                    miner_type: types::register_miner::MinerType,
+                    domain: types::register_miner::Domain,
+                    latitude: types::register_miner::Latitude,
+                    longitude: types::register_miner::Longitude,
+                    ram: types::register_miner::Ram,
+                    storage: types::register_miner::Storage,
+                    cpu: types::register_miner::Cpu,
+                ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::RegisterMiner>
                 {
                     ::subxt::ext::subxt_core::tx::payload::StaticPayload::new_static(
                         "EdgeConnect",
-                        "register_worker",
-                        types::RegisterWorker {
-                            worker_type,
+                        "register_miner",
+                        types::RegisterMiner {
+                            miner_type,
                             domain,
                             latitude,
                             longitude,
@@ -14503,157 +14504,157 @@ pub mod api {
                             cpu,
                         },
                         [
-                            126u8, 20u8, 230u8, 96u8, 249u8, 183u8, 245u8, 108u8, 201u8, 234u8,
-                            115u8, 2u8, 139u8, 30u8, 62u8, 254u8, 214u8, 120u8, 7u8, 220u8, 150u8,
-                            170u8, 54u8, 32u8, 76u8, 112u8, 81u8, 36u8, 140u8, 12u8, 1u8, 23u8,
+                            209u8, 147u8, 114u8, 64u8, 212u8, 218u8, 5u8, 191u8, 245u8, 86u8, 19u8,
+                            4u8, 27u8, 188u8, 24u8, 229u8, 175u8, 174u8, 157u8, 153u8, 228u8, 72u8,
+                            121u8, 141u8, 45u8, 217u8, 137u8, 160u8, 130u8, 220u8, 44u8, 109u8,
                         ],
                     )
                 }
-                #[doc = "Remove a worker from storage an deactivates it"]
-                pub fn remove_worker(
+                #[doc = "Remove a miner from storage an deactivates it"]
+                pub fn remove_miner(
                     &self,
-                    worker_type: types::remove_worker::WorkerType,
-                    worker_id: types::remove_worker::WorkerId,
-                ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::RemoveWorker>
+                    miner_type: types::remove_miner::MinerType,
+                    miner_id: types::remove_miner::MinerId,
+                ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::RemoveMiner>
                 {
                     ::subxt::ext::subxt_core::tx::payload::StaticPayload::new_static(
                         "EdgeConnect",
-                        "remove_worker",
-                        types::RemoveWorker {
-                            worker_type,
-                            worker_id,
+                        "remove_miner",
+                        types::RemoveMiner {
+                            miner_type,
+                            miner_id,
                         },
                         [
-                            88u8, 199u8, 100u8, 78u8, 120u8, 225u8, 43u8, 249u8, 85u8, 9u8, 187u8,
-                            115u8, 152u8, 128u8, 237u8, 167u8, 117u8, 42u8, 72u8, 177u8, 72u8,
-                            218u8, 40u8, 57u8, 89u8, 60u8, 122u8, 143u8, 186u8, 176u8, 203u8, 82u8,
+                            187u8, 79u8, 228u8, 244u8, 52u8, 42u8, 121u8, 205u8, 135u8, 17u8,
+                            106u8, 223u8, 202u8, 143u8, 201u8, 25u8, 8u8, 70u8, 182u8, 30u8, 7u8,
+                            175u8, 34u8, 193u8, 230u8, 174u8, 255u8, 165u8, 69u8, 9u8, 68u8, 18u8,
                         ],
                     )
                 }
-                #[doc = "Switches the visibility of a worker between active and inactive."]
-                pub fn toggle_worker_visibility(
+                #[doc = "Switches the visibility of a miner between active and inactive."]
+                pub fn toggle_miner_visibility(
                     &self,
-                    worker_type: types::toggle_worker_visibility::WorkerType,
-                    worker_id: types::toggle_worker_visibility::WorkerId,
-                    visibility: types::toggle_worker_visibility::Visibility,
+                    miner_type: types::toggle_miner_visibility::MinerType,
+                    miner_id: types::toggle_miner_visibility::MinerId,
+                    visibility: types::toggle_miner_visibility::Visibility,
                 ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<
-                    types::ToggleWorkerVisibility,
+                    types::ToggleMinerVisibility,
                 > {
                     ::subxt::ext::subxt_core::tx::payload::StaticPayload::new_static(
                         "EdgeConnect",
-                        "toggle_worker_visibility",
-                        types::ToggleWorkerVisibility {
-                            worker_type,
-                            worker_id,
+                        "toggle_miner_visibility",
+                        types::ToggleMinerVisibility {
+                            miner_type,
+                            miner_id,
                             visibility,
                         },
                         [
-                            94u8, 104u8, 211u8, 45u8, 9u8, 15u8, 102u8, 90u8, 42u8, 155u8, 235u8,
-                            154u8, 51u8, 135u8, 201u8, 81u8, 40u8, 47u8, 73u8, 246u8, 60u8, 173u8,
-                            240u8, 255u8, 89u8, 246u8, 68u8, 218u8, 234u8, 35u8, 229u8, 209u8,
+                            3u8, 41u8, 146u8, 94u8, 198u8, 20u8, 130u8, 6u8, 169u8, 188u8, 173u8,
+                            73u8, 57u8, 249u8, 205u8, 202u8, 203u8, 58u8, 114u8, 178u8, 153u8,
+                            164u8, 23u8, 154u8, 215u8, 190u8, 202u8, 62u8, 97u8, 110u8, 33u8,
+                            219u8,
                         ],
                     )
                 }
-                pub fn penalize_worker(
+                pub fn penalize_miner(
                     &self,
-                    worker_owner: types::penalize_worker::WorkerOwner,
-                    worker_id: types::penalize_worker::WorkerId,
-                    worker_type: types::penalize_worker::WorkerType,
-                    penalty: types::penalize_worker::Penalty,
-                    reason: types::penalize_worker::Reason,
-                ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::PenalizeWorker>
+                    miner_owner: types::penalize_miner::MinerOwner,
+                    miner_id: types::penalize_miner::MinerId,
+                    miner_type: types::penalize_miner::MinerType,
+                    penalty: types::penalize_miner::Penalty,
+                    reason: types::penalize_miner::Reason,
+                ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::PenalizeMiner>
                 {
                     ::subxt::ext::subxt_core::tx::payload::StaticPayload::new_static(
                         "EdgeConnect",
-                        "penalize_worker",
-                        types::PenalizeWorker {
-                            worker_owner,
-                            worker_id,
-                            worker_type,
+                        "penalize_miner",
+                        types::PenalizeMiner {
+                            miner_owner,
+                            miner_id,
+                            miner_type,
                             penalty,
                             reason,
                         },
                         [
-                            125u8, 109u8, 252u8, 224u8, 235u8, 242u8, 18u8, 4u8, 165u8, 184u8,
-                            44u8, 128u8, 22u8, 94u8, 174u8, 16u8, 45u8, 126u8, 187u8, 180u8, 48u8,
-                            28u8, 15u8, 207u8, 146u8, 86u8, 124u8, 184u8, 125u8, 80u8, 76u8, 188u8,
+                            40u8, 73u8, 29u8, 185u8, 189u8, 110u8, 207u8, 12u8, 83u8, 101u8, 100u8,
+                            105u8, 129u8, 95u8, 59u8, 28u8, 164u8, 140u8, 133u8, 112u8, 247u8,
+                            21u8, 46u8, 22u8, 239u8, 147u8, 185u8, 159u8, 66u8, 226u8, 183u8, 81u8,
                         ],
                     )
                 }
-                #[doc = "Manually suspend a worker (root only)"]
-                pub fn suspend_worker(
+                #[doc = "Manually suspend a miner (root only)"]
+                pub fn suspend_miner(
                     &self,
-                    worker_owner: types::suspend_worker::WorkerOwner,
-                    worker_id: types::suspend_worker::WorkerId,
-                    worker_type: types::suspend_worker::WorkerType,
-                    blocks: types::suspend_worker::Blocks,
-                    reason: types::suspend_worker::Reason,
-                ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::SuspendWorker>
+                    miner_owner: types::suspend_miner::MinerOwner,
+                    miner_id: types::suspend_miner::MinerId,
+                    miner_type: types::suspend_miner::MinerType,
+                    blocks: types::suspend_miner::Blocks,
+                    reason: types::suspend_miner::Reason,
+                ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::SuspendMiner>
                 {
                     ::subxt::ext::subxt_core::tx::payload::StaticPayload::new_static(
                         "EdgeConnect",
-                        "suspend_worker",
-                        types::SuspendWorker {
-                            worker_owner,
-                            worker_id,
-                            worker_type,
+                        "suspend_miner",
+                        types::SuspendMiner {
+                            miner_owner,
+                            miner_id,
+                            miner_type,
                             blocks,
                             reason,
                         },
                         [
-                            55u8, 58u8, 67u8, 212u8, 38u8, 80u8, 210u8, 242u8, 158u8, 241u8, 125u8,
-                            196u8, 148u8, 128u8, 48u8, 247u8, 196u8, 46u8, 244u8, 132u8, 6u8,
-                            237u8, 160u8, 158u8, 171u8, 179u8, 150u8, 2u8, 208u8, 137u8, 210u8,
-                            167u8,
+                            41u8, 114u8, 24u8, 225u8, 12u8, 249u8, 191u8, 176u8, 183u8, 158u8,
+                            113u8, 82u8, 130u8, 236u8, 155u8, 38u8, 127u8, 178u8, 232u8, 62u8,
+                            212u8, 173u8, 105u8, 43u8, 59u8, 146u8, 253u8, 65u8, 131u8, 175u8,
+                            249u8, 134u8,
                         ],
                     )
                 }
-                #[doc = "Manually ban a worker (root only)"]
-                pub fn ban_worker(
+                #[doc = "Manually ban a miner (root only)"]
+                pub fn ban_miner(
                     &self,
-                    worker_owner: types::ban_worker::WorkerOwner,
-                    worker_id: types::ban_worker::WorkerId,
-                    worker_type: types::ban_worker::WorkerType,
-                    reason: types::ban_worker::Reason,
-                ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::BanWorker>
+                    miner_owner: types::ban_miner::MinerOwner,
+                    miner_id: types::ban_miner::MinerId,
+                    miner_type: types::ban_miner::MinerType,
+                    reason: types::ban_miner::Reason,
+                ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::BanMiner>
                 {
                     ::subxt::ext::subxt_core::tx::payload::StaticPayload::new_static(
                         "EdgeConnect",
-                        "ban_worker",
-                        types::BanWorker {
-                            worker_owner,
-                            worker_id,
-                            worker_type,
+                        "ban_miner",
+                        types::BanMiner {
+                            miner_owner,
+                            miner_id,
+                            miner_type,
                             reason,
                         },
                         [
-                            216u8, 150u8, 108u8, 138u8, 9u8, 29u8, 222u8, 164u8, 64u8, 174u8,
-                            127u8, 55u8, 150u8, 228u8, 35u8, 59u8, 76u8, 169u8, 57u8, 109u8, 59u8,
-                            97u8, 104u8, 32u8, 236u8, 73u8, 221u8, 136u8, 102u8, 123u8, 115u8,
-                            206u8,
+                            95u8, 81u8, 244u8, 73u8, 124u8, 205u8, 125u8, 25u8, 204u8, 191u8, 80u8,
+                            212u8, 171u8, 57u8, 143u8, 55u8, 3u8, 210u8, 144u8, 247u8, 129u8,
+                            211u8, 187u8, 65u8, 227u8, 205u8, 27u8, 42u8, 50u8, 20u8, 244u8, 157u8,
                         ],
                     )
                 }
-                #[doc = "Lift suspension from a worker (root only)"]
-                pub fn unsuspend_worker(
+                #[doc = "Lift suspension from a miner (root only)"]
+                pub fn unsuspend_miner(
                     &self,
-                    worker_owner: types::unsuspend_worker::WorkerOwner,
-                    worker_id: types::unsuspend_worker::WorkerId,
-                    worker_type: types::unsuspend_worker::WorkerType,
-                ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::UnsuspendWorker>
+                    miner_owner: types::unsuspend_miner::MinerOwner,
+                    miner_id: types::unsuspend_miner::MinerId,
+                    miner_type: types::unsuspend_miner::MinerType,
+                ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::UnsuspendMiner>
                 {
                     ::subxt::ext::subxt_core::tx::payload::StaticPayload::new_static(
                         "EdgeConnect",
-                        "unsuspend_worker",
-                        types::UnsuspendWorker {
-                            worker_owner,
-                            worker_id,
-                            worker_type,
+                        "unsuspend_miner",
+                        types::UnsuspendMiner {
+                            miner_owner,
+                            miner_id,
+                            miner_type,
                         },
                         [
-                            225u8, 8u8, 217u8, 29u8, 242u8, 31u8, 67u8, 194u8, 25u8, 166u8, 116u8,
-                            158u8, 165u8, 58u8, 254u8, 185u8, 246u8, 77u8, 193u8, 105u8, 51u8,
-                            182u8, 24u8, 6u8, 206u8, 246u8, 234u8, 123u8, 198u8, 32u8, 30u8, 151u8,
+                            206u8, 191u8, 168u8, 28u8, 142u8, 187u8, 38u8, 49u8, 65u8, 243u8, 12u8,
+                            220u8, 150u8, 66u8, 254u8, 151u8, 246u8, 90u8, 116u8, 40u8, 145u8,
+                            82u8, 208u8, 111u8, 190u8, 45u8, 89u8, 82u8, 211u8, 136u8, 100u8, 15u8,
                         ],
                     )
                 }
@@ -14676,20 +14677,20 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
-            #[doc = "Event emitted when a new worker is successfully registered."]
+            #[doc = "Event emitted when a new miner is successfully registered."]
             #[doc = ""]
-            #[doc = "- `creator`: The account ID of the worker's creator."]
-            #[doc = "- `worker`: A tuple containing the account ID of the worker owner and the worker ID."]
+            #[doc = "- `creator`: The account ID of the miner's creator."]
+            #[doc = "- `miner`: A tuple containing the account ID of the miner owner and the miner ID."]
             #[doc = "- `domain`: The domain associated with the"]
-            pub struct WorkerRegistered {
-                pub creator: worker_registered::Creator,
-                pub worker: worker_registered::Worker,
-                pub domain: worker_registered::Domain,
+            pub struct MinerRegistered {
+                pub creator: miner_registered::Creator,
+                pub miner: miner_registered::Miner,
+                pub domain: miner_registered::Domain,
             }
-            pub mod worker_registered {
+            pub mod miner_registered {
                 use super::runtime_types;
                 pub type Creator = ::subxt::ext::subxt_core::utils::AccountId32;
-                pub type Worker = (
+                pub type Miner = (
                     ::subxt::ext::subxt_core::utils::AccountId32,
                     ::core::primitive::u64,
                 );
@@ -14697,9 +14698,9 @@ pub mod api {
                     ::core::primitive::u8,
                 >;
             }
-            impl ::subxt::ext::subxt_core::events::StaticEvent for WorkerRegistered {
+            impl ::subxt::ext::subxt_core::events::StaticEvent for MinerRegistered {
                 const PALLET: &'static str = "EdgeConnect";
-                const EVENT: &'static str = "WorkerRegistered";
+                const EVENT: &'static str = "MinerRegistered";
             }
             #[derive(
                 :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -14716,16 +14717,16 @@ pub mod api {
             #[doc = "Event emitted when a miner tries to re-register itself."]
             #[doc = ""]
             #[doc = "- `creator`: The account ID of the miner's creator."]
-            #[doc = "- `worker`: A tuple containing the account ID of the miner owner and the miner ID."]
-            pub struct WorkerAlreadyRegistered {
-                pub creator: worker_already_registered::Creator,
-                pub worker: worker_already_registered::Worker,
-                pub domain: worker_already_registered::Domain,
+            #[doc = "- `miner`: A tuple containing the account ID of the miner owner and the miner ID."]
+            pub struct MinerAlreadyRegistered {
+                pub creator: miner_already_registered::Creator,
+                pub miner: miner_already_registered::Miner,
+                pub domain: miner_already_registered::Domain,
             }
-            pub mod worker_already_registered {
+            pub mod miner_already_registered {
                 use super::runtime_types;
                 pub type Creator = ::subxt::ext::subxt_core::utils::AccountId32;
-                pub type Worker = (
+                pub type Miner = (
                     ::subxt::ext::subxt_core::utils::AccountId32,
                     ::core::primitive::u64,
                 );
@@ -14733,9 +14734,9 @@ pub mod api {
                     ::core::primitive::u8,
                 >;
             }
-            impl ::subxt::ext::subxt_core::events::StaticEvent for WorkerAlreadyRegistered {
+            impl ::subxt::ext::subxt_core::events::StaticEvent for MinerAlreadyRegistered {
                 const PALLET: &'static str = "EdgeConnect";
-                const EVENT: &'static str = "WorkerAlreadyRegistered";
+                const EVENT: &'static str = "MinerAlreadyRegistered";
             }
             #[derive(
                 :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -14749,22 +14750,22 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
-            #[doc = "Event emitted when a worker is removed from the system."]
+            #[doc = "Event emitted when a miner is removed from the system."]
             #[doc = ""]
-            #[doc = "- `creator`: The account ID of the worker's creator."]
-            #[doc = "- `worker_id`: The ID of the worker that was removed."]
-            pub struct WorkerRemoved {
-                pub creator: worker_removed::Creator,
-                pub worker_id: worker_removed::WorkerId,
+            #[doc = "- `creator`: The account ID of the miner's creator."]
+            #[doc = "- `miner_id`: The ID of the miner that was removed."]
+            pub struct MinerRemoved {
+                pub creator: miner_removed::Creator,
+                pub miner_id: miner_removed::MinerId,
             }
-            pub mod worker_removed {
+            pub mod miner_removed {
                 use super::runtime_types;
                 pub type Creator = ::subxt::ext::subxt_core::utils::AccountId32;
-                pub type WorkerId = ::core::primitive::u64;
+                pub type MinerId = ::core::primitive::u64;
             }
-            impl ::subxt::ext::subxt_core::events::StaticEvent for WorkerRemoved {
+            impl ::subxt::ext::subxt_core::events::StaticEvent for MinerRemoved {
                 const PALLET: &'static str = "EdgeConnect";
-                const EVENT: &'static str = "WorkerRemoved";
+                const EVENT: &'static str = "MinerRemoved";
             }
             #[derive(
                 :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -14778,25 +14779,25 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
-            #[doc = "Event emitted when a worker's status is updated (e.g., toggling visibility)."]
+            #[doc = "Event emitted when a miner's status is updated (e.g., toggling visibility)."]
             #[doc = ""]
-            #[doc = "- `creator`: The account ID of the worker's creator."]
-            #[doc = "- `worker_id`: The ID of the worker whose status was updated."]
-            #[doc = "- `worker_status`: The new status of the worker, either active or inactive."]
-            pub struct WorkerStatusUpdated {
-                pub creator: worker_status_updated::Creator,
-                pub worker_id: worker_status_updated::WorkerId,
-                pub worker_status: worker_status_updated::WorkerStatus,
+            #[doc = "- `creator`: The account ID of the miner's creator."]
+            #[doc = "- `miner_id`: The ID of the miner whose status was updated."]
+            #[doc = "- `miner_status`: The new status of the miner, either active or inactive."]
+            pub struct MinerStatusUpdated {
+                pub creator: miner_status_updated::Creator,
+                pub miner_id: miner_status_updated::MinerId,
+                pub miner_status: miner_status_updated::MinerStatus,
             }
-            pub mod worker_status_updated {
+            pub mod miner_status_updated {
                 use super::runtime_types;
                 pub type Creator = ::subxt::ext::subxt_core::utils::AccountId32;
-                pub type WorkerId = ::core::primitive::u64;
-                pub type WorkerStatus = runtime_types::cyborg_primitives::worker::WorkerStatusType;
+                pub type MinerId = ::core::primitive::u64;
+                pub type MinerStatus = runtime_types::cyborg_primitives::miner::MinerStatusType;
             }
-            impl ::subxt::ext::subxt_core::events::StaticEvent for WorkerStatusUpdated {
+            impl ::subxt::ext::subxt_core::events::StaticEvent for MinerStatusUpdated {
                 const PALLET: &'static str = "EdgeConnect";
-                const EVENT: &'static str = "WorkerStatusUpdated";
+                const EVENT: &'static str = "MinerStatusUpdated";
             }
             #[derive(
                 :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -14810,24 +14811,24 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
-            #[doc = "Event emitted when a worker is penalized"]
-            pub struct WorkerPenalized {
-                pub worker: worker_penalized::Worker,
-                pub penalty: worker_penalized::Penalty,
-                pub reason: worker_penalized::Reason,
+            #[doc = "Event emitted when a miner is penalized"]
+            pub struct MinerPenalized {
+                pub miner: miner_penalized::Miner,
+                pub penalty: miner_penalized::Penalty,
+                pub reason: miner_penalized::Reason,
             }
-            pub mod worker_penalized {
+            pub mod miner_penalized {
                 use super::runtime_types;
-                pub type Worker = (
+                pub type Miner = (
                     ::subxt::ext::subxt_core::utils::AccountId32,
                     ::core::primitive::u64,
                 );
                 pub type Penalty = ::core::primitive::i32;
                 pub type Reason = runtime_types::pallet_edge_connect::pallet::PenaltyReason;
             }
-            impl ::subxt::ext::subxt_core::events::StaticEvent for WorkerPenalized {
+            impl ::subxt::ext::subxt_core::events::StaticEvent for MinerPenalized {
                 const PALLET: &'static str = "EdgeConnect";
-                const EVENT: &'static str = "WorkerPenalized";
+                const EVENT: &'static str = "MinerPenalized";
             }
             #[derive(
                 :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -14841,22 +14842,22 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
-            #[doc = "Event emitted when a worker is suspended"]
-            pub struct WorkerSuspended {
-                pub worker: worker_suspended::Worker,
-                pub until_block: worker_suspended::UntilBlock,
+            #[doc = "Event emitted when a miner is suspended"]
+            pub struct MinerSuspended {
+                pub miner: miner_suspended::Miner,
+                pub until_block: miner_suspended::UntilBlock,
             }
-            pub mod worker_suspended {
+            pub mod miner_suspended {
                 use super::runtime_types;
-                pub type Worker = (
+                pub type Miner = (
                     ::subxt::ext::subxt_core::utils::AccountId32,
                     ::core::primitive::u64,
                 );
                 pub type UntilBlock = ::core::primitive::u32;
             }
-            impl ::subxt::ext::subxt_core::events::StaticEvent for WorkerSuspended {
+            impl ::subxt::ext::subxt_core::events::StaticEvent for MinerSuspended {
                 const PALLET: &'static str = "EdgeConnect";
-                const EVENT: &'static str = "WorkerSuspended";
+                const EVENT: &'static str = "MinerSuspended";
             }
             #[derive(
                 :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -14870,22 +14871,22 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
-            #[doc = "Event emitted when a worker is put under review"]
-            pub struct WorkerUnderReview {
-                pub worker: worker_under_review::Worker,
-                pub reason: worker_under_review::Reason,
+            #[doc = "Event emitted when a miner is put under review"]
+            pub struct MinerUnderReview {
+                pub miner: miner_under_review::Miner,
+                pub reason: miner_under_review::Reason,
             }
-            pub mod worker_under_review {
+            pub mod miner_under_review {
                 use super::runtime_types;
-                pub type Worker = (
+                pub type Miner = (
                     ::subxt::ext::subxt_core::utils::AccountId32,
                     ::core::primitive::u64,
                 );
-                pub type Reason = runtime_types::cyborg_primitives::worker::SuspensionReason;
+                pub type Reason = runtime_types::cyborg_primitives::miner::SuspensionReason;
             }
-            impl ::subxt::ext::subxt_core::events::StaticEvent for WorkerUnderReview {
+            impl ::subxt::ext::subxt_core::events::StaticEvent for MinerUnderReview {
                 const PALLET: &'static str = "EdgeConnect";
-                const EVENT: &'static str = "WorkerUnderReview";
+                const EVENT: &'static str = "MinerUnderReview";
             }
             #[derive(
                 :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -14899,22 +14900,22 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
-            #[doc = "Event emitted when a worker is banned"]
-            pub struct WorkerBanned {
-                pub worker: worker_banned::Worker,
-                pub reason: worker_banned::Reason,
+            #[doc = "Event emitted when a miner is banned"]
+            pub struct MinerBanned {
+                pub miner: miner_banned::Miner,
+                pub reason: miner_banned::Reason,
             }
-            pub mod worker_banned {
+            pub mod miner_banned {
                 use super::runtime_types;
-                pub type Worker = (
+                pub type Miner = (
                     ::subxt::ext::subxt_core::utils::AccountId32,
                     ::core::primitive::u64,
                 );
-                pub type Reason = runtime_types::cyborg_primitives::worker::SuspensionReason;
+                pub type Reason = runtime_types::cyborg_primitives::miner::SuspensionReason;
             }
-            impl ::subxt::ext::subxt_core::events::StaticEvent for WorkerBanned {
+            impl ::subxt::ext::subxt_core::events::StaticEvent for MinerBanned {
                 const PALLET: &'static str = "EdgeConnect";
-                const EVENT: &'static str = "WorkerBanned";
+                const EVENT: &'static str = "MinerBanned";
             }
             #[derive(
                 :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -14928,43 +14929,43 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
-            #[doc = "Event emitted when a worker is unsuspended"]
-            pub struct WorkerUnsuspended {
-                pub worker: worker_unsuspended::Worker,
+            #[doc = "Event emitted when a miner is unsuspended"]
+            pub struct MinerUnsuspended {
+                pub miner: miner_unsuspended::Miner,
             }
-            pub mod worker_unsuspended {
+            pub mod miner_unsuspended {
                 use super::runtime_types;
-                pub type Worker = (
+                pub type Miner = (
                     ::subxt::ext::subxt_core::utils::AccountId32,
                     ::core::primitive::u64,
                 );
             }
-            impl ::subxt::ext::subxt_core::events::StaticEvent for WorkerUnsuspended {
+            impl ::subxt::ext::subxt_core::events::StaticEvent for MinerUnsuspended {
                 const PALLET: &'static str = "EdgeConnect";
-                const EVENT: &'static str = "WorkerUnsuspended";
+                const EVENT: &'static str = "MinerUnsuspended";
             }
         }
         pub mod storage {
             use super::runtime_types;
             pub mod types {
                 use super::runtime_types;
-                pub mod account_workers {
+                pub mod account_miners {
                     use super::runtime_types;
-                    pub type AccountWorkers = ::core::primitive::u64;
+                    pub type AccountMiners = ::core::primitive::u64;
                     pub type Param0 = ::subxt::ext::subxt_core::utils::AccountId32;
                 }
-                pub mod suspended_workers {
+                pub mod suspended_miners {
                     use super::runtime_types;
-                    pub type SuspendedWorkers = (
+                    pub type SuspendedMiners = (
                         ::core::primitive::u32,
-                        runtime_types::cyborg_primitives::worker::SuspensionReason,
+                        runtime_types::cyborg_primitives::miner::SuspensionReason,
                     );
                     pub type Param0 = ::subxt::ext::subxt_core::utils::AccountId32;
                     pub type Param1 = ::core::primitive::u64;
                 }
-                pub mod worker_clusters {
+                pub mod cloud_miners {
                     use super::runtime_types;
-                    pub type WorkerClusters = runtime_types::cyborg_primitives::worker::Worker<
+                    pub type CloudMiners = runtime_types::cyborg_primitives::miner::Miner<
                         ::subxt::ext::subxt_core::utils::AccountId32,
                         ::core::primitive::u32,
                         ::core::primitive::u64,
@@ -14972,9 +14973,9 @@ pub mod api {
                     pub type Param0 = ::subxt::ext::subxt_core::utils::AccountId32;
                     pub type Param1 = ::core::primitive::u64;
                 }
-                pub mod executable_workers {
+                pub mod edge_miners {
                     use super::runtime_types;
-                    pub type ExecutableWorkers = runtime_types::cyborg_primitives::worker::Worker<
+                    pub type EdgeMiners = runtime_types::cyborg_primitives::miner::Miner<
                         ::subxt::ext::subxt_core::utils::AccountId32,
                         ::core::primitive::u32,
                         ::core::primitive::u64,
@@ -14985,125 +14986,123 @@ pub mod api {
             }
             pub struct StorageApi;
             impl StorageApi {
-                #[doc = " AccountWorkers Information, Storage map for associating an account ID with a worker ID. If no worker exists, the query returns None."]
-                #[doc = " Keeps track of workerIds per account if any"]
-                pub fn account_workers_iter(
+                #[doc = " AccountMiners Information, Storage map for associating an account ID with a miner ID. If no miner exists, the query returns None."]
+                #[doc = " Keeps track of MinerIds per account if any"]
+                pub fn account_miners_iter(
                     &self,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
                     (),
-                    types::account_workers::AccountWorkers,
+                    types::account_miners::AccountMiners,
                     (),
                     (),
                     ::subxt::ext::subxt_core::utils::Yes,
                 > {
                     ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
                         "EdgeConnect",
-                        "AccountWorkers",
+                        "AccountMiners",
                         (),
                         [
-                            189u8, 133u8, 255u8, 21u8, 68u8, 183u8, 140u8, 39u8, 192u8, 115u8,
-                            33u8, 246u8, 47u8, 166u8, 33u8, 125u8, 182u8, 53u8, 117u8, 82u8, 232u8,
-                            6u8, 163u8, 160u8, 173u8, 215u8, 215u8, 224u8, 183u8, 112u8, 79u8,
-                            10u8,
+                            139u8, 52u8, 43u8, 217u8, 55u8, 47u8, 184u8, 254u8, 109u8, 226u8,
+                            208u8, 12u8, 130u8, 215u8, 191u8, 2u8, 206u8, 9u8, 96u8, 83u8, 164u8,
+                            119u8, 241u8, 128u8, 224u8, 0u8, 25u8, 127u8, 157u8, 222u8, 195u8,
+                            198u8,
                         ],
                     )
                 }
-                #[doc = " AccountWorkers Information, Storage map for associating an account ID with a worker ID. If no worker exists, the query returns None."]
-                #[doc = " Keeps track of workerIds per account if any"]
-                pub fn account_workers(
+                #[doc = " AccountMiners Information, Storage map for associating an account ID with a miner ID. If no miner exists, the query returns None."]
+                #[doc = " Keeps track of MinerIds per account if any"]
+                pub fn account_miners(
                     &self,
-                    _0: impl ::core::borrow::Borrow<types::account_workers::Param0>,
+                    _0: impl ::core::borrow::Borrow<types::account_miners::Param0>,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
                     ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
-                        types::account_workers::Param0,
+                        types::account_miners::Param0,
                     >,
-                    types::account_workers::AccountWorkers,
+                    types::account_miners::AccountMiners,
                     ::subxt::ext::subxt_core::utils::Yes,
                     (),
                     (),
                 > {
                     ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
                         "EdgeConnect",
-                        "AccountWorkers",
+                        "AccountMiners",
                         ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
                             _0.borrow(),
                         ),
                         [
-                            189u8, 133u8, 255u8, 21u8, 68u8, 183u8, 140u8, 39u8, 192u8, 115u8,
-                            33u8, 246u8, 47u8, 166u8, 33u8, 125u8, 182u8, 53u8, 117u8, 82u8, 232u8,
-                            6u8, 163u8, 160u8, 173u8, 215u8, 215u8, 224u8, 183u8, 112u8, 79u8,
-                            10u8,
+                            139u8, 52u8, 43u8, 217u8, 55u8, 47u8, 184u8, 254u8, 109u8, 226u8,
+                            208u8, 12u8, 130u8, 215u8, 191u8, 2u8, 206u8, 9u8, 96u8, 83u8, 164u8,
+                            119u8, 241u8, 128u8, 224u8, 0u8, 25u8, 127u8, 157u8, 222u8, 195u8,
+                            198u8,
                         ],
                     )
                 }
-                pub fn suspended_workers_iter(
+                pub fn suspended_miners_iter(
                     &self,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
                     (),
-                    types::suspended_workers::SuspendedWorkers,
+                    types::suspended_miners::SuspendedMiners,
                     (),
                     (),
                     ::subxt::ext::subxt_core::utils::Yes,
                 > {
                     ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
                         "EdgeConnect",
-                        "SuspendedWorkers",
+                        "SuspendedMiners",
                         (),
                         [
-                            101u8, 117u8, 85u8, 49u8, 115u8, 145u8, 55u8, 10u8, 138u8, 141u8,
-                            129u8, 69u8, 123u8, 58u8, 156u8, 34u8, 201u8, 22u8, 101u8, 163u8,
-                            219u8, 198u8, 204u8, 7u8, 241u8, 200u8, 90u8, 22u8, 21u8, 96u8, 143u8,
-                            153u8,
+                            123u8, 54u8, 26u8, 167u8, 58u8, 35u8, 129u8, 177u8, 92u8, 223u8, 210u8,
+                            158u8, 216u8, 217u8, 13u8, 250u8, 133u8, 43u8, 48u8, 25u8, 25u8, 170u8,
+                            146u8, 127u8, 74u8, 146u8, 15u8, 99u8, 191u8, 241u8, 153u8, 164u8,
                         ],
                     )
                 }
-                pub fn suspended_workers_iter1(
+                pub fn suspended_miners_iter1(
                     &self,
-                    _0: impl ::core::borrow::Borrow<types::suspended_workers::Param0>,
+                    _0: impl ::core::borrow::Borrow<types::suspended_miners::Param0>,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
                     ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
-                        types::suspended_workers::Param0,
+                        types::suspended_miners::Param0,
                     >,
-                    types::suspended_workers::SuspendedWorkers,
+                    types::suspended_miners::SuspendedMiners,
                     (),
                     (),
                     ::subxt::ext::subxt_core::utils::Yes,
                 > {
                     ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
                         "EdgeConnect",
-                        "SuspendedWorkers",
+                        "SuspendedMiners",
                         ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
                             _0.borrow(),
                         ),
                         [
-                            101u8, 117u8, 85u8, 49u8, 115u8, 145u8, 55u8, 10u8, 138u8, 141u8,
-                            129u8, 69u8, 123u8, 58u8, 156u8, 34u8, 201u8, 22u8, 101u8, 163u8,
-                            219u8, 198u8, 204u8, 7u8, 241u8, 200u8, 90u8, 22u8, 21u8, 96u8, 143u8,
-                            153u8,
+                            123u8, 54u8, 26u8, 167u8, 58u8, 35u8, 129u8, 177u8, 92u8, 223u8, 210u8,
+                            158u8, 216u8, 217u8, 13u8, 250u8, 133u8, 43u8, 48u8, 25u8, 25u8, 170u8,
+                            146u8, 127u8, 74u8, 146u8, 15u8, 99u8, 191u8, 241u8, 153u8, 164u8,
                         ],
                     )
                 }
-                pub fn suspended_workers(
+                pub fn suspended_miners(
                     &self,
-                    _0: impl ::core::borrow::Borrow<types::suspended_workers::Param0>,
-                    _1: impl ::core::borrow::Borrow<types::suspended_workers::Param1>,
+                    _0: impl ::core::borrow::Borrow<types::suspended_miners::Param0>,
+                    _1: impl ::core::borrow::Borrow<types::suspended_miners::Param1>,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
                     (
                         ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
-                            types::suspended_workers::Param0,
+                            types::suspended_miners::Param0,
                         >,
                         ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
-                            types::suspended_workers::Param1,
+                            types::suspended_miners::Param1,
                         >,
                     ),
-                    types::suspended_workers::SuspendedWorkers,
+                    types::suspended_miners::SuspendedMiners,
                     ::subxt::ext::subxt_core::utils::Yes,
                     (),
                     (),
                 > {
                     ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
                         "EdgeConnect",
-                        "SuspendedWorkers",
+                        "SuspendedMiners",
                         (
                             ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
                                 _0.borrow(),
@@ -15113,82 +15112,81 @@ pub mod api {
                             ),
                         ),
                         [
-                            101u8, 117u8, 85u8, 49u8, 115u8, 145u8, 55u8, 10u8, 138u8, 141u8,
-                            129u8, 69u8, 123u8, 58u8, 156u8, 34u8, 201u8, 22u8, 101u8, 163u8,
-                            219u8, 198u8, 204u8, 7u8, 241u8, 200u8, 90u8, 22u8, 21u8, 96u8, 143u8,
-                            153u8,
+                            123u8, 54u8, 26u8, 167u8, 58u8, 35u8, 129u8, 177u8, 92u8, 223u8, 210u8,
+                            158u8, 216u8, 217u8, 13u8, 250u8, 133u8, 43u8, 48u8, 25u8, 25u8, 170u8,
+                            146u8, 127u8, 74u8, 146u8, 15u8, 99u8, 191u8, 241u8, 153u8, 164u8,
                         ],
                     )
                 }
-                #[doc = " Worker Cluster information, Storage map to keep track of detailed worker cluster information for each (account ID, worker ID) pair."]
-                pub fn worker_clusters_iter(
+                #[doc = " Cloud Miner information, Storage map to keep track of detailed miner information for each (account ID, miner ID) pair."]
+                pub fn cloud_miners_iter(
                     &self,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
                     (),
-                    types::worker_clusters::WorkerClusters,
+                    types::cloud_miners::CloudMiners,
                     (),
                     (),
                     ::subxt::ext::subxt_core::utils::Yes,
                 > {
                     ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
                         "EdgeConnect",
-                        "WorkerClusters",
+                        "CloudMiners",
                         (),
                         [
-                            242u8, 98u8, 210u8, 153u8, 122u8, 64u8, 69u8, 89u8, 232u8, 142u8, 11u8,
-                            62u8, 12u8, 5u8, 249u8, 141u8, 60u8, 76u8, 230u8, 192u8, 225u8, 202u8,
-                            119u8, 230u8, 253u8, 158u8, 141u8, 249u8, 227u8, 181u8, 7u8, 12u8,
+                            249u8, 161u8, 15u8, 129u8, 131u8, 181u8, 218u8, 20u8, 245u8, 187u8,
+                            44u8, 78u8, 194u8, 43u8, 173u8, 34u8, 243u8, 183u8, 58u8, 126u8, 167u8,
+                            230u8, 122u8, 59u8, 51u8, 64u8, 177u8, 49u8, 128u8, 112u8, 80u8, 221u8,
                         ],
                     )
                 }
-                #[doc = " Worker Cluster information, Storage map to keep track of detailed worker cluster information for each (account ID, worker ID) pair."]
-                pub fn worker_clusters_iter1(
+                #[doc = " Cloud Miner information, Storage map to keep track of detailed miner information for each (account ID, miner ID) pair."]
+                pub fn cloud_miners_iter1(
                     &self,
-                    _0: impl ::core::borrow::Borrow<types::worker_clusters::Param0>,
+                    _0: impl ::core::borrow::Borrow<types::cloud_miners::Param0>,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
                     ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
-                        types::worker_clusters::Param0,
+                        types::cloud_miners::Param0,
                     >,
-                    types::worker_clusters::WorkerClusters,
+                    types::cloud_miners::CloudMiners,
                     (),
                     (),
                     ::subxt::ext::subxt_core::utils::Yes,
                 > {
                     ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
                         "EdgeConnect",
-                        "WorkerClusters",
+                        "CloudMiners",
                         ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
                             _0.borrow(),
                         ),
                         [
-                            242u8, 98u8, 210u8, 153u8, 122u8, 64u8, 69u8, 89u8, 232u8, 142u8, 11u8,
-                            62u8, 12u8, 5u8, 249u8, 141u8, 60u8, 76u8, 230u8, 192u8, 225u8, 202u8,
-                            119u8, 230u8, 253u8, 158u8, 141u8, 249u8, 227u8, 181u8, 7u8, 12u8,
+                            249u8, 161u8, 15u8, 129u8, 131u8, 181u8, 218u8, 20u8, 245u8, 187u8,
+                            44u8, 78u8, 194u8, 43u8, 173u8, 34u8, 243u8, 183u8, 58u8, 126u8, 167u8,
+                            230u8, 122u8, 59u8, 51u8, 64u8, 177u8, 49u8, 128u8, 112u8, 80u8, 221u8,
                         ],
                     )
                 }
-                #[doc = " Worker Cluster information, Storage map to keep track of detailed worker cluster information for each (account ID, worker ID) pair."]
-                pub fn worker_clusters(
+                #[doc = " Cloud Miner information, Storage map to keep track of detailed miner information for each (account ID, miner ID) pair."]
+                pub fn cloud_miners(
                     &self,
-                    _0: impl ::core::borrow::Borrow<types::worker_clusters::Param0>,
-                    _1: impl ::core::borrow::Borrow<types::worker_clusters::Param1>,
+                    _0: impl ::core::borrow::Borrow<types::cloud_miners::Param0>,
+                    _1: impl ::core::borrow::Borrow<types::cloud_miners::Param1>,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
                     (
                         ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
-                            types::worker_clusters::Param0,
+                            types::cloud_miners::Param0,
                         >,
                         ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
-                            types::worker_clusters::Param1,
+                            types::cloud_miners::Param1,
                         >,
                     ),
-                    types::worker_clusters::WorkerClusters,
+                    types::cloud_miners::CloudMiners,
                     ::subxt::ext::subxt_core::utils::Yes,
                     (),
                     (),
                 > {
                     ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
                         "EdgeConnect",
-                        "WorkerClusters",
+                        "CloudMiners",
                         (
                             ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
                                 _0.borrow(),
@@ -15198,81 +15196,81 @@ pub mod api {
                             ),
                         ),
                         [
-                            242u8, 98u8, 210u8, 153u8, 122u8, 64u8, 69u8, 89u8, 232u8, 142u8, 11u8,
-                            62u8, 12u8, 5u8, 249u8, 141u8, 60u8, 76u8, 230u8, 192u8, 225u8, 202u8,
-                            119u8, 230u8, 253u8, 158u8, 141u8, 249u8, 227u8, 181u8, 7u8, 12u8,
+                            249u8, 161u8, 15u8, 129u8, 131u8, 181u8, 218u8, 20u8, 245u8, 187u8,
+                            44u8, 78u8, 194u8, 43u8, 173u8, 34u8, 243u8, 183u8, 58u8, 126u8, 167u8,
+                            230u8, 122u8, 59u8, 51u8, 64u8, 177u8, 49u8, 128u8, 112u8, 80u8, 221u8,
                         ],
                     )
                 }
-                #[doc = " Execultable Worker information, Storage map to keep track of detailed worker cluster information for each (account ID, worker ID) pair."]
-                pub fn executable_workers_iter(
+                #[doc = " Edge Miner information, Storage map to keep track of detailed miner information for each (account ID, miner ID) pair."]
+                pub fn edge_miners_iter(
                     &self,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
                     (),
-                    types::executable_workers::ExecutableWorkers,
+                    types::edge_miners::EdgeMiners,
                     (),
                     (),
                     ::subxt::ext::subxt_core::utils::Yes,
                 > {
                     ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
                         "EdgeConnect",
-                        "ExecutableWorkers",
+                        "EdgeMiners",
                         (),
                         [
-                            185u8, 174u8, 106u8, 241u8, 11u8, 47u8, 47u8, 126u8, 247u8, 196u8, 5u8,
-                            106u8, 45u8, 207u8, 60u8, 20u8, 4u8, 253u8, 19u8, 32u8, 132u8, 27u8,
-                            93u8, 112u8, 36u8, 171u8, 161u8, 71u8, 137u8, 215u8, 228u8, 158u8,
+                            199u8, 9u8, 109u8, 186u8, 144u8, 48u8, 4u8, 187u8, 32u8, 142u8, 74u8,
+                            196u8, 137u8, 12u8, 7u8, 228u8, 49u8, 219u8, 205u8, 60u8, 253u8, 55u8,
+                            59u8, 142u8, 39u8, 121u8, 196u8, 63u8, 152u8, 37u8, 112u8, 203u8,
                         ],
                     )
                 }
-                #[doc = " Execultable Worker information, Storage map to keep track of detailed worker cluster information for each (account ID, worker ID) pair."]
-                pub fn executable_workers_iter1(
+                #[doc = " Edge Miner information, Storage map to keep track of detailed miner information for each (account ID, miner ID) pair."]
+                pub fn edge_miners_iter1(
                     &self,
-                    _0: impl ::core::borrow::Borrow<types::executable_workers::Param0>,
+                    _0: impl ::core::borrow::Borrow<types::edge_miners::Param0>,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
                     ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
-                        types::executable_workers::Param0,
+                        types::edge_miners::Param0,
                     >,
-                    types::executable_workers::ExecutableWorkers,
+                    types::edge_miners::EdgeMiners,
                     (),
                     (),
                     ::subxt::ext::subxt_core::utils::Yes,
                 > {
                     ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
                         "EdgeConnect",
-                        "ExecutableWorkers",
+                        "EdgeMiners",
                         ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
                             _0.borrow(),
                         ),
                         [
-                            185u8, 174u8, 106u8, 241u8, 11u8, 47u8, 47u8, 126u8, 247u8, 196u8, 5u8,
-                            106u8, 45u8, 207u8, 60u8, 20u8, 4u8, 253u8, 19u8, 32u8, 132u8, 27u8,
-                            93u8, 112u8, 36u8, 171u8, 161u8, 71u8, 137u8, 215u8, 228u8, 158u8,
+                            199u8, 9u8, 109u8, 186u8, 144u8, 48u8, 4u8, 187u8, 32u8, 142u8, 74u8,
+                            196u8, 137u8, 12u8, 7u8, 228u8, 49u8, 219u8, 205u8, 60u8, 253u8, 55u8,
+                            59u8, 142u8, 39u8, 121u8, 196u8, 63u8, 152u8, 37u8, 112u8, 203u8,
                         ],
                     )
                 }
-                #[doc = " Execultable Worker information, Storage map to keep track of detailed worker cluster information for each (account ID, worker ID) pair."]
-                pub fn executable_workers(
+                #[doc = " Edge Miner information, Storage map to keep track of detailed miner information for each (account ID, miner ID) pair."]
+                pub fn edge_miners(
                     &self,
-                    _0: impl ::core::borrow::Borrow<types::executable_workers::Param0>,
-                    _1: impl ::core::borrow::Borrow<types::executable_workers::Param1>,
+                    _0: impl ::core::borrow::Borrow<types::edge_miners::Param0>,
+                    _1: impl ::core::borrow::Borrow<types::edge_miners::Param1>,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
                     (
                         ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
-                            types::executable_workers::Param0,
+                            types::edge_miners::Param0,
                         >,
                         ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
-                            types::executable_workers::Param1,
+                            types::edge_miners::Param1,
                         >,
                     ),
-                    types::executable_workers::ExecutableWorkers,
+                    types::edge_miners::EdgeMiners,
                     ::subxt::ext::subxt_core::utils::Yes,
                     (),
                     (),
                 > {
                     ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
                         "EdgeConnect",
-                        "ExecutableWorkers",
+                        "EdgeMiners",
                         (
                             ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
                                 _0.borrow(),
@@ -15282,9 +15280,9 @@ pub mod api {
                             ),
                         ),
                         [
-                            185u8, 174u8, 106u8, 241u8, 11u8, 47u8, 47u8, 126u8, 247u8, 196u8, 5u8,
-                            106u8, 45u8, 207u8, 60u8, 20u8, 4u8, 253u8, 19u8, 32u8, 132u8, 27u8,
-                            93u8, 112u8, 36u8, 171u8, 161u8, 71u8, 137u8, 215u8, 228u8, 158u8,
+                            199u8, 9u8, 109u8, 186u8, 144u8, 48u8, 4u8, 187u8, 32u8, 142u8, 74u8,
+                            196u8, 137u8, 12u8, 7u8, 228u8, 49u8, 219u8, 205u8, 60u8, 253u8, 55u8,
+                            59u8, 142u8, 39u8, 121u8, 196u8, 63u8, 152u8, 37u8, 112u8, 203u8,
                         ],
                     )
                 }
@@ -15321,19 +15319,19 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                #[doc = "Creates a new task and assigns it to a randomly selected worker."]
+                #[doc = "Creates a new task and assigns it to a randomly selected miner."]
                 #[doc = "None -> Assigned"]
                 pub struct TaskScheduler {
                     pub task_kind: task_scheduler::TaskKind,
-                    pub worker_owner: task_scheduler::WorkerOwner,
-                    pub worker_id: task_scheduler::WorkerId,
+                    pub miner_owner: task_scheduler::MinerOwner,
+                    pub miner_id: task_scheduler::MinerId,
                     pub compute_hours_deposit: task_scheduler::ComputeHoursDeposit,
                 }
                 pub mod task_scheduler {
                     use super::runtime_types;
                     pub type TaskKind = runtime_types::cyborg_primitives::task::TaskSubmissionData;
-                    pub type WorkerOwner = ::subxt::ext::subxt_core::utils::AccountId32;
-                    pub type WorkerId = ::core::primitive::u64;
+                    pub type MinerOwner = ::subxt::ext::subxt_core::utils::AccountId32;
+                    pub type MinerId = ::core::primitive::u64;
                     pub type ComputeHoursDeposit = ::core::option::Option<::core::primitive::u32>;
                 }
                 impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for TaskScheduler {
@@ -15421,10 +15419,12 @@ pub mod api {
                 #[doc = "Stopped to vacated"]
                 pub struct ConfirmMinerVacation {
                     pub task_id: confirm_miner_vacation::TaskId,
+                    pub miner_type: confirm_miner_vacation::MinerType,
                 }
                 pub mod confirm_miner_vacation {
                     use super::runtime_types;
                     pub type TaskId = ::core::primitive::u64;
+                    pub type MinerType = runtime_types::cyborg_primitives::miner::MinerType;
                 }
                 impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for ConfirmMinerVacation {
                     const PALLET: &'static str = "TaskManagement";
@@ -15518,13 +15518,13 @@ pub mod api {
             }
             pub struct TransactionApi;
             impl TransactionApi {
-                #[doc = "Creates a new task and assigns it to a randomly selected worker."]
+                #[doc = "Creates a new task and assigns it to a randomly selected miner."]
                 #[doc = "None -> Assigned"]
                 pub fn task_scheduler(
                     &self,
                     task_kind: types::task_scheduler::TaskKind,
-                    worker_owner: types::task_scheduler::WorkerOwner,
-                    worker_id: types::task_scheduler::WorkerId,
+                    miner_owner: types::task_scheduler::MinerOwner,
+                    miner_id: types::task_scheduler::MinerId,
                     compute_hours_deposit: types::task_scheduler::ComputeHoursDeposit,
                 ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::TaskScheduler>
                 {
@@ -15533,14 +15533,14 @@ pub mod api {
                         "task_scheduler",
                         types::TaskScheduler {
                             task_kind,
-                            worker_owner,
-                            worker_id,
+                            miner_owner,
+                            miner_id,
                             compute_hours_deposit,
                         },
                         [
-                            157u8, 52u8, 161u8, 208u8, 69u8, 56u8, 159u8, 17u8, 26u8, 246u8, 62u8,
-                            165u8, 48u8, 46u8, 216u8, 37u8, 233u8, 110u8, 36u8, 29u8, 143u8, 243u8,
-                            94u8, 223u8, 187u8, 116u8, 135u8, 167u8, 237u8, 232u8, 232u8, 16u8,
+                            69u8, 26u8, 211u8, 160u8, 91u8, 103u8, 203u8, 2u8, 59u8, 113u8, 27u8,
+                            226u8, 231u8, 161u8, 12u8, 15u8, 216u8, 239u8, 161u8, 40u8, 104u8,
+                            165u8, 148u8, 252u8, 65u8, 204u8, 181u8, 72u8, 3u8, 41u8, 129u8, 160u8,
                         ],
                     )
                 }
@@ -15589,16 +15589,21 @@ pub mod api {
                 pub fn confirm_miner_vacation(
                     &self,
                     task_id: types::confirm_miner_vacation::TaskId,
+                    miner_type: types::confirm_miner_vacation::MinerType,
                 ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::ConfirmMinerVacation>
                 {
                     ::subxt::ext::subxt_core::tx::payload::StaticPayload::new_static(
                         "TaskManagement",
                         "confirm_miner_vacation",
-                        types::ConfirmMinerVacation { task_id },
+                        types::ConfirmMinerVacation {
+                            task_id,
+                            miner_type,
+                        },
                         [
-                            59u8, 61u8, 124u8, 133u8, 42u8, 125u8, 128u8, 6u8, 249u8, 164u8, 224u8,
-                            173u8, 22u8, 116u8, 117u8, 35u8, 39u8, 120u8, 131u8, 235u8, 40u8, 87u8,
-                            84u8, 120u8, 110u8, 65u8, 154u8, 195u8, 21u8, 18u8, 156u8, 56u8,
+                            121u8, 155u8, 220u8, 197u8, 163u8, 120u8, 147u8, 196u8, 9u8, 213u8,
+                            91u8, 37u8, 78u8, 117u8, 108u8, 1u8, 249u8, 236u8, 192u8, 22u8, 199u8,
+                            128u8, 147u8, 181u8, 226u8, 149u8, 227u8, 67u8, 161u8, 168u8, 75u8,
+                            248u8,
                         ],
                     )
                 }
@@ -15674,16 +15679,16 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
-            #[doc = "A new task has been scheduled and assigned to a worker."]
+            #[doc = "A new task has been scheduled and assigned to a miner."]
             pub struct TaskScheduled {
-                pub assigned_worker: task_scheduled::AssignedWorker,
+                pub assigned_miner: task_scheduled::AssignedMiner,
                 pub task_kind: task_scheduled::TaskKind,
                 pub task_owner: task_scheduled::TaskOwner,
                 pub task_id: task_scheduled::TaskId,
             }
             pub mod task_scheduled {
                 use super::runtime_types;
-                pub type AssignedWorker = (
+                pub type AssignedMiner = (
                     ::subxt::ext::subxt_core::utils::AccountId32,
                     ::core::primitive::u64,
                 );
@@ -15708,7 +15713,7 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
-            #[doc = "A worker confirmed reception of task data and started execution."]
+            #[doc = "A miner confirmed reception of task data and started execution."]
             pub struct TaskReceptionConfirmed {
                 pub task_id: task_reception_confirmed::TaskId,
                 pub who: task_reception_confirmed::Who,
@@ -15877,6 +15882,19 @@ pub mod api {
                     pub type ModelHashes = ::subxt::ext::subxt_core::utils::H256;
                     pub type Param0 = [::core::primitive::u8; 32usize];
                 }
+                pub mod task_assignment_block {
+                    use super::runtime_types;
+                    pub type TaskAssignmentBlock = ::core::primitive::u32;
+                    pub type Param0 = ::core::primitive::u64;
+                }
+                pub mod pending_task_confirmations {
+                    use super::runtime_types;
+                    pub type PendingTaskConfirmations =
+                        runtime_types::bounded_collections::bounded_vec::BoundedVec<
+                            ::core::primitive::u64,
+                        >;
+                    pub type Param0 = ::core::primitive::u32;
+                }
             }
             pub struct StorageApi;
             impl StorageApi {
@@ -15927,7 +15945,7 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Allocation of tasks to workers."]
+                #[doc = " Allocation of tasks to miners."]
                 pub fn task_allocations_iter(
                     &self,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
@@ -15949,7 +15967,7 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Allocation of tasks to workers."]
+                #[doc = " Allocation of tasks to miners."]
                 pub fn task_allocations(
                     &self,
                     _0: impl ::core::borrow::Borrow<types::task_allocations::Param0>,
@@ -16062,10 +16080,10 @@ pub mod api {
                         "Tasks",
                         (),
                         [
-                            131u8, 26u8, 91u8, 20u8, 93u8, 127u8, 12u8, 81u8, 241u8, 74u8, 95u8,
-                            6u8, 143u8, 222u8, 209u8, 203u8, 245u8, 130u8, 26u8, 115u8, 121u8,
-                            184u8, 167u8, 52u8, 43u8, 203u8, 236u8, 188u8, 157u8, 167u8, 172u8,
-                            243u8,
+                            136u8, 106u8, 26u8, 145u8, 194u8, 214u8, 28u8, 138u8, 40u8, 33u8,
+                            233u8, 118u8, 241u8, 83u8, 205u8, 39u8, 119u8, 156u8, 30u8, 251u8,
+                            38u8, 4u8, 253u8, 39u8, 86u8, 34u8, 29u8, 69u8, 245u8, 233u8, 153u8,
+                            53u8,
                         ],
                     )
                 }
@@ -16089,10 +16107,10 @@ pub mod api {
                             _0.borrow(),
                         ),
                         [
-                            131u8, 26u8, 91u8, 20u8, 93u8, 127u8, 12u8, 81u8, 241u8, 74u8, 95u8,
-                            6u8, 143u8, 222u8, 209u8, 203u8, 245u8, 130u8, 26u8, 115u8, 121u8,
-                            184u8, 167u8, 52u8, 43u8, 203u8, 236u8, 188u8, 157u8, 167u8, 172u8,
-                            243u8,
+                            136u8, 106u8, 26u8, 145u8, 194u8, 214u8, 28u8, 138u8, 40u8, 33u8,
+                            233u8, 118u8, 241u8, 83u8, 205u8, 39u8, 119u8, 156u8, 30u8, 251u8,
+                            38u8, 4u8, 253u8, 39u8, 86u8, 34u8, 29u8, 69u8, 245u8, 233u8, 153u8,
+                            53u8,
                         ],
                     )
                 }
@@ -16255,6 +16273,98 @@ pub mod api {
                         ],
                     )
                 }
+                pub fn task_assignment_block_iter(
+                    &self,
+                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
+                    (),
+                    types::task_assignment_block::TaskAssignmentBlock,
+                    (),
+                    (),
+                    ::subxt::ext::subxt_core::utils::Yes,
+                > {
+                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
+                        "TaskManagement",
+                        "TaskAssignmentBlock",
+                        (),
+                        [
+                            6u8, 248u8, 116u8, 144u8, 231u8, 47u8, 52u8, 114u8, 159u8, 194u8,
+                            196u8, 27u8, 102u8, 151u8, 86u8, 108u8, 214u8, 112u8, 229u8, 19u8,
+                            199u8, 46u8, 178u8, 252u8, 11u8, 185u8, 53u8, 127u8, 210u8, 119u8,
+                            250u8, 176u8,
+                        ],
+                    )
+                }
+                pub fn task_assignment_block(
+                    &self,
+                    _0: impl ::core::borrow::Borrow<types::task_assignment_block::Param0>,
+                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
+                    ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
+                        types::task_assignment_block::Param0,
+                    >,
+                    types::task_assignment_block::TaskAssignmentBlock,
+                    ::subxt::ext::subxt_core::utils::Yes,
+                    (),
+                    (),
+                > {
+                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
+                        "TaskManagement",
+                        "TaskAssignmentBlock",
+                        ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
+                            _0.borrow(),
+                        ),
+                        [
+                            6u8, 248u8, 116u8, 144u8, 231u8, 47u8, 52u8, 114u8, 159u8, 194u8,
+                            196u8, 27u8, 102u8, 151u8, 86u8, 108u8, 214u8, 112u8, 229u8, 19u8,
+                            199u8, 46u8, 178u8, 252u8, 11u8, 185u8, 53u8, 127u8, 210u8, 119u8,
+                            250u8, 176u8,
+                        ],
+                    )
+                }
+                pub fn pending_task_confirmations_iter(
+                    &self,
+                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
+                    (),
+                    types::pending_task_confirmations::PendingTaskConfirmations,
+                    (),
+                    ::subxt::ext::subxt_core::utils::Yes,
+                    ::subxt::ext::subxt_core::utils::Yes,
+                > {
+                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
+                        "TaskManagement",
+                        "PendingTaskConfirmations",
+                        (),
+                        [
+                            178u8, 92u8, 176u8, 85u8, 215u8, 192u8, 110u8, 94u8, 22u8, 236u8,
+                            213u8, 66u8, 48u8, 37u8, 233u8, 128u8, 143u8, 92u8, 6u8, 87u8, 9u8,
+                            180u8, 34u8, 163u8, 212u8, 9u8, 83u8, 38u8, 238u8, 57u8, 56u8, 10u8,
+                        ],
+                    )
+                }
+                pub fn pending_task_confirmations(
+                    &self,
+                    _0: impl ::core::borrow::Borrow<types::pending_task_confirmations::Param0>,
+                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
+                    ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
+                        types::pending_task_confirmations::Param0,
+                    >,
+                    types::pending_task_confirmations::PendingTaskConfirmations,
+                    ::subxt::ext::subxt_core::utils::Yes,
+                    ::subxt::ext::subxt_core::utils::Yes,
+                    (),
+                > {
+                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
+                        "TaskManagement",
+                        "PendingTaskConfirmations",
+                        ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
+                            _0.borrow(),
+                        ),
+                        [
+                            178u8, 92u8, 176u8, 85u8, 215u8, 192u8, 110u8, 94u8, 22u8, 236u8,
+                            213u8, 66u8, 48u8, 37u8, 233u8, 128u8, 143u8, 92u8, 6u8, 87u8, 9u8,
+                            180u8, 34u8, 163u8, 212u8, 9u8, 83u8, 38u8, 238u8, 57u8, 56u8, 10u8,
+                        ],
+                    )
+                }
             }
         }
     }
@@ -16278,22 +16388,22 @@ pub mod api {
             #[codec(dumb_trait_bound)]
             #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
             #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
-            #[doc = "Event emitted when the worker status is updated based on aggregated data from the oracle."]
-            #[doc = "This provides the new online and availability status for the worker and the block number where the status was last updated."]
+            #[doc = "Event emitted when the miner status is updated based on aggregated data from the oracle."]
+            #[doc = "This provides the new online and availability status for the miner and the block number where the status was last updated."]
             #[doc = ""]
-            #[doc = "- `worker`: A tuple containing the worker's account ID and the worker ID."]
-            #[doc = "- `online`: A boolean indicating whether the worker is online."]
-            #[doc = "- `available`: A boolean indicating whether the worker is available."]
-            #[doc = "- `last_block_processed`: The block number at which the worker's status was last updated."]
-            pub struct UpdateFromAggregatedWorkerInfo {
-                pub worker: update_from_aggregated_worker_info::Worker,
-                pub online: update_from_aggregated_worker_info::Online,
-                pub available: update_from_aggregated_worker_info::Available,
-                pub last_block_processed: update_from_aggregated_worker_info::LastBlockProcessed,
+            #[doc = "- `miner`: A tuple containing the miner's account ID and the miner ID."]
+            #[doc = "- `online`: A boolean indicating whether the miner is online."]
+            #[doc = "- `available`: A boolean indicating whether the miner is available."]
+            #[doc = "- `last_block_processed`: The block number at which the miner's status was last updated."]
+            pub struct UpdateFromAggregatedMinerInfo {
+                pub miner: update_from_aggregated_miner_info::Miner,
+                pub online: update_from_aggregated_miner_info::Online,
+                pub available: update_from_aggregated_miner_info::Available,
+                pub last_block_processed: update_from_aggregated_miner_info::LastBlockProcessed,
             }
-            pub mod update_from_aggregated_worker_info {
+            pub mod update_from_aggregated_miner_info {
                 use super::runtime_types;
-                pub type Worker = (
+                pub type Miner = (
                     ::subxt::ext::subxt_core::utils::AccountId32,
                     ::core::primitive::u64,
                 );
@@ -16301,9 +16411,9 @@ pub mod api {
                 pub type Available = ::core::primitive::bool;
                 pub type LastBlockProcessed = ::core::primitive::u32;
             }
-            impl ::subxt::ext::subxt_core::events::StaticEvent for UpdateFromAggregatedWorkerInfo {
+            impl ::subxt::ext::subxt_core::events::StaticEvent for UpdateFromAggregatedMinerInfo {
                 const PALLET: &'static str = "StatusAggregator";
-                const EVENT: &'static str = "UpdateFromAggregatedWorkerInfo";
+                const EVENT: &'static str = "UpdateFromAggregatedMinerInfo";
             }
             #[derive(
                 :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -16341,15 +16451,15 @@ pub mod api {
                     use super::runtime_types;
                     pub type LastClearedBlock = ::core::primitive::u32;
                 }
-                pub mod worker_status_entries_per_period {
+                pub mod miner_status_entries_per_period {
                     use super::runtime_types;
-                    pub type WorkerStatusEntriesPerPeriod =
+                    pub type MinerStatusEntriesPerPeriod =
                         runtime_types::bounded_collections::bounded_vec::BoundedVec<
                             runtime_types::pallet_status_aggregator::StatusInstance<
                                 ::core::primitive::u32,
                             >,
                         >;
-                    pub type Param0 = runtime_types::cyborg_primitives::oracle::OracleWorkerFormat<
+                    pub type Param0 = runtime_types::cyborg_primitives::oracle::OracleMinerFormat<
                         ::subxt::ext::subxt_core::utils::AccountId32,
                     >;
                 }
@@ -16357,25 +16467,25 @@ pub mod api {
                     use super::runtime_types;
                     pub type SubmittedPerPeriod = ::core::primitive::bool;
                     pub type Param0 = ::subxt::ext::subxt_core::utils::AccountId32;
-                    pub type Param1 = runtime_types::cyborg_primitives::oracle::OracleWorkerFormat<
+                    pub type Param1 = runtime_types::cyborg_primitives::oracle::OracleMinerFormat<
                         ::subxt::ext::subxt_core::utils::AccountId32,
                     >;
                 }
-                pub mod resulting_worker_status_percentages {
+                pub mod resulting_miner_status_percentages {
                     use super::runtime_types;
-                    pub type ResultingWorkerStatusPercentages =
+                    pub type ResultingMinerStatusPercentages =
                         runtime_types::pallet_status_aggregator::ProcessStatusPercentages<
                             ::core::primitive::u32,
                         >;
-                    pub type Param0 = runtime_types::cyborg_primitives::oracle::OracleWorkerFormat<
+                    pub type Param0 = runtime_types::cyborg_primitives::oracle::OracleMinerFormat<
                         ::subxt::ext::subxt_core::utils::AccountId32,
                     >;
                 }
-                pub mod resulting_worker_status {
+                pub mod resulting_miner_status {
                     use super::runtime_types;
-                    pub type ResultingWorkerStatus =
+                    pub type ResultingMinerStatus =
                         runtime_types::cyborg_primitives::oracle::ProcessStatus;
-                    pub type Param0 = runtime_types::cyborg_primitives::oracle::OracleWorkerFormat<
+                    pub type Param0 = runtime_types::cyborg_primitives::oracle::OracleMinerFormat<
                         ::subxt::ext::subxt_core::utils::AccountId32,
                     >;
                 }
@@ -16404,67 +16514,67 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Stores the status entries (online/offline, available/unavailable) for each worker over a specific period."]
+                #[doc = " Stores the status entries (online/offline, available/unavailable) for each miner over a specific period."]
                 #[doc = " The status is provided by different oracle feeders, and the data is collected and aggregated to calculate"]
-                #[doc = " the overall status for each worker."]
+                #[doc = " the overall status for each miner."]
                 #[doc = ""]
-                #[doc = " - The storage key is a tuple of `(T::AccountId, WorkerId)`, which uniquely identifies the worker."]
-                #[doc = " - The value is a bounded vector of `StatusInstance`, which contains the worker's status over time."]
-                pub fn worker_status_entries_per_period_iter(
+                #[doc = " - The storage key is a tuple of `(T::AccountId, MinerId)`, which uniquely identifies the miner."]
+                #[doc = " - The value is a bounded vector of `StatusInstance`, which contains the miner's status over time."]
+                pub fn miner_status_entries_per_period_iter(
                     &self,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
                     (),
-                    types::worker_status_entries_per_period::WorkerStatusEntriesPerPeriod,
+                    types::miner_status_entries_per_period::MinerStatusEntriesPerPeriod,
                     (),
                     ::subxt::ext::subxt_core::utils::Yes,
                     ::subxt::ext::subxt_core::utils::Yes,
                 > {
                     ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
                         "StatusAggregator",
-                        "WorkerStatusEntriesPerPeriod",
+                        "MinerStatusEntriesPerPeriod",
                         (),
                         [
-                            252u8, 244u8, 26u8, 170u8, 193u8, 128u8, 203u8, 88u8, 106u8, 172u8,
-                            38u8, 97u8, 48u8, 244u8, 5u8, 204u8, 145u8, 62u8, 231u8, 170u8, 141u8,
-                            36u8, 22u8, 26u8, 198u8, 136u8, 129u8, 95u8, 36u8, 163u8, 204u8, 27u8,
+                            160u8, 144u8, 110u8, 96u8, 202u8, 147u8, 60u8, 189u8, 107u8, 113u8,
+                            206u8, 159u8, 169u8, 218u8, 32u8, 216u8, 13u8, 19u8, 102u8, 65u8, 76u8,
+                            32u8, 79u8, 213u8, 204u8, 4u8, 109u8, 116u8, 177u8, 179u8, 33u8, 236u8,
                         ],
                     )
                 }
-                #[doc = " Stores the status entries (online/offline, available/unavailable) for each worker over a specific period."]
+                #[doc = " Stores the status entries (online/offline, available/unavailable) for each miner over a specific period."]
                 #[doc = " The status is provided by different oracle feeders, and the data is collected and aggregated to calculate"]
-                #[doc = " the overall status for each worker."]
+                #[doc = " the overall status for each miner."]
                 #[doc = ""]
-                #[doc = " - The storage key is a tuple of `(T::AccountId, WorkerId)`, which uniquely identifies the worker."]
-                #[doc = " - The value is a bounded vector of `StatusInstance`, which contains the worker's status over time."]
-                pub fn worker_status_entries_per_period(
+                #[doc = " - The storage key is a tuple of `(T::AccountId, MinerId)`, which uniquely identifies the miner."]
+                #[doc = " - The value is a bounded vector of `StatusInstance`, which contains the miner's status over time."]
+                pub fn miner_status_entries_per_period(
                     &self,
-                    _0: impl ::core::borrow::Borrow<types::worker_status_entries_per_period::Param0>,
+                    _0: impl ::core::borrow::Borrow<types::miner_status_entries_per_period::Param0>,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
                     ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
-                        types::worker_status_entries_per_period::Param0,
+                        types::miner_status_entries_per_period::Param0,
                     >,
-                    types::worker_status_entries_per_period::WorkerStatusEntriesPerPeriod,
+                    types::miner_status_entries_per_period::MinerStatusEntriesPerPeriod,
                     ::subxt::ext::subxt_core::utils::Yes,
                     ::subxt::ext::subxt_core::utils::Yes,
                     (),
                 > {
                     ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
                         "StatusAggregator",
-                        "WorkerStatusEntriesPerPeriod",
+                        "MinerStatusEntriesPerPeriod",
                         ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
                             _0.borrow(),
                         ),
                         [
-                            252u8, 244u8, 26u8, 170u8, 193u8, 128u8, 203u8, 88u8, 106u8, 172u8,
-                            38u8, 97u8, 48u8, 244u8, 5u8, 204u8, 145u8, 62u8, 231u8, 170u8, 141u8,
-                            36u8, 22u8, 26u8, 198u8, 136u8, 129u8, 95u8, 36u8, 163u8, 204u8, 27u8,
+                            160u8, 144u8, 110u8, 96u8, 202u8, 147u8, 60u8, 189u8, 107u8, 113u8,
+                            206u8, 159u8, 169u8, 218u8, 32u8, 216u8, 13u8, 19u8, 102u8, 65u8, 76u8,
+                            32u8, 79u8, 213u8, 204u8, 4u8, 109u8, 116u8, 177u8, 179u8, 33u8, 236u8,
                         ],
                     )
                 }
-                #[doc = " Tracks whether a specific oracle provider has submitted worker status data during the current period."]
+                #[doc = " Tracks whether a specific oracle provider has submitted miner status data during the current period."]
                 #[doc = " This is used to prevent multiple submissions from the same oracle provider within a period."]
                 #[doc = ""]
-                #[doc = " - The key is a tuple of the oracle provider's account and required worker info `(T::AccountId, OracleWorkerFormat)`."]
+                #[doc = " - The key is a tuple of the oracle provider's account and required miner info `(T::AccountId, OracleMinerFormat)`."]
                 #[doc = " - The value is a boolean indicating whether the oracle has already submitted data."]
                 pub fn submitted_per_period_iter(
                     &self,
@@ -16480,17 +16590,17 @@ pub mod api {
                         "SubmittedPerPeriod",
                         (),
                         [
-                            99u8, 135u8, 18u8, 164u8, 50u8, 158u8, 250u8, 144u8, 116u8, 28u8, 56u8,
-                            138u8, 233u8, 79u8, 120u8, 186u8, 58u8, 166u8, 176u8, 218u8, 253u8,
-                            88u8, 192u8, 147u8, 238u8, 110u8, 151u8, 119u8, 20u8, 160u8, 132u8,
-                            110u8,
+                            199u8, 31u8, 134u8, 158u8, 20u8, 221u8, 92u8, 177u8, 125u8, 152u8,
+                            181u8, 7u8, 241u8, 179u8, 207u8, 220u8, 200u8, 15u8, 204u8, 187u8,
+                            140u8, 175u8, 178u8, 164u8, 145u8, 232u8, 189u8, 230u8, 143u8, 225u8,
+                            205u8, 5u8,
                         ],
                     )
                 }
-                #[doc = " Tracks whether a specific oracle provider has submitted worker status data during the current period."]
+                #[doc = " Tracks whether a specific oracle provider has submitted miner status data during the current period."]
                 #[doc = " This is used to prevent multiple submissions from the same oracle provider within a period."]
                 #[doc = ""]
-                #[doc = " - The key is a tuple of the oracle provider's account and required worker info `(T::AccountId, OracleWorkerFormat)`."]
+                #[doc = " - The key is a tuple of the oracle provider's account and required miner info `(T::AccountId, OracleMinerFormat)`."]
                 #[doc = " - The value is a boolean indicating whether the oracle has already submitted data."]
                 pub fn submitted_per_period_iter1(
                     &self,
@@ -16511,17 +16621,17 @@ pub mod api {
                             _0.borrow(),
                         ),
                         [
-                            99u8, 135u8, 18u8, 164u8, 50u8, 158u8, 250u8, 144u8, 116u8, 28u8, 56u8,
-                            138u8, 233u8, 79u8, 120u8, 186u8, 58u8, 166u8, 176u8, 218u8, 253u8,
-                            88u8, 192u8, 147u8, 238u8, 110u8, 151u8, 119u8, 20u8, 160u8, 132u8,
-                            110u8,
+                            199u8, 31u8, 134u8, 158u8, 20u8, 221u8, 92u8, 177u8, 125u8, 152u8,
+                            181u8, 7u8, 241u8, 179u8, 207u8, 220u8, 200u8, 15u8, 204u8, 187u8,
+                            140u8, 175u8, 178u8, 164u8, 145u8, 232u8, 189u8, 230u8, 143u8, 225u8,
+                            205u8, 5u8,
                         ],
                     )
                 }
-                #[doc = " Tracks whether a specific oracle provider has submitted worker status data during the current period."]
+                #[doc = " Tracks whether a specific oracle provider has submitted miner status data during the current period."]
                 #[doc = " This is used to prevent multiple submissions from the same oracle provider within a period."]
                 #[doc = ""]
-                #[doc = " - The key is a tuple of the oracle provider's account and required worker info `(T::AccountId, OracleWorkerFormat)`."]
+                #[doc = " - The key is a tuple of the oracle provider's account and required miner info `(T::AccountId, OracleMinerFormat)`."]
                 #[doc = " - The value is a boolean indicating whether the oracle has already submitted data."]
                 pub fn submitted_per_period(
                     &self,
@@ -16553,124 +16663,124 @@ pub mod api {
                             ),
                         ),
                         [
-                            99u8, 135u8, 18u8, 164u8, 50u8, 158u8, 250u8, 144u8, 116u8, 28u8, 56u8,
-                            138u8, 233u8, 79u8, 120u8, 186u8, 58u8, 166u8, 176u8, 218u8, 253u8,
-                            88u8, 192u8, 147u8, 238u8, 110u8, 151u8, 119u8, 20u8, 160u8, 132u8,
-                            110u8,
+                            199u8, 31u8, 134u8, 158u8, 20u8, 221u8, 92u8, 177u8, 125u8, 152u8,
+                            181u8, 7u8, 241u8, 179u8, 207u8, 220u8, 200u8, 15u8, 204u8, 187u8,
+                            140u8, 175u8, 178u8, 164u8, 145u8, 232u8, 189u8, 230u8, 143u8, 225u8,
+                            205u8, 5u8,
                         ],
                     )
                 }
-                #[doc = " Stores the resulting percentage status (online and available) for each worker after aggregation."]
+                #[doc = " Stores the resulting percentage status (online and available) for each miner after aggregation."]
                 #[doc = " This is calculated by taking the status data submitted during the period and determining the"]
-                #[doc = " percentage of time the worker was online and available."]
+                #[doc = " percentage of time the miner was online and available."]
                 #[doc = ""]
-                #[doc = " - The key is `(T::AccountId, WorkerId)`, representing the worker."]
+                #[doc = " - The key is `(T::AccountId, MinerId)`, representing the miner."]
                 #[doc = " - The value is `ProcessStatusPercentages`, which contains the percentages and the block number of the last processed status."]
-                pub fn resulting_worker_status_percentages_iter(
+                pub fn resulting_miner_status_percentages_iter(
                     &self,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
                     (),
-                    types::resulting_worker_status_percentages::ResultingWorkerStatusPercentages,
+                    types::resulting_miner_status_percentages::ResultingMinerStatusPercentages,
                     (),
                     ::subxt::ext::subxt_core::utils::Yes,
                     ::subxt::ext::subxt_core::utils::Yes,
                 > {
                     ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
                         "StatusAggregator",
-                        "ResultingWorkerStatusPercentages",
+                        "ResultingMinerStatusPercentages",
                         (),
                         [
-                            13u8, 55u8, 108u8, 50u8, 114u8, 224u8, 30u8, 31u8, 27u8, 164u8, 226u8,
-                            70u8, 129u8, 255u8, 200u8, 122u8, 6u8, 109u8, 8u8, 125u8, 247u8, 223u8,
-                            222u8, 199u8, 55u8, 106u8, 61u8, 169u8, 93u8, 173u8, 40u8, 110u8,
+                            226u8, 70u8, 169u8, 200u8, 40u8, 35u8, 107u8, 126u8, 234u8, 239u8,
+                            206u8, 251u8, 48u8, 115u8, 207u8, 4u8, 119u8, 174u8, 132u8, 56u8,
+                            122u8, 241u8, 227u8, 29u8, 122u8, 240u8, 125u8, 31u8, 79u8, 27u8,
+                            207u8, 126u8,
                         ],
                     )
                 }
-                #[doc = " Stores the resulting percentage status (online and available) for each worker after aggregation."]
+                #[doc = " Stores the resulting percentage status (online and available) for each miner after aggregation."]
                 #[doc = " This is calculated by taking the status data submitted during the period and determining the"]
-                #[doc = " percentage of time the worker was online and available."]
+                #[doc = " percentage of time the miner was online and available."]
                 #[doc = ""]
-                #[doc = " - The key is `(T::AccountId, WorkerId)`, representing the worker."]
+                #[doc = " - The key is `(T::AccountId, MinerId)`, representing the miner."]
                 #[doc = " - The value is `ProcessStatusPercentages`, which contains the percentages and the block number of the last processed status."]
-                pub fn resulting_worker_status_percentages(
+                pub fn resulting_miner_status_percentages(
                     &self,
-                    _0: impl ::core::borrow::Borrow<types::resulting_worker_status_percentages::Param0>,
+                    _0: impl ::core::borrow::Borrow<types::resulting_miner_status_percentages::Param0>,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
                     ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
-                        types::resulting_worker_status_percentages::Param0,
+                        types::resulting_miner_status_percentages::Param0,
                     >,
-                    types::resulting_worker_status_percentages::ResultingWorkerStatusPercentages,
+                    types::resulting_miner_status_percentages::ResultingMinerStatusPercentages,
                     ::subxt::ext::subxt_core::utils::Yes,
                     ::subxt::ext::subxt_core::utils::Yes,
                     (),
                 > {
                     ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
                         "StatusAggregator",
-                        "ResultingWorkerStatusPercentages",
+                        "ResultingMinerStatusPercentages",
                         ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
                             _0.borrow(),
                         ),
                         [
-                            13u8, 55u8, 108u8, 50u8, 114u8, 224u8, 30u8, 31u8, 27u8, 164u8, 226u8,
-                            70u8, 129u8, 255u8, 200u8, 122u8, 6u8, 109u8, 8u8, 125u8, 247u8, 223u8,
-                            222u8, 199u8, 55u8, 106u8, 61u8, 169u8, 93u8, 173u8, 40u8, 110u8,
+                            226u8, 70u8, 169u8, 200u8, 40u8, 35u8, 107u8, 126u8, 234u8, 239u8,
+                            206u8, 251u8, 48u8, 115u8, 207u8, 4u8, 119u8, 174u8, 132u8, 56u8,
+                            122u8, 241u8, 227u8, 29u8, 122u8, 240u8, 125u8, 31u8, 79u8, 27u8,
+                            207u8, 126u8,
                         ],
                     )
                 }
-                #[doc = " Stores the final status (online/offline and available/unavailable) for each worker based on the percentage thresholds."]
+                #[doc = " Stores the final status (online/offline and available/unavailable) for each miner based on the percentage thresholds."]
                 #[doc = " The final status is determined based on the configured threshold values for uptime."]
                 #[doc = ""]
-                #[doc = " - The key is `(T::AccountId, WorkerId)`, representing the worker."]
-                #[doc = " - The value is `ProcessStatus`, which contains the final online and available status for the worker."]
-                pub fn resulting_worker_status_iter(
+                #[doc = " - The key is `(T::AccountId, MinerId)`, representing the miner."]
+                #[doc = " - The value is `ProcessStatus`, which contains the final online and available status for the miner."]
+                pub fn resulting_miner_status_iter(
                     &self,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
                     (),
-                    types::resulting_worker_status::ResultingWorkerStatus,
+                    types::resulting_miner_status::ResultingMinerStatus,
                     (),
                     ::subxt::ext::subxt_core::utils::Yes,
                     ::subxt::ext::subxt_core::utils::Yes,
                 > {
                     ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
                         "StatusAggregator",
-                        "ResultingWorkerStatus",
+                        "ResultingMinerStatus",
                         (),
                         [
-                            171u8, 155u8, 124u8, 169u8, 169u8, 5u8, 165u8, 70u8, 97u8, 98u8, 155u8,
-                            155u8, 54u8, 232u8, 171u8, 20u8, 233u8, 55u8, 129u8, 56u8, 192u8,
-                            226u8, 31u8, 38u8, 246u8, 91u8, 100u8, 115u8, 198u8, 149u8, 196u8,
-                            23u8,
+                            25u8, 196u8, 159u8, 168u8, 68u8, 152u8, 36u8, 84u8, 37u8, 83u8, 83u8,
+                            128u8, 72u8, 244u8, 14u8, 226u8, 142u8, 124u8, 175u8, 213u8, 25u8,
+                            31u8, 205u8, 20u8, 10u8, 137u8, 120u8, 74u8, 231u8, 179u8, 62u8, 135u8,
                         ],
                     )
                 }
-                #[doc = " Stores the final status (online/offline and available/unavailable) for each worker based on the percentage thresholds."]
+                #[doc = " Stores the final status (online/offline and available/unavailable) for each miner based on the percentage thresholds."]
                 #[doc = " The final status is determined based on the configured threshold values for uptime."]
                 #[doc = ""]
-                #[doc = " - The key is `(T::AccountId, WorkerId)`, representing the worker."]
-                #[doc = " - The value is `ProcessStatus`, which contains the final online and available status for the worker."]
-                pub fn resulting_worker_status(
+                #[doc = " - The key is `(T::AccountId, MinerId)`, representing the miner."]
+                #[doc = " - The value is `ProcessStatus`, which contains the final online and available status for the miner."]
+                pub fn resulting_miner_status(
                     &self,
-                    _0: impl ::core::borrow::Borrow<types::resulting_worker_status::Param0>,
+                    _0: impl ::core::borrow::Borrow<types::resulting_miner_status::Param0>,
                 ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
                     ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
-                        types::resulting_worker_status::Param0,
+                        types::resulting_miner_status::Param0,
                     >,
-                    types::resulting_worker_status::ResultingWorkerStatus,
+                    types::resulting_miner_status::ResultingMinerStatus,
                     ::subxt::ext::subxt_core::utils::Yes,
                     ::subxt::ext::subxt_core::utils::Yes,
                     (),
                 > {
                     ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
                         "StatusAggregator",
-                        "ResultingWorkerStatus",
+                        "ResultingMinerStatus",
                         ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
                             _0.borrow(),
                         ),
                         [
-                            171u8, 155u8, 124u8, 169u8, 169u8, 5u8, 165u8, 70u8, 97u8, 98u8, 155u8,
-                            155u8, 54u8, 232u8, 171u8, 20u8, 233u8, 55u8, 129u8, 56u8, 192u8,
-                            226u8, 31u8, 38u8, 246u8, 91u8, 100u8, 115u8, 198u8, 149u8, 196u8,
-                            23u8,
+                            25u8, 196u8, 159u8, 168u8, 68u8, 152u8, 36u8, 84u8, 37u8, 83u8, 83u8,
+                            128u8, 72u8, 244u8, 14u8, 226u8, 142u8, 124u8, 175u8, 213u8, 25u8,
+                            31u8, 205u8, 20u8, 10u8, 137u8, 120u8, 74u8, 231u8, 179u8, 62u8, 135u8,
                         ],
                     )
                 }
@@ -16697,7 +16807,7 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " The percentage of active oracle entries needed to determine online status for worker"]
+                #[doc = " The percentage of active oracle entries needed to determine online status for miner"]
                 pub fn threshold_uptime_status(
                     &self,
                 ) -> ::subxt::ext::subxt_core::constants::address::StaticAddress<
@@ -16714,7 +16824,7 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = " Maximum number of status entries by unique oracle feeders for a worker per period"]
+                #[doc = " Maximum number of status entries by unique oracle feeders for a miner per period"]
                 pub fn max_aggregate_param_length(
                     &self,
                 ) -> ::subxt::ext::subxt_core::constants::address::StaticAddress<
@@ -20048,6 +20158,204 @@ pub mod api {
         }
         pub mod cyborg_primitives {
             use super::runtime_types;
+            pub mod miner {
+                use super::runtime_types;
+                #[derive(
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                    Clone,
+                    Debug,
+                )]
+                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+                #[codec(dumb_trait_bound)]
+                #[decode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
+                )]
+                #[encode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
+                )]
+                pub struct Location {
+                    pub latitude: ::core::primitive::i32,
+                    pub longitude: ::core::primitive::i32,
+                }
+                #[derive(
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                    Clone,
+                    Debug,
+                )]
+                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+                #[codec(dumb_trait_bound)]
+                #[decode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
+                )]
+                #[encode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
+                )]
+                pub struct Miner<_0, _1, _2> {
+                    pub id: ::core::primitive::u64,
+                    pub owner: _0,
+                    pub location: runtime_types::cyborg_primitives::miner::Location,
+                    pub specs: runtime_types::cyborg_primitives::miner::MinerSpecs,
+                    pub reputation: runtime_types::cyborg_primitives::miner::MinerReputation<_1>,
+                    pub current_task: ::core::option::Option<_2>,
+                    pub start_block: _1,
+                    pub status: runtime_types::cyborg_primitives::miner::MinerStatusType,
+                    pub status_last_updated: _1,
+                    pub api: runtime_types::cyborg_primitives::miner::MinerAPI,
+                    pub last_status_check: _2,
+                }
+                #[derive(
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                    Clone,
+                    Debug,
+                )]
+                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+                #[codec(dumb_trait_bound)]
+                #[decode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
+                )]
+                #[encode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
+                )]
+                pub struct MinerAPI {
+                    pub domain: runtime_types::bounded_collections::bounded_vec::BoundedVec<
+                        ::core::primitive::u8,
+                    >,
+                }
+                #[derive(
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                    Clone,
+                    Debug,
+                )]
+                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+                #[codec(dumb_trait_bound)]
+                #[decode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
+                )]
+                #[encode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
+                )]
+                pub struct MinerReputation<_0> {
+                    pub score: ::core::primitive::i32,
+                    pub last_updated: ::core::option::Option<_0>,
+                    pub violations: ::core::primitive::u32,
+                    pub successful_tasks: ::core::primitive::u32,
+                    pub suspension_count: ::core::primitive::u32,
+                    pub review_count: ::core::primitive::u32,
+                }
+                #[derive(
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                    Clone,
+                    Debug,
+                )]
+                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+                #[codec(dumb_trait_bound)]
+                #[decode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
+                )]
+                #[encode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
+                )]
+                pub struct MinerSpecs {
+                    pub ram: ::core::primitive::u64,
+                    pub storage: ::core::primitive::u64,
+                    pub cpu: ::core::primitive::u16,
+                }
+                #[derive(
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                    Clone,
+                    Debug,
+                )]
+                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+                #[codec(dumb_trait_bound)]
+                #[decode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
+                )]
+                #[encode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
+                )]
+                pub enum MinerStatusType {
+                    #[codec(index = 0)]
+                    Active,
+                    #[codec(index = 1)]
+                    Busy,
+                    #[codec(index = 2)]
+                    Inactive,
+                    #[codec(index = 3)]
+                    Suspended,
+                }
+                #[derive(
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                    Clone,
+                    Debug,
+                    serde :: Deserialize,
+                    serde :: Serialize,
+                )]
+                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+                #[codec(dumb_trait_bound)]
+                #[decode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
+                )]
+                #[encode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
+                )]
+                pub enum MinerType {
+                    #[codec(index = 0)]
+                    Cloud,
+                    #[codec(index = 1)]
+                    Edge,
+                }
+                #[derive(
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                    Clone,
+                    Debug,
+                )]
+                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+                #[codec(dumb_trait_bound)]
+                #[decode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
+                )]
+                #[encode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
+                )]
+                pub enum SuspensionReason {
+                    #[codec(index = 0)]
+                    RepeatedTaskFailures,
+                    #[codec(index = 1)]
+                    SpamBehavior,
+                    #[codec(index = 2)]
+                    MaliciousActivity,
+                    #[codec(index = 3)]
+                    ReputationThreshold,
+                    #[codec(index = 4)]
+                    ManualOverride,
+                    #[codec(index = 5)]
+                    TaskConfirmationTimeout,
+                }
+            }
             pub mod oracle {
                 use super::runtime_types;
                 #[derive(
@@ -20068,9 +20376,29 @@ pub mod api {
                 )]
                 pub enum OracleKey<_0> {
                     #[codec(index = 0)]
-                    Miner(runtime_types::cyborg_primitives::oracle::OracleWorkerFormat<_0>),
+                    Miner(runtime_types::cyborg_primitives::oracle::OracleMinerFormat<_0>),
                     #[codec(index = 1)]
                     NzkProofResult(::core::primitive::u64),
+                }
+                #[derive(
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                    Clone,
+                    Debug,
+                )]
+                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+                #[codec(dumb_trait_bound)]
+                #[decode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
+                )]
+                #[encode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
+                )]
+                pub struct OracleMinerFormat<_0> {
+                    pub id: (_0, ::core::primitive::u64),
+                    pub miner_type: runtime_types::cyborg_primitives::miner::MinerType,
                 }
                 #[derive(
                     :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -20093,26 +20421,6 @@ pub mod api {
                     MinerStatus(runtime_types::cyborg_primitives::oracle::ProcessStatus),
                     #[codec(index = 1)]
                     ZkProofResult(::core::primitive::bool),
-                }
-                #[derive(
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                    Clone,
-                    Debug,
-                )]
-                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-                #[codec(dumb_trait_bound)]
-                #[decode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
-                )]
-                #[encode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
-                )]
-                pub struct OracleWorkerFormat<_0> {
-                    pub id: (_0, ::core::primitive::u64),
-                    pub worker_type: runtime_types::cyborg_primitives::worker::WorkerType,
                 }
                 #[derive(
                     :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -20252,6 +20560,11 @@ pub mod api {
                         runtime_types::bounded_collections::bounded_vec::BoundedVec<
                             ::core::primitive::u8,
                         >,
+                    pub gatekeeper_pub: ::core::option::Option<
+                        runtime_types::bounded_collections::bounded_vec::BoundedVec<
+                            ::core::primitive::u8,
+                        >,
+                    >,
                 }
                 #[derive(
                     :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -20389,6 +20702,8 @@ pub mod api {
                     OpenInference(runtime_types::cyborg_primitives::task::OpenInferenceTask),
                     #[codec(index = 2)]
                     FlashInferInfer(runtime_types::cyborg_primitives::task::FlashInferTask),
+                    #[codec(index = 3)]
+                    CyCloud,
                 }
                 #[derive(
                     :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -20439,200 +20754,8 @@ pub mod api {
                     OpenInference(runtime_types::cyborg_primitives::task::OpenInferenceTask),
                     #[codec(index = 2)]
                     FlashInfer(runtime_types::cyborg_primitives::task::FlashInferTask),
-                }
-            }
-            pub mod worker {
-                use super::runtime_types;
-                #[derive(
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                    Clone,
-                    Debug,
-                )]
-                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-                #[codec(dumb_trait_bound)]
-                #[decode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
-                )]
-                #[encode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
-                )]
-                pub struct Location {
-                    pub latitude: ::core::primitive::i32,
-                    pub longitude: ::core::primitive::i32,
-                }
-                #[derive(
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                    Clone,
-                    Debug,
-                )]
-                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-                #[codec(dumb_trait_bound)]
-                #[decode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
-                )]
-                #[encode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
-                )]
-                pub enum SuspensionReason {
-                    #[codec(index = 0)]
-                    RepeatedTaskFailures,
-                    #[codec(index = 1)]
-                    SpamBehavior,
-                    #[codec(index = 2)]
-                    MaliciousActivity,
                     #[codec(index = 3)]
-                    ReputationThreshold,
-                    #[codec(index = 4)]
-                    ManualOverride,
-                }
-                #[derive(
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                    Clone,
-                    Debug,
-                )]
-                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-                #[codec(dumb_trait_bound)]
-                #[decode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
-                )]
-                #[encode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
-                )]
-                pub struct Worker<_0, _1, _2> {
-                    pub id: ::core::primitive::u64,
-                    pub owner: _0,
-                    pub location: runtime_types::cyborg_primitives::worker::Location,
-                    pub specs: runtime_types::cyborg_primitives::worker::WorkerSpecs,
-                    pub reputation: runtime_types::cyborg_primitives::worker::WorkerReputation<_1>,
-                    pub current_task: ::core::option::Option<_2>,
-                    pub start_block: _1,
-                    pub status: runtime_types::cyborg_primitives::worker::WorkerStatusType,
-                    pub status_last_updated: _1,
-                    pub api: runtime_types::cyborg_primitives::worker::WorkerAPI,
-                    pub last_status_check: _2,
-                }
-                #[derive(
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                    Clone,
-                    Debug,
-                )]
-                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-                #[codec(dumb_trait_bound)]
-                #[decode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
-                )]
-                #[encode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
-                )]
-                pub struct WorkerAPI {
-                    pub domain: runtime_types::bounded_collections::bounded_vec::BoundedVec<
-                        ::core::primitive::u8,
-                    >,
-                }
-                #[derive(
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                    Clone,
-                    Debug,
-                )]
-                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-                #[codec(dumb_trait_bound)]
-                #[decode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
-                )]
-                #[encode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
-                )]
-                pub struct WorkerReputation<_0> {
-                    pub score: ::core::primitive::i32,
-                    pub last_updated: ::core::option::Option<_0>,
-                    pub violations: ::core::primitive::u32,
-                    pub successful_tasks: ::core::primitive::u32,
-                    pub suspension_count: ::core::primitive::u32,
-                    pub review_count: ::core::primitive::u32,
-                }
-                #[derive(
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                    Clone,
-                    Debug,
-                )]
-                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-                #[codec(dumb_trait_bound)]
-                #[decode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
-                )]
-                #[encode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
-                )]
-                pub struct WorkerSpecs {
-                    pub ram: ::core::primitive::u64,
-                    pub storage: ::core::primitive::u64,
-                    pub cpu: ::core::primitive::u16,
-                }
-                #[derive(
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                    Clone,
-                    Debug,
-                )]
-                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-                #[codec(dumb_trait_bound)]
-                #[decode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
-                )]
-                #[encode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
-                )]
-                pub enum WorkerStatusType {
-                    #[codec(index = 0)]
-                    Active,
-                    #[codec(index = 1)]
-                    Busy,
-                    #[codec(index = 2)]
-                    Inactive,
-                    #[codec(index = 3)]
-                    Suspended,
-                }
-                #[derive(
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                    Clone,
-                    Debug,
-                )]
-                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-                #[codec(dumb_trait_bound)]
-                #[decode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
-                )]
-                #[encode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
-                )]
-                pub enum WorkerType {
-                    #[codec(index = 0)]
-                    Docker,
-                    #[codec(index = 1)]
-                    Executable,
+                    CyCloud,
                 }
             }
             pub mod zkml {
@@ -22569,9 +22692,9 @@ pub mod api {
                 #[doc = "Contains a variant per dispatchable extrinsic that this pallet has."]
                 pub enum Call {
                     #[codec(index = 0)]
-                    #[doc = "Registers a Worker with either a domain and initialize it with an inactive status."]
-                    register_worker {
-                        worker_type: runtime_types::cyborg_primitives::worker::WorkerType,
+                    #[doc = "Registers a Miner with either a domain and initialize it with an inactive status."]
+                    register_miner {
+                        miner_type: runtime_types::cyborg_primitives::miner::MinerType,
                         domain: runtime_types::bounded_collections::bounded_vec::BoundedVec<
                             ::core::primitive::u8,
                         >,
@@ -22582,49 +22705,49 @@ pub mod api {
                         cpu: ::core::primitive::u16,
                     },
                     #[codec(index = 1)]
-                    #[doc = "Remove a worker from storage an deactivates it"]
-                    remove_worker {
-                        worker_type: runtime_types::cyborg_primitives::worker::WorkerType,
-                        worker_id: ::core::primitive::u64,
+                    #[doc = "Remove a miner from storage an deactivates it"]
+                    remove_miner {
+                        miner_type: runtime_types::cyborg_primitives::miner::MinerType,
+                        miner_id: ::core::primitive::u64,
                     },
                     #[codec(index = 2)]
-                    #[doc = "Switches the visibility of a worker between active and inactive."]
-                    toggle_worker_visibility {
-                        worker_type: runtime_types::cyborg_primitives::worker::WorkerType,
-                        worker_id: ::core::primitive::u64,
+                    #[doc = "Switches the visibility of a miner between active and inactive."]
+                    toggle_miner_visibility {
+                        miner_type: runtime_types::cyborg_primitives::miner::MinerType,
+                        miner_id: ::core::primitive::u64,
                         visibility: ::core::primitive::bool,
                     },
                     #[codec(index = 3)]
-                    penalize_worker {
-                        worker_owner: ::subxt::ext::subxt_core::utils::AccountId32,
-                        worker_id: ::core::primitive::u64,
-                        worker_type: runtime_types::cyborg_primitives::worker::WorkerType,
+                    penalize_miner {
+                        miner_owner: ::subxt::ext::subxt_core::utils::AccountId32,
+                        miner_id: ::core::primitive::u64,
+                        miner_type: runtime_types::cyborg_primitives::miner::MinerType,
                         penalty: ::core::primitive::i32,
                         reason: runtime_types::pallet_edge_connect::pallet::PenaltyReason,
                     },
                     #[codec(index = 4)]
-                    #[doc = "Manually suspend a worker (root only)"]
-                    suspend_worker {
-                        worker_owner: ::subxt::ext::subxt_core::utils::AccountId32,
-                        worker_id: ::core::primitive::u64,
-                        worker_type: runtime_types::cyborg_primitives::worker::WorkerType,
+                    #[doc = "Manually suspend a miner (root only)"]
+                    suspend_miner {
+                        miner_owner: ::subxt::ext::subxt_core::utils::AccountId32,
+                        miner_id: ::core::primitive::u64,
+                        miner_type: runtime_types::cyborg_primitives::miner::MinerType,
                         blocks: ::core::primitive::u32,
-                        reason: runtime_types::cyborg_primitives::worker::SuspensionReason,
+                        reason: runtime_types::cyborg_primitives::miner::SuspensionReason,
                     },
                     #[codec(index = 5)]
-                    #[doc = "Manually ban a worker (root only)"]
-                    ban_worker {
-                        worker_owner: ::subxt::ext::subxt_core::utils::AccountId32,
-                        worker_id: ::core::primitive::u64,
-                        worker_type: runtime_types::cyborg_primitives::worker::WorkerType,
-                        reason: runtime_types::cyborg_primitives::worker::SuspensionReason,
+                    #[doc = "Manually ban a miner (root only)"]
+                    ban_miner {
+                        miner_owner: ::subxt::ext::subxt_core::utils::AccountId32,
+                        miner_id: ::core::primitive::u64,
+                        miner_type: runtime_types::cyborg_primitives::miner::MinerType,
+                        reason: runtime_types::cyborg_primitives::miner::SuspensionReason,
                     },
                     #[codec(index = 6)]
-                    #[doc = "Lift suspension from a worker (root only)"]
-                    unsuspend_worker {
-                        worker_owner: ::subxt::ext::subxt_core::utils::AccountId32,
-                        worker_id: ::core::primitive::u64,
-                        worker_type: runtime_types::cyborg_primitives::worker::WorkerType,
+                    #[doc = "Lift suspension from a miner (root only)"]
+                    unsuspend_miner {
+                        miner_owner: ::subxt::ext::subxt_core::utils::AccountId32,
+                        miner_id: ::core::primitive::u64,
+                        miner_type: runtime_types::cyborg_primitives::miner::MinerType,
                     },
                 }
                 #[derive(
@@ -22647,19 +22770,19 @@ pub mod api {
                 #[doc = "These errors will be returned in the `DispatchResult` when a function call fails."]
                 pub enum Error {
                     #[codec(index = 0)]
-                    #[doc = "Error indicating that either the IP address or the domain was missing when attempting to register a worker."]
-                    WorkerRegisterMissingIpOrDomain,
+                    #[doc = "Error indicating that either the IP address or the domain was missing when attempting to register a miner."]
+                    MinerRegisterMissingIpOrDomain,
                     #[codec(index = 1)]
-                    #[doc = "Error indicating that the worker already exists and cannot be registered again."]
-                    WorkerExists,
+                    #[doc = "Error indicating that the miner already exists and cannot be registered again."]
+                    MinerExists,
                     #[codec(index = 2)]
-                    #[doc = "Error indicating that the worker does not exist in the system when trying to perform actions (e.g., removal or status update)."]
-                    WorkerDoesNotExist,
+                    #[doc = "Error indicating that the miner does not exist in the system when trying to perform actions (e.g., removal or status update)."]
+                    MinerDoesNotExist,
                     #[codec(index = 3)]
-                    #[doc = "Worker is suspended and cannot perform actions."]
-                    WorkerSuspended,
+                    #[doc = "Miner is suspended and cannot perform actions."]
+                    MinerSuspended,
                     #[codec(index = 4)]
-                    #[doc = "Worker reputation is too low"]
+                    #[doc = "Miner reputation is too low"]
                     InsufficientReputation,
                     #[codec(index = 5)]
                     #[doc = "Miner is busy"]
@@ -22688,14 +22811,14 @@ pub mod api {
                 #[doc = "Events are emitted when significant actions or state changes happen in the pallet."]
                 pub enum Event {
                     #[codec(index = 0)]
-                    #[doc = "Event emitted when a new worker is successfully registered."]
+                    #[doc = "Event emitted when a new miner is successfully registered."]
                     #[doc = ""]
-                    #[doc = "- `creator`: The account ID of the worker's creator."]
-                    #[doc = "- `worker`: A tuple containing the account ID of the worker owner and the worker ID."]
+                    #[doc = "- `creator`: The account ID of the miner's creator."]
+                    #[doc = "- `miner`: A tuple containing the account ID of the miner owner and the miner ID."]
                     #[doc = "- `domain`: The domain associated with the"]
-                    WorkerRegistered {
+                    MinerRegistered {
                         creator: ::subxt::ext::subxt_core::utils::AccountId32,
-                        worker: (
+                        miner: (
                             ::subxt::ext::subxt_core::utils::AccountId32,
                             ::core::primitive::u64,
                         ),
@@ -22707,10 +22830,10 @@ pub mod api {
                     #[doc = "Event emitted when a miner tries to re-register itself."]
                     #[doc = ""]
                     #[doc = "- `creator`: The account ID of the miner's creator."]
-                    #[doc = "- `worker`: A tuple containing the account ID of the miner owner and the miner ID."]
-                    WorkerAlreadyRegistered {
+                    #[doc = "- `miner`: A tuple containing the account ID of the miner owner and the miner ID."]
+                    MinerAlreadyRegistered {
                         creator: ::subxt::ext::subxt_core::utils::AccountId32,
-                        worker: (
+                        miner: (
                             ::subxt::ext::subxt_core::utils::AccountId32,
                             ::core::primitive::u64,
                         ),
@@ -22719,29 +22842,29 @@ pub mod api {
                         >,
                     },
                     #[codec(index = 2)]
-                    #[doc = "Event emitted when a worker is removed from the system."]
+                    #[doc = "Event emitted when a miner is removed from the system."]
                     #[doc = ""]
-                    #[doc = "- `creator`: The account ID of the worker's creator."]
-                    #[doc = "- `worker_id`: The ID of the worker that was removed."]
-                    WorkerRemoved {
+                    #[doc = "- `creator`: The account ID of the miner's creator."]
+                    #[doc = "- `miner_id`: The ID of the miner that was removed."]
+                    MinerRemoved {
                         creator: ::subxt::ext::subxt_core::utils::AccountId32,
-                        worker_id: ::core::primitive::u64,
+                        miner_id: ::core::primitive::u64,
                     },
                     #[codec(index = 3)]
-                    #[doc = "Event emitted when a worker's status is updated (e.g., toggling visibility)."]
+                    #[doc = "Event emitted when a miner's status is updated (e.g., toggling visibility)."]
                     #[doc = ""]
-                    #[doc = "- `creator`: The account ID of the worker's creator."]
-                    #[doc = "- `worker_id`: The ID of the worker whose status was updated."]
-                    #[doc = "- `worker_status`: The new status of the worker, either active or inactive."]
-                    WorkerStatusUpdated {
+                    #[doc = "- `creator`: The account ID of the miner's creator."]
+                    #[doc = "- `miner_id`: The ID of the miner whose status was updated."]
+                    #[doc = "- `miner_status`: The new status of the miner, either active or inactive."]
+                    MinerStatusUpdated {
                         creator: ::subxt::ext::subxt_core::utils::AccountId32,
-                        worker_id: ::core::primitive::u64,
-                        worker_status: runtime_types::cyborg_primitives::worker::WorkerStatusType,
+                        miner_id: ::core::primitive::u64,
+                        miner_status: runtime_types::cyborg_primitives::miner::MinerStatusType,
                     },
                     #[codec(index = 4)]
-                    #[doc = "Event emitted when a worker is penalized"]
-                    WorkerPenalized {
-                        worker: (
+                    #[doc = "Event emitted when a miner is penalized"]
+                    MinerPenalized {
+                        miner: (
                             ::subxt::ext::subxt_core::utils::AccountId32,
                             ::core::primitive::u64,
                         ),
@@ -22749,36 +22872,36 @@ pub mod api {
                         reason: runtime_types::pallet_edge_connect::pallet::PenaltyReason,
                     },
                     #[codec(index = 5)]
-                    #[doc = "Event emitted when a worker is suspended"]
-                    WorkerSuspended {
-                        worker: (
+                    #[doc = "Event emitted when a miner is suspended"]
+                    MinerSuspended {
+                        miner: (
                             ::subxt::ext::subxt_core::utils::AccountId32,
                             ::core::primitive::u64,
                         ),
                         until_block: ::core::primitive::u32,
                     },
                     #[codec(index = 6)]
-                    #[doc = "Event emitted when a worker is put under review"]
-                    WorkerUnderReview {
-                        worker: (
+                    #[doc = "Event emitted when a miner is put under review"]
+                    MinerUnderReview {
+                        miner: (
                             ::subxt::ext::subxt_core::utils::AccountId32,
                             ::core::primitive::u64,
                         ),
-                        reason: runtime_types::cyborg_primitives::worker::SuspensionReason,
+                        reason: runtime_types::cyborg_primitives::miner::SuspensionReason,
                     },
                     #[codec(index = 7)]
-                    #[doc = "Event emitted when a worker is banned"]
-                    WorkerBanned {
-                        worker: (
+                    #[doc = "Event emitted when a miner is banned"]
+                    MinerBanned {
+                        miner: (
                             ::subxt::ext::subxt_core::utils::AccountId32,
                             ::core::primitive::u64,
                         ),
-                        reason: runtime_types::cyborg_primitives::worker::SuspensionReason,
+                        reason: runtime_types::cyborg_primitives::miner::SuspensionReason,
                     },
                     #[codec(index = 8)]
-                    #[doc = "Event emitted when a worker is unsuspended"]
-                    WorkerUnsuspended {
-                        worker: (
+                    #[doc = "Event emitted when a miner is unsuspended"]
+                    MinerUnsuspended {
+                        miner: (
                             ::subxt::ext::subxt_core::utils::AccountId32,
                             ::core::primitive::u64,
                         ),
@@ -23797,15 +23920,15 @@ pub mod api {
                 #[doc = "Events are emitted when significant actions or state changes happen in the pallet."]
                 pub enum Event {
                     #[codec(index = 0)]
-                    #[doc = "Event emitted when the worker status is updated based on aggregated data from the oracle."]
-                    #[doc = "This provides the new online and availability status for the worker and the block number where the status was last updated."]
+                    #[doc = "Event emitted when the miner status is updated based on aggregated data from the oracle."]
+                    #[doc = "This provides the new online and availability status for the miner and the block number where the status was last updated."]
                     #[doc = ""]
-                    #[doc = "- `worker`: A tuple containing the worker's account ID and the worker ID."]
-                    #[doc = "- `online`: A boolean indicating whether the worker is online."]
-                    #[doc = "- `available`: A boolean indicating whether the worker is available."]
-                    #[doc = "- `last_block_processed`: The block number at which the worker's status was last updated."]
-                    UpdateFromAggregatedWorkerInfo {
-                        worker: (
+                    #[doc = "- `miner`: A tuple containing the miner's account ID and the miner ID."]
+                    #[doc = "- `online`: A boolean indicating whether the miner is online."]
+                    #[doc = "- `available`: A boolean indicating whether the miner is available."]
+                    #[doc = "- `last_block_processed`: The block number at which the miner's status was last updated."]
+                    UpdateFromAggregatedMinerInfo {
+                        miner: (
                             ::subxt::ext::subxt_core::utils::AccountId32,
                             ::core::primitive::u64,
                         ),
@@ -24015,12 +24138,12 @@ pub mod api {
                 #[doc = "Contains a variant per dispatchable extrinsic that this pallet has."]
                 pub enum Call {
                     #[codec(index = 0)]
-                    #[doc = "Creates a new task and assigns it to a randomly selected worker."]
+                    #[doc = "Creates a new task and assigns it to a randomly selected miner."]
                     #[doc = "None -> Assigned"]
                     task_scheduler {
                         task_kind: runtime_types::cyborg_primitives::task::TaskSubmissionData,
-                        worker_owner: ::subxt::ext::subxt_core::utils::AccountId32,
-                        worker_id: ::core::primitive::u64,
+                        miner_owner: ::subxt::ext::subxt_core::utils::AccountId32,
+                        miner_id: ::core::primitive::u64,
                         compute_hours_deposit: ::core::option::Option<::core::primitive::u32>,
                     },
                     #[codec(index = 1)]
@@ -24037,7 +24160,10 @@ pub mod api {
                     #[codec(index = 6)]
                     #[doc = "miner confirms that it has reset itself"]
                     #[doc = "Stopped to vacated"]
-                    confirm_miner_vacation { task_id: ::core::primitive::u64 },
+                    confirm_miner_vacation {
+                        task_id: ::core::primitive::u64,
+                        miner_type: runtime_types::cyborg_primitives::miner::MinerType,
+                    },
                     #[codec(index = 4)]
                     set_gatekeeper {
                         new_gatekeeper: ::subxt::ext::subxt_core::utils::AccountId32,
@@ -24108,6 +24234,8 @@ pub mod api {
                     ModelAlreadyRegistered,
                     #[codec(index = 17)]
                     ModelNotFound,
+                    #[codec(index = 18)]
+                    TaskReceptionAlreadyConfirmed,
                 }
                 #[derive(
                     :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -24129,9 +24257,9 @@ pub mod api {
                 #[doc = "<https://paritytech.github.io/polkadot-sdk/master/polkadot_sdk_docs/guides/your_first_pallet/index.html#event-and-error>"]
                 pub enum Event {
                     #[codec(index = 0)]
-                    #[doc = "A new task has been scheduled and assigned to a worker."]
+                    #[doc = "A new task has been scheduled and assigned to a miner."]
                     TaskScheduled {
-                        assigned_worker: (
+                        assigned_miner: (
                             ::subxt::ext::subxt_core::utils::AccountId32,
                             ::core::primitive::u64,
                         ),
@@ -24142,7 +24270,7 @@ pub mod api {
                         task_id: ::core::primitive::u64,
                     },
                     #[codec(index = 1)]
-                    #[doc = "A worker confirmed reception of task data and started execution."]
+                    #[doc = "A miner confirmed reception of task data and started execution."]
                     TaskReceptionConfirmed {
                         task_id: ::core::primitive::u64,
                         who: ::subxt::ext::subxt_core::utils::AccountId32,

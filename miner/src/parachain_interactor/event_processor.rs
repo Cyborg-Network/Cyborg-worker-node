@@ -1,4 +1,4 @@
-use crate::config::get_paths;
+use crate::global_config::PATHS;
 use crate::substrate_interface;
 use crate::traits::{InferenceServer, ParachainInteractor};
 use crate::types::CurrentTask;
@@ -6,63 +6,70 @@ use crate::utils::task_handling::{self, return_task_container_name, set_current_
 use crate::utils::tx_builder::pub_confirm_task_reception;
 use crate::{
     error::{Error, Result},
-    types::{Miner, MinerData},
+    types::{Miner, MinerIdentity},
 };
 use subxt::{events::EventDetails, PolkadotConfig};
 use std::fs;
+use std::sync::Arc;
 
-pub async fn process_event(miner: &mut Miner, event: &EventDetails<PolkadotConfig>) -> Result<()> {
-    // Check for WorkerRegistered event
-    match event.as_event::<substrate_interface::api::edge_connect::events::WorkerRegistered>() {
-        Ok(Some(worker_registered)) => {
-            let creator = &worker_registered.creator;
-            let worker = &worker_registered.worker;
-            let domain = &worker_registered.domain;
+pub async fn process_event(miner: Arc<Miner>, event: &EventDetails<PolkadotConfig>) -> Result<()> {
+    // Extract the task_id before matching to avoid having to clone miner
+    let current_task_id = {
+        let guard = miner.current_task.read().await;
+        guard.as_ref().map(|t| t.id)
+    };
+
+    // Check for MinerRegistered event
+    match event.as_event::<substrate_interface::api::edge_connect::events::MinerRegistered>() {
+        Ok(Some(miner_registered)) => {
+            let creator = &miner_registered.creator;
+            let miner = &miner_registered.miner;
+            let domain = &miner_registered.domain;
 
             println!(
-                "Worker Registered: Creator: {:?}, Worker: {:?}, Domain: {:?}",
-                creator, worker, domain
+                "Miner Registered: Creator: {:?}, Miner: {:?}, Domain: {:?}",
+                creator, miner, domain
             );
         }
         Err(e) => {
-            println!("Error decoding WorkerRegistered event: {:?}", e);
+            println!("Error decoding MinerRegistered event: {:?}", e);
             return Err(Error::Subxt(e.into()));
         }
         _ => {} // Skip non-matching events
     }
 
-    // Check for WorkerRemoved event
-    match event.as_event::<substrate_interface::api::edge_connect::events::WorkerRemoved>() {
-        Ok(Some(worker_removed)) => {
-            let creator = &worker_removed.creator;
-            let worker_id = &worker_removed.worker_id;
+    // Check for MinerRemoved event
+    match event.as_event::<substrate_interface::api::edge_connect::events::MinerRemoved>() {
+        Ok(Some(miner_removed)) => {
+            let creator = &miner_removed.creator;
+            let miner_id = &miner_removed.miner_id;
 
             println!(
-                "Worker Removed: Creator: {:?}, Worker ID: {:?}",
-                creator, worker_id
+                "Miner Removed: Creator: {:?}, Miner ID: {:?}",
+                creator, miner_id
             );
         }
         Err(e) => {
-            println!("Error decoding WorkerRemoved event: {:?}", e);
+            println!("Error decoding MinerRemoved event: {:?}", e);
             return Err(Error::Subxt(e.into()));
         }
         _ => {} // Skip non-matching events
     }
 
-    // Check for WorkerStatusUpdated event
-    match event.as_event::<substrate_interface::api::edge_connect::events::WorkerStatusUpdated>() {
+    // Check for MinerStatusUpdated event
+    match event.as_event::<substrate_interface::api::edge_connect::events::MinerStatusUpdated>() {
         Ok(Some(status_updated)) => {
             let creator = &status_updated.creator;
-            let worker_id = &status_updated.worker_id;
-            let worker_status = &status_updated.worker_status;
+            let miner_id = &status_updated.miner_id;
+            let miner_status = &status_updated.miner_status;
 
             println!(
-                "Worker Status Updated: Creator: {:?}, Worker ID: {:?}, Status: {:?}",
-                creator, worker_id, worker_status
+                "Miner Status Updated: Creator: {:?}, Miner ID: {:?}, Status: {:?}",
+                creator, miner_id, miner_status
             );
         }
         Err(e) => {
-            println!("Error decoding WorkerStatusUpdated event: {:?}", e);
+            println!("Error decoding MinerStatusUpdated event: {:?}", e);
             return Err(Error::Subxt(e.into()));
         }
         _ => {} // Skip non-matching events
@@ -71,13 +78,13 @@ pub async fn process_event(miner: &mut Miner, event: &EventDetails<PolkadotConfi
     // Check for TaskScheduled event
     match event.as_event::<substrate_interface::api::task_management::events::TaskScheduled>() {
         Ok(Some(task_scheduled)) => {
-            let assigned_miner = &task_scheduled.assigned_worker;
-            let identity_path = &get_paths()?.identity_path;
+            let assigned_miner = &task_scheduled.assigned_miner;
+            let identity_path = &PATHS.identity_path;
 
             let file_content = fs::read_to_string(identity_path)?;
-            let miner_data: MinerData = serde_json::from_str(&file_content)?;
+            let miner_data: MinerIdentity = serde_json::from_str(&file_content)?;
 
-            if assigned_miner == &miner_data.miner_identity {
+            if assigned_miner == &miner_data.miner_id {
                 println!("New task scheduled: {:?}", task_scheduled.task_id);
 
                 let current_task = CurrentTask {
@@ -87,10 +94,9 @@ pub async fn process_event(miner: &mut Miner, event: &EventDetails<PolkadotConfi
                     id: task_scheduled.task_id,
                 };
 
-                let (current_task_id, _handle) = set_current_task(miner, current_task).await?;
+                let (current_task_id, _handle) = set_current_task(Arc::clone(&miner), current_task).await?;
 
-                
-                let keypair = miner.keypair.clone();
+                let keypair = Arc::clone(&miner.keypair);
                 tokio::spawn(async move {
                     if let Err(e) = pub_confirm_task_reception(keypair, &current_task_id).await {
                         println!("Critical error encountered, please contact the support: {}", e);
@@ -106,15 +112,13 @@ pub async fn process_event(miner: &mut Miner, event: &EventDetails<PolkadotConfi
         _ => {} // Skip non-matching events
     }
 
-    if let Some(current_task) = &miner.current_task {
-        let current_task_id = current_task.id;
-
+    if let Some(current_task_id) = current_task_id {
         match event.as_event::<substrate_interface::api::task_management::events::TaskStopRequested>() {
             Ok(Some(requested_task_stop)) => {
                 let task_id = &requested_task_stop.task_id;
 
                 if *task_id == current_task_id {
-                    task_handling::clean_up_current_task_and_vacate(miner).await?;
+                    task_handling::clean_up_current_task_and_vacate(Arc::clone(&miner)).await?;
                 }
             }
             Err(e) => {
@@ -125,12 +129,12 @@ pub async fn process_event(miner: &mut Miner, event: &EventDetails<PolkadotConfi
         }
     }
 
-    if let Some(current_task) = &miner.current_task {
+    if let Some(current_task_id) = current_task_id {
         match event.as_event::<substrate_interface::api::neuro_zk::events::NzkProofRequested>() {
             Ok(Some(requested_proof)) => {
                 let task_id = &requested_proof.task_id;
 
-                if *task_id == current_task.id {
+                if *task_id == current_task_id {
                     let proof = miner.parent_runtime.read().await.generate_proof().await?;
                     let _ = miner.submit_zkml_proof(proof).await?;
                 }
@@ -145,7 +149,7 @@ pub async fn process_event(miner: &mut Miner, event: &EventDetails<PolkadotConfi
 
     /*
     //TODO check if proof was submitted (after parachain update)
-    // Check for SubmittedCompletedTask event to check if worker was assigned to verify task
+    // Check for SubmittedCompletedTask event to check if miner was assigned to verify task
     match event.as_event::<substrate_interface::api::neuro_zk::events::ProofSubmitted>() {
         Ok(Some(submitted_proof)) => {
             let prover = &submitted_task.prover;

@@ -1,0 +1,39 @@
+[Unit]
+Description=Container Access Control API
+Documentation=https://docs.example.com/container-access-api
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+
+Environment="SCRIPTS_DIR=/opt/container-management"
+Environment="LOG_FILE=/var/log/container-access-api.log"
+
+NoNewPrivileges=false
+PrivateTmp=true
+
+Restart=always
+RestartSec=10
+StartLimitInterval=60
+StartLimitBurst=3
+
+LimitNOFILE=65536
+MemoryLimit=512M
+CPUQuota=50%
+
+ExecStartPre=/bin/mkdir -p /var/run /var/log /var/lib/container-access-api /var/lib/container-ssh-mappings
+ExecStartPre=/bin/chmod 755 /opt/container-management/container-access-api.sh
+ExecStart=/opt/container-management/container-access-api.sh
+ExecReload=/bin/kill -HUP $MAINPID
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=container-access-api
+
+ExecStopPost=/bin/rm -f /var/run/container-access-api.sock
+
+[Install]
+WantedBy=multi-user.target

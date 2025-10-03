@@ -1,12 +1,17 @@
+use std::sync::Arc;
+
 use crate::{
     error::Result, parachain_interactor::{
-        behavior_control, event_processor, identity, registration::{self, RegistrationStatus}, task_management,
-    }, parent_runtime::{inference, proof, setup}, substrate_interface::api::{task_management::events::task_scheduled::TaskKind}, types::{CurrentTask, Miner, ParentRuntime}
+        behavior_control, event_processor, registration, task_management
+    }, 
+    parent_runtime::{inference, proof, setup}, 
+    types::{CurrentTask, Miner, ParentRuntime},
+    global_config,
 };
 use async_trait::async_trait;
 use subxt::events::EventDetails;
 use subxt::PolkadotConfig;
-use tokio::task::JoinHandle;
+use tokio::sync::RwLock;
 
 #[async_trait]
 pub trait InferenceServer {
@@ -17,7 +22,7 @@ pub trait InferenceServer {
     ///
     /// # Returns
     /// A `Result` containing `Ok(())` if the task is successfully processed, or an `Error` if it fails.
-    async fn process_task(&self, task: TaskKind) -> Result<()>;
+    async fn process_task(&self, task: Arc<RwLock<CurrentTask>>) -> Result<()>;
 
     /// Starts performing inference, selecting the correct inference engine based on the task type
     ///
@@ -26,7 +31,7 @@ pub trait InferenceServer {
     ///
     /// # Returns
     /// An `impl Stream<Item = Result<Message, tungstenite::Error>>` representing the output stream of messages.
-    async fn spawn_inference_server(&self, current_task: &CurrentTask) -> Result</*JoinHandle<()>*/()>;
+    async fn spawn_inference_server(&self, current_task: Arc<RwLock<CurrentTask>>) -> Result</*JoinHandle<()>*/()>;
 
     /// Generates a zkml proof for the model currently in execution.
     ///
@@ -37,11 +42,11 @@ pub trait InferenceServer {
 
 #[async_trait]
 impl InferenceServer for ParentRuntime {
-    async fn process_task(&self, task: TaskKind) -> Result<()> {
+    async fn process_task(&self, task: Arc<RwLock<CurrentTask>>) -> Result<()> {
         setup::process_task(task).await
     }
 
-    async fn spawn_inference_server(&self, current_task: &CurrentTask) -> Result</*JoinHandle<()>*/()> {
+    async fn spawn_inference_server(&self, current_task: Arc<RwLock<CurrentTask>>) -> Result</*JoinHandle<()>*/()> {
         inference::spawn_inference_server(current_task, self.port).await
     }
 
@@ -56,17 +61,11 @@ impl InferenceServer for ParentRuntime {
 /// Provides an asynchronous API for interacting with a blockchain, which enables clients to register workers,
 /// initiate mining sessions, and handle blockchain events with asynchronous operations.
 pub trait ParachainInteractor {
-    /// Confirms the registration of a worker node on the blockchain.
-    ///
-    /// # Returns
-    /// A `Result` indicating `Ok(true)` if successful, or an `Error` if confirmation fails.
-    async fn confirm_registration(&self) -> Result<RegistrationStatus>;
-
     /// Starts a miner by subscribing to events and listening to finalized blocks.
     ///
     /// # Returns
     /// A `Result` indicating `Ok(())` if the session starts successfully, or an `Error` if it fails.
-    async fn start_miner(&mut self) -> Result<()>;
+    async fn start_miner(&self) -> Result<()>;
 
     /// Processes an event received from the blockchain.
     ///
@@ -75,7 +74,7 @@ pub trait ParachainInteractor {
     ///
     /// # Returns
     /// An `Option<String>` containing relevant information derived from the event, or `None` if no information is extracted.
-    async fn process_event(&mut self, event: &EventDetails<PolkadotConfig>) -> Result<()>;
+    async fn process_event(&self, event: &EventDetails<PolkadotConfig>) -> Result<()>;
 
     /// Submits a zkml (Zero Knowledge Machine Learning) proof to the blockchain.
     ///
@@ -109,17 +108,13 @@ pub trait ParachainInteractor {
 
 /// Implementation of `ParachainInteractor` trait for `Miner`.
 #[async_trait]
-impl ParachainInteractor for Miner {
-    async fn confirm_registration(&self) -> Result<RegistrationStatus> {
-        registration::confirm_registration(self).await
+impl ParachainInteractor for Arc<Miner> {
+    async fn start_miner(&self) -> Result<()> {
+        registration::start_miner(Arc::clone(self)).await
     }
 
-    async fn start_miner(&mut self) -> Result<()> {
-        registration::start_miner(self).await
-    }
-
-    async fn process_event(&mut self, event: &EventDetails<PolkadotConfig>) -> Result<()> {
-        event_processor::process_event(self, event).await
+    async fn process_event(&self, event: &EventDetails<PolkadotConfig>) -> Result<()> {
+        event_processor::process_event(Arc::clone(self), event).await
     }
 
     async fn stop_task_and_vacate_miner(&self) -> Result<()> {
@@ -127,11 +122,11 @@ impl ParachainInteractor for Miner {
     }
 
     async fn submit_zkml_proof(&self, proof: Vec<u8>) -> Result<()> {
-        task_management::submit_zkml_proof(self, proof).await
+        task_management::submit_zkml_proof(Arc::clone(self), proof).await
     }
 
     fn update_identity_file(&self, path: &str, content: &str) -> Result<()> {
-        identity::update_identity_file(path, content)
+        global_config::update_config_file(path, content)
     }
 
     async fn suspend_miner(&self) -> Result<()> {

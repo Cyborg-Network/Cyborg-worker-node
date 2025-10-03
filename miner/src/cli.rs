@@ -7,7 +7,7 @@ use clap::{Parser, Subcommand};
     version = "1.0"                          // Version number of the CLI tool.
 )]
 
-/// `Cli` struct defines the command-line interface for the Cyborg worker.
+/// `Cli` struct defines the command-line interface for the Cyborg miner.
 /// This struct uses the `clap` crate to parse command-line arguments.
 /// It contains a single field `command` which specifies the subcommand to be executed.
 pub struct Cli {
@@ -18,23 +18,24 @@ pub struct Cli {
 
 // Enum to define the available subcommands. Each variant corresponds to a different command.
 #[derive(Debug, Subcommand, PartialEq)]
-/// `Commands` enum defines the available subcommands for the Cyborg worker.
-/// Each variant represents a specific action that can be performed by the worker.
-/// - `Registration`: Registers the worker with the specified API URL and account seed.
+/// `Commands` enum defines the available subcommands for the Cyborg miner.
+/// Each variant represents a specific action that can be performed by the miner.
+/// - `Registration`: Registers the miner with the specified API URL and account seed.
 /// - `Startmining`: Starts the mining process with the specified API URL, account seed, and IPFS URL.
 pub enum Commands {
-    /// Start the worker with specified API URL and IPFS URL.
+    /// Start the miner with specified API URL and IPFS URL.
     StartMiner {
-        /// API URL for starting the worker
+        /// API URL for starting the miner
         #[clap(long, value_name = "API_URL")]
         parachain_url: String,
 
-        /// Account ID for the worker registration.
+        /// Account ID for the miner registration.
         #[clap(long, value_name = "ACCOUNT_SEED")]
         account_seed: String,
-        //// IPFS URL for the worker.
-        //#[clap(long, value_name = "IPFS_URL")]
-        //ipfs_url: String,
+
+        /// The type of miner (eg. cloud / edge)
+        #[clap(long, value_name = "MINER_TYPE")]
+        miner_type: String,
     },
 }
 
@@ -48,7 +49,7 @@ mod test {
     fn test_registration_command() {
         // Simulate running the CLI with the `registration` subcommand and arguments.
         let args = [
-            "cyborg-worker",
+            "cyborg-miner",
             "registration",
             "--parachain-url",
             "http://example.com",
@@ -83,7 +84,7 @@ mod test {
     fn test_start_command() {
         // Simulate running the CLI with the `start` subcommand and arguments.
         let args = [
-            "cyborg-worker",
+            "cyborg-miner",
             "startmining",
             "--parachain-url",
             "http://example.com",
@@ -108,7 +109,7 @@ mod test {
     #[test]
     fn test_no_command() {
         // Simulate running the CLI without any subcommand.
-        let args = ["cyborg-worker"];
+        let args = ["cyborg-miner"];
         let cli = Cli::try_parse_from(args).unwrap();
 
         // Ensure `command` is `None` when no subcommand is provided.
@@ -118,7 +119,7 @@ mod test {
     #[test]
     fn test_invalid_command() {
         // Simulate running the CLI with an invalid subcommand.
-        let args = ["cyborg-worker", "invalid"];
+        let args = ["cyborg-miner", "invalid"];
 
         // Attempt to parse the arguments and expect an error for the unrecognized command.
         let result = Cli::try_parse_from(args);

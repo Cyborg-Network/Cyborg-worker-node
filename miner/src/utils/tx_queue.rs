@@ -8,10 +8,9 @@ use std::{
     },
 };
 use once_cell::sync::OnceCell;
-use subxt::utils::AccountId32;
 use tokio::time::{sleep, Duration};
 use tokio::sync::{oneshot, Mutex};
-use crate::error::Result;
+use crate::{error::Result, types::MinerIdentity};
 
 const MAX_RETRIES: u32 = 500;
 
@@ -20,7 +19,7 @@ type TxExecutor = Box<dyn Fn() -> Pin<Box<dyn Future<Output = Result<TxOutput>> 
 
 #[derive(Debug)]
 pub enum TxOutput{
-    RegistrationInfo((AccountId32, u64)),
+    RegistrationInfo(MinerIdentity),
     Success
 }
 

@@ -1,19 +1,19 @@
+use std::sync::Arc;
+
 use crate::{
-    config, 
-    error::{Error, Result}, 
-    substrate_interface::{self, api::runtime_types::bounded_collections::bounded_vec::BoundedVec}, 
-    types::Miner
+    global_config, 
+    error::Result, 
+    substrate_interface::{self, api::runtime_types::bounded_collections::bounded_vec::BoundedVec}, types::Miner, 
 };
 
-pub async fn confirm_task_reception(miner: &Miner) -> Result<()> {
-    let client = config::get_parachain_client()?;
-    let keypair = &miner.keypair;
+pub async fn confirm_task_reception(miner: Arc<Miner>) -> Result<()> {
+    let client = global_config::get_parachain_client()?;
     let current_task = miner
-        .current_task
-        .as_ref()
-        .ok_or(Error::no_current_task())?
-        .id
-        .clone();
+        .current_task()
+        .await?
+        .read()
+        .await
+        .id;
 
     let task_confirmation = substrate_interface::api::tx()
         .task_management()
@@ -28,7 +28,7 @@ pub async fn confirm_task_reception(miner: &Miner) -> Result<()> {
 
     let worker_registration_events = client
         .tx()
-        .sign_and_submit_then_watch_default(&task_confirmation, keypair)
+        .sign_and_submit_then_watch_default(&task_confirmation, miner.keypair.as_ref())
         .await
         .map(|e| {
             println!("Task reception confirmation submitted, waiting for transaction to be finalized...");
@@ -57,17 +57,16 @@ pub async fn stop_task_and_vacate_miner() -> Result<()> {
     Ok(())
 }
 
-pub async fn submit_zkml_proof(miner: &Miner, proof: Vec<u8>) -> Result<()> {
+pub async fn submit_zkml_proof(miner: Arc<Miner>, proof: Vec<u8>) -> Result<()> {
     let proof: BoundedVec<u8> = BoundedVec::from(BoundedVec(proof));
 
-    let client = config::get_parachain_client()?;
-    let keypair = &miner.keypair;
+    let client = global_config::get_parachain_client()?;
     let current_task = miner
-        .current_task
-        .as_ref()
-        .ok_or(Error::no_current_task())?
-        .id
-        .clone();
+        .current_task()
+        .await?
+        .read()
+        .await
+        .id;
 
     let proof_submission = substrate_interface::api::tx()
         .neuro_zk()
@@ -80,7 +79,7 @@ pub async fn submit_zkml_proof(miner: &Miner, proof: Vec<u8>) -> Result<()> {
 
     let proof_submission_events = client
         .tx()
-        .sign_and_submit_then_watch_default(&proof_submission, keypair)
+        .sign_and_submit_then_watch_default(&proof_submission, miner.keypair.as_ref())
         .await
         .map(|e| {
             println!(

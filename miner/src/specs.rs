@@ -7,7 +7,7 @@ use sysinfo::{MemoryRefreshKind, RefreshKind, System};
 use reqwest::Client;
 
 use crate::{
-    config,
+    global_config,
     error::Result,
     types::MinerConfig,
 };
@@ -56,8 +56,6 @@ pub async fn gather_worker_spec() -> Result<MinerConfig> {
         env::var("CYBORG_MINER_TEST_IP").unwrap_or("".to_string())
     );
 
-    let tailscale_net = config::get_tailscale_net()?;
-
     let domain = match env::var("CYBORG_MINER_TEST_IP") {
         Ok(val) => val,
         Err(_) => {
@@ -68,7 +66,7 @@ pub async fn gather_worker_spec() -> Result<MinerConfig> {
             let hostname = String::from_utf8(output)?
                 .trim().to_string();
 
-            format!("https://{hostname}.{tailscale_net}")
+            format!("https://{hostname}.{}", *global_config::TAILSCALE_NET)
         }
         /* 
         Err(_) => {

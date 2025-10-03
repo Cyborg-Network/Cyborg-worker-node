@@ -1,4 +1,8 @@
+use std::sync::Arc;
+
+use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType;
 use crate::substrate_interface::api::runtime_types::cyborg_primitives::task::TaskInfo;
+use crate::types::MinerIdentity;
 use crate::{error::Result, substrate_interface};
 use subxt::utils::AccountId32;
 use subxt::{OnlineClient, PolkadotConfig};
@@ -13,10 +17,19 @@ pub struct CyborgTask {
 
 /// Query the current task id of a miner from the parachain
 // No good for producion, but miners need a different ID in order to efficiently query them due to subxt bug when querying tuples
-pub async fn get_currently_assigned_task_id(api: &OnlineClient<PolkadotConfig>, miner_id: &(AccountId32, u64)) -> Result<u64> {
-    let miner_iter_address = substrate_interface::api::storage()
-        .edge_connect()
-        .executable_workers_iter();
+pub async fn get_currently_assigned_task_id(api: &OnlineClient<PolkadotConfig>, miner_id: &(AccountId32, u64), miner_type: Arc<MinerType>) -> Result<u64> {
+    let miner_iter_address = match miner_type.as_ref() {
+        MinerType::Edge => {
+            substrate_interface::api::storage()
+                .edge_connect()
+                .edge_miners_iter()
+        }
+        MinerType::Cloud => {
+            substrate_interface::api::storage()
+                .edge_connect()
+                .cloud_miners_iter()
+        }
+    };
 
     let mut miner_iter_query = api
         .storage()
@@ -29,6 +42,8 @@ pub async fn get_currently_assigned_task_id(api: &OnlineClient<PolkadotConfig>, 
        if fetched_miner.value.owner == miner_id.0 && fetched_miner.value.id == miner_id.1 {
             if let Some(task_id) = fetched_miner.value.current_task {
                 return Ok(task_id);
+            } else {
+                return Err("Miner has no task assigned".into());
             }
        }
     }
@@ -74,10 +89,20 @@ pub async fn get_miner_id_assigned_to_task(api: &OnlineClient<PolkadotConfig>, t
     }
 }
 
-pub async fn get_miner_by_domain(api: &OnlineClient<PolkadotConfig>, local_domain: &String) -> Result<(AccountId32, u64)> {
-    let miner_address = substrate_interface::api::storage()
-        .edge_connect()
-        .executable_workers_iter();
+/// TODO - once attestation is in place, this needs to be via ID, not domain
+pub async fn get_miner_by_domain(api: &OnlineClient<PolkadotConfig>, domain: &String, miner_type: Arc<MinerType>) -> Result<MinerIdentity> {
+    let miner_address = match miner_type.as_ref() {
+        MinerType::Edge => {
+            substrate_interface::api::storage()
+                .edge_connect()
+                .edge_miners_iter()
+        }
+        MinerType::Cloud => {
+            substrate_interface::api::storage()
+                .edge_connect()
+                .cloud_miners_iter()
+        }
+    };
 
     let mut miner_query = api
         .storage()
@@ -88,8 +113,12 @@ pub async fn get_miner_by_domain(api: &OnlineClient<PolkadotConfig>, local_domai
 
     while let Some(Ok(miner)) = miner_query.next().await {
         let queried_domain = String::from_utf8(miner.value.api.domain.0)?;
-        if *local_domain == queried_domain {
-            return Ok((miner.value.owner, miner.value.id));
+        if *domain == queried_domain {
+            return Ok(MinerIdentity {
+                miner_owner: miner.value.owner.clone(),
+                miner_id: (miner.value.owner, miner.value.id),
+                miner_type: miner_type.as_ref().clone(),
+            });
         }
     }
 

@@ -1,43 +1,48 @@
-use crate::config;
-use crate::error::{Error, Result};
+use crate::global_config::{PATHS, self, update_config_file};
+use crate::error::Result;
 use crate::self_update::try_apply_update_if_available;
 use crate::substrate_interface;
+use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType;
 use crate::utils::task_handling::pick_up_task;
-use crate::utils::tx_builder::register;
-use crate::utils::tx_queue::TxOutput;
 use crate::traits::ParachainInteractor;
-use crate::types::{Miner, MinerData, ParentRuntime};
-use serde::Deserialize;
+use crate::types::{Miner, MinerIdentity};
+use crate::utils::tx_builder::pub_register;
+use subxt_signer::sr25519::Keypair;
 use std::fs;
-use subxt::utils::AccountId32;
-
-#[derive(Deserialize)]
-struct Identity {
-    _miner_owner: String,
-    miner_identity: (AccountId32, u64),
-}
+use std::sync::Arc;
 
 pub enum RegistrationStatus{
-    Registered(AccountId32, u64),
+    Registered(MinerIdentity),
     Unknown,
 }
 
-pub async fn confirm_registration(_: &Miner) -> Result<RegistrationStatus> {
-    let client = config::get_parachain_client()?;
+async fn confirm_registration() -> Result<RegistrationStatus> {
+    //TODO - REGISTRATION VIA ATTESTATION: At the moment we're saving the identity to the config file - this needs to be replaced by invoking the miner-attestor to obtain the pulic key of the miner and verify this way
+    let client = global_config::get_parachain_client()?;
 
-    let identity_path = &config::get_paths()?.identity_path;
+    let identity_path = &PATHS.identity_path;
     let identity_file_content = fs::read_to_string(identity_path)?;
-    let identity: Identity = serde_json::from_str(&identity_file_content)?;
-    let identity = identity.miner_identity;
+    let identity: MinerIdentity = serde_json::from_str(&identity_file_content)?;
+    let miner_type = identity.miner_type;
+    let identity = identity.miner_id;
 
     println!("Confirming miner registration...");
 
     println!("identity: {:?}", identity);
 
     // Since there seems to be a bug in subxt that should have been resolved (and we possibly won't have a separate storage map for querying workers by id)
-    let miner_registration_confirmation_query = substrate_interface::api::storage()
-        .edge_connect()
-        .executable_workers_iter();
+    let miner_registration_confirmation_query = match miner_type {
+        MinerType::Cloud => {
+            substrate_interface::api::storage()
+                .edge_connect()
+                .cloud_miners_iter()
+        }
+        MinerType::Edge => {
+            substrate_interface::api::storage()
+                .edge_connect()
+                .edge_miners_iter()
+        }
+    };
 
     let mut result = client
         .storage()
@@ -48,7 +53,13 @@ pub async fn confirm_registration(_: &Miner) -> Result<RegistrationStatus> {
 
     while let Some(Ok(miner)) = result.next().await {
         if miner.value.owner == identity.0 && miner.value.id == identity.1 {
-            return Ok(RegistrationStatus::Registered(identity.0, identity.1));
+            return Ok(RegistrationStatus::Registered(
+                MinerIdentity {
+                    miner_owner: miner.value.owner.clone(),
+                    miner_id: (miner.value.owner, miner.value.id),
+                    miner_type: miner_type,
+                }
+            ));
         }
     }
 
@@ -56,72 +67,39 @@ pub async fn confirm_registration(_: &Miner) -> Result<RegistrationStatus> {
     Ok(RegistrationStatus::Unknown)
 }
 
-pub async fn start_miner(miner: &mut Miner) -> Result<()> {
+pub async fn retrieve_identity(keypair: Arc<Keypair>, miner_type: Arc<MinerType>) -> Result<MinerIdentity> {
+    let identity: MinerIdentity;
+
+    match confirm_registration().await {
+        Ok(RegistrationStatus::Registered(miner_identity)) => {
+            println!("Miner is registered, using existing identity.");
+            identity = miner_identity;
+        }, 
+        Ok(RegistrationStatus::Unknown) => {
+            println!("Registration status unknown, attempting registration.");
+            identity = pub_register(keypair, miner_type).await?;
+        },
+        Err(e) => {
+            println!("Error confirming miner registration: {}, attempting registration.", e);
+            identity = pub_register(keypair, miner_type).await?;
+        }
+    }
+
+    let miner_identity_json = serde_json::to_string(&identity)?;
+
+    update_config_file(&PATHS.identity_path, &miner_identity_json)?;
+
+    Ok(identity)
+}
+
+pub async fn start_miner(miner: Arc<Miner>) -> Result<()> {
     println!("Starting miner...");
 
     println!("Waiting for tasks...");
 
-    let client = config::get_parachain_client()?;
-    let tx_queue = config::get_tx_queue()?;
+    let client = global_config::get_parachain_client()?;
 
-    match miner.confirm_registration().await {
-        Ok(RegistrationStatus::Registered(owner, id)) => {
-            miner.miner_identity = Some((owner, id));
-        }, 
-        Ok(RegistrationStatus::Unknown) => {
-            let keypair = miner.keypair.clone();
-            let rx = tx_queue.enqueue( move || {
-                let keypair = keypair.clone();
-                async move {
-                    let result = register(keypair).await?;
-                    Ok(TxOutput::RegistrationInfo(result))
-                }
-            })
-            .await?;
-
-            match rx.await {
-                Ok(Ok(TxOutput::RegistrationInfo(data))) => {
-                    miner.miner_identity = Some(data.clone());
-                    let miner_identity_json = serde_json::to_string(&MinerData {
-                        miner_owner: data.0.to_string(),
-                        miner_identity: (data.0, data.1),
-                    })?;
-                    miner.update_identity_file(&config::get_paths()?.identity_path, &miner_identity_json)?;
-                },
-                Ok(Err(e)) => println!("Error registering miner: {}", e),
-                Err(_) => println!("Response channel dropped."),
-                _ => println!("Missing identity string from registration event"),
-            }
-        },
-        Err(e) => {
-            println!("Error confirming miner registration: {}, registering...", e);
-            let keypair = miner.keypair.clone();
-            let rx = tx_queue.enqueue( move || {
-                let keypair = keypair.clone();
-                async move {
-                    let result = register(keypair).await?;
-                    Ok(TxOutput::RegistrationInfo(result))
-                }
-            })
-            .await?;
-
-            match rx.await {
-                Ok(Ok(TxOutput::RegistrationInfo(data))) => {
-                    miner.miner_identity = Some(data.clone());
-                    let miner_identity_json = serde_json::to_string(&MinerData {
-                        miner_owner: data.0.to_string(),
-                        miner_identity: (data.0, data.1),
-                    })?;
-                    miner.update_identity_file(&config::get_paths()?.identity_path, &miner_identity_json)?;
-                },
-                Ok(Err(e)) => println!("Error registering miner: {}", e),
-                Err(_) => println!("Response channel dropped."),
-                _ => println!("Missing identity data from registration event"),
-            }
-        }
-    }
-
-    if let Err(e) = pick_up_task(miner).await {
+    if let Err(e) = pick_up_task(Arc::clone(&miner)).await {
         println!("No task to pick up, performing clean startup: {}", e);        
     }
 
@@ -130,12 +108,12 @@ pub async fn start_miner(miner: &mut Miner) -> Result<()> {
     while let Some(Ok(block)) = blocks.next().await {
         println!("New block imported: {:?}", block.hash());
 
-        let miner_identity = miner.miner_identity.clone()
-            .ok_or(Error::Custom("Miner identity not present!!!".to_string()))?;
+        let miner_identity = miner.identity.as_ref();
 
         println!("Active miner identity: {:?}", miner_identity);
 
-        if miner.current_task.is_none() {
+        if miner.current_task.read().await.is_none() {
+            println!("Miner doesn't have an active task, trying to apply update!");
             try_apply_update_if_available()?;
         }
 

@@ -2,6 +2,11 @@
 For testing the whole network, please refer to [Local Testing](https://github.com/Cyborg-Network/cyborg-parachain/blob/master/Local%20Testing.md#local-setup)
 ## Overview
 The Cyborg Worker Node is the one of the Cyborg Worker types, contributing compute resources to Cyborg Network, a decentralized compute platform designed to harness computational resources from distributed nodes around the world. By joining the network, users can either provide computational power to contribute to the network's infrastructure or consume computational resources for task execution.
+## Codegen
+When making changes to the repository, to generate all parachain api types correctly, run: 
+```
+subxt codegen --url <Parachain URL> --derive Clone --derive Debug --derive-for-type cyborg_primitives::miner::MinerType=serde::Deserialize --derive-for-type cyborg_primitives::miner::MinerType=serde::Serialize | rustfmt > miner/src/substrate_interface.rs
+```
 ## Usage 
 #### Requirements
 - A machine with internet access, running either Ubuntu 22 or 24

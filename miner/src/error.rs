@@ -8,34 +8,43 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Debug, From)]
 pub enum Error {
     #[from]
+    #[allow(dead_code)]
     Custom(String),
 
     // -- Externals
     #[from]
+    #[allow(dead_code)]
     Io(std::io::Error),
 
     #[from]
+    #[allow(dead_code)]
     Serialization(serde_json::Error),
 
     #[from]
+    #[allow(dead_code)]
     Reqwest(reqwest::Error),
 
     #[from]
+    #[allow(dead_code)]
     Subxt(subxt::Error),
 
     #[from]
+    #[allow(dead_code)]
     Conversion(std::string::FromUtf8Error),
 
     #[from]
+    #[allow(dead_code)]
     Cess(cess_rust_sdk::core::Error),
 
     #[from]
     ReqwestToStr(reqwest::header::ToStrError),
     
     #[from]
+    #[allow(dead_code)]
     ReqwestParseInt(std::num::ParseIntError), 
 
     #[from]
+    #[allow(dead_code)]
     Bollard(bollard::errors::Error),
 }
 
@@ -46,22 +55,6 @@ impl Error {
 
     pub fn parachain_client_not_intitialized() -> Self {
         Self::Custom("Parachain client not initialized".to_string())
-    }
-
-    pub fn identity_not_initialized() -> Self {
-        Self::Custom("Identity not initialized".to_string())
-    }
-
-    pub fn config_paths_not_initialized() -> Self {
-        Self::Custom("Config paths not initialized".to_string())
-    }
-
-    pub fn no_current_task() -> Self {
-        Self::Custom("The miner does not have a running task".to_string())
-    }
-
-    pub fn cess_gateway_not_initialized() -> Self {
-        Self::Custom("CESS gateway not initialized".to_string())
     }
 }
 

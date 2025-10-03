@@ -14,7 +14,7 @@
 /// Run the executable with appropriate arguments to start mining.
 mod builder;
 mod cli;
-mod config;
+mod global_config;
 mod error;
 mod log;
 mod parachain_interactor;
@@ -29,7 +29,7 @@ mod utils;
 use builder::MinerBuilder;
 use clap::Parser;
 use cli::{Cli, Commands};
-use config::run_config;
+use global_config::run_global_config;
 use error::Result;
 use traits::ParachainInteractor;
 
@@ -43,18 +43,22 @@ async fn main() -> Result<()> {
         Some(Commands::StartMiner {
             parachain_url,
             account_seed,
+            miner_type,
         }) => {
-            run_config(parachain_url).await;
+            // This is done separately from the miner, as these likely will remain constant, even when running multiple miners
+            // Fails fast, am error here is unrecoverable
+            run_global_config(parachain_url).await.expect("Error running the global config!");
 
-            let _log_guard = log::init_logger();
+            // Fails fast, am error here is unrecoverable
+            log::init_logger().expect("Could not initialize logger!");
 
-            // Build the Miner using the provided parachain URL, account seed, and CESS gateway.
-            let mut miner = MinerBuilder::default()
+            // Fails fast, am error here is unrecoverable
+            let miner = MinerBuilder::new()
+                .miner_type(miner_type).expect("Failed to set miner type")
                 .parachain_url(parachain_url.to_string())
-                .keypair(account_seed)?
-                .config()?
+                .keypair(account_seed).expect("Failed to set keypair")
                 .build()
-                .await?;
+                .await.expect("Failed to build miner");
 
             // Start the mining session using the built miner.
             miner.start_miner().await?;

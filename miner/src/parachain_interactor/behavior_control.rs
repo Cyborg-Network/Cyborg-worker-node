@@ -1,31 +1,24 @@
-use crate::error::{Error, Result};
-use crate::substrate_interface::api::runtime_types::cyborg_primitives::worker::WorkerType;
+use crate::error::Result;
 use crate::types::Miner;
-use crate::{config, substrate_interface};
+use crate::{global_config, substrate_interface};
 
 pub async fn _miner_self_suspend(miner: &Miner) -> Result<()> {
-    let client = config::get_parachain_client()?;
-    let miner_id = miner
-        .miner_identity
-        .as_ref()
-        .ok_or(Error::identity_not_initialized())?
-        .1;
+    let client = global_config::get_parachain_client()?;
+    let miner_id = &miner.identity.miner_id;
 
     // TODO This needs a special function and miners need a quarantine or other way to punish suspicious behavior
     let worker_suspension = substrate_interface::api::tx()
         .edge_connect()
-        .toggle_worker_visibility(WorkerType::Executable, miner_id, false);
+        .toggle_miner_visibility(miner.miner_type.as_ref().clone(), miner_id.1, false);
 
     println!("Transaction Details:");
     println!("Module: {:?}", worker_suspension.pallet_name());
     println!("Call: {:?}", worker_suspension.call_name());
     println!("Parameters: {:?}", worker_suspension.call_data());
 
-    let keypair = &miner.keypair;
-
     let miner_suspension_events = client
         .tx()
-        .sign_and_submit_then_watch_default(&worker_suspension, keypair)
+        .sign_and_submit_then_watch_default(&worker_suspension, miner.keypair.as_ref())
         .await
         .map(|e| {
             println!("Miner suspension submitted, waiting for transaction to be finalized...");
@@ -35,7 +28,7 @@ pub async fn _miner_self_suspend(miner: &Miner) -> Result<()> {
         .await?;
 
     let suspension_event = miner_suspension_events
-        .find_first::<substrate_interface::api::edge_connect::events::WorkerStatusUpdated>(
+        .find_first::<substrate_interface::api::edge_connect::events::MinerStatusUpdated>(
     )?;
 
     if let Some(event) = suspension_event {

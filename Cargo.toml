@@ -21,3 +21,4 @@ miner = { path = "miner" }
 neuro-zk-runtime = { path = "neuro-zk-runtime" }
 open-inference-runtime = { path = "open-inference-runtime" }
 flash-infer-runtime = { path = "flash-infer-runtime" }
+cycloud-runtime = { path = "cycloud-runtime" }

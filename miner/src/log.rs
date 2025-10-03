@@ -1,4 +1,4 @@
-use crate::config;
+use crate::global_config;
 use crate::error::{Error, Result};
 use once_cell::sync::Lazy;
 use std::sync::Mutex;
@@ -11,9 +11,7 @@ static LOG_GUARD: Lazy<Mutex<Option<WorkerGuard>>> = Lazy::new(|| Mutex::new(Non
 pub fn init_logger() -> Result<()> {
     eprintln!("Running as UID: {:?}", nix::unistd::getuid());
 
-    let log_file_path = &config::PATHS.get()
-        .ok_or(Error::config_paths_not_initialized())?
-        .log_path;
+    let log_file_path = &global_config::PATHS.log_path;
 
     let log_dir_path = log_file_path
         .parent()
@@ -45,9 +43,7 @@ pub fn init_logger() -> Result<()> {
 pub fn reset_log_file() -> Result<()> {
     *LOG_GUARD.lock().map_err(|_| Error::Custom("Failed to lock log guard => poisoned".to_string()))? = None;
 
-    let log_file_path = &config::PATHS.get()
-        .ok_or(Error::config_paths_not_initialized())?
-        .log_path;
+    let log_file_path = &global_config::PATHS.log_path;
 
     std::fs::remove_file(log_file_path)?;
 

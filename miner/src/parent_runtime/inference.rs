@@ -1,7 +1,6 @@
-use crate::config::{self, get_flash_infer_port};
+use crate::global_config::{TAILSCALE_NET, PATHS, FLASH_INFER_PORT};
 use crate::substrate_interface::api::runtime_types::cyborg_primitives::task::{FlashInferTask, TaskKind};
 use crate::{
-    config::get_paths,
     error::{Error, Result},
     types::CurrentTask,
 };
@@ -15,8 +14,9 @@ use axum::{
 use futures::{SinkExt, StreamExt};
 use neuro_zk_runtime::NeuroZKEngine;
 use flash_infer_runtime::FlashInferEngine;
+use cycloud_runtime::CyCloudEngine;
 use once_cell::sync::Lazy;
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::{mpsc, oneshot, RwLock};
 use std::{
     net::SocketAddr, 
     path::{PathBuf, Path}, 
@@ -36,6 +36,7 @@ pub enum InferenceEngine {
     OpenInference(Arc<Mutex<TritonClient>>),
     NeuroZk(Arc<Mutex<NeuroZKEngine>>),
     FlashInference(Arc<Mutex<FlashInferEngine>>),
+    CyCloud(Arc<Mutex<CyCloudEngine>>),
 }
 
 impl InferenceEngine {
@@ -67,13 +68,18 @@ impl InferenceEngine {
                     .map_err(|e| Error::Custom(format!("Failed to kill engine: {}", e.to_string())))?;
                 Ok(())
             }
+            InferenceEngine::CyCloud(engine) => {
+                engine.lock().await.kill_engine().await
+                    .map_err(|e| Error::Custom(format!("Failed to kill engine: {}", e.to_string())))?;
+                Ok(())
+            }
         }
     }
 }
 
 #[derive(Clone)]
 struct AppState {
-    task: CurrentTask,
+    task: Arc<RwLock<CurrentTask>>,
     engine: InferenceEngine,
     status: Arc<watch::Receiver<EngineStatus>>,
     shutdown: watch::Receiver<bool>,
@@ -120,20 +126,19 @@ impl RunningInferenceServer {
 pub static CURRENT_SERVER: Lazy<Mutex<Option<RunningInferenceServer>>> = Lazy::new(|| Mutex::new(None));
 
 pub async fn spawn_inference_server(
-    task: &CurrentTask,
+    task: Arc<RwLock<CurrentTask>>,
     port: Option<u16>,
 ) -> Result</*tokio::task::JoinHandle<()>*/()> {
-    tracing::info!("Spawning inference server for task {}", task.id);
+    tracing::info!("Spawning inference server for current task.");
 
     let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
     let (shutdown_done_tx, shutdown_done_rx) = oneshot::channel::<()>();
 
     let (status_tx, status_rx) = watch::channel(EngineStatus::Idle);
-    let paths = get_paths()?;
     
-    let engine = match &task.task_type {
+    let engine = match &task.read().await.task_type {
         TaskKind::OpenInference(_) => {
-            let triton_client = TritonClient::new("http://localhost:8000/v2",PathBuf::from(&paths.task_dir_path))
+            let triton_client = TritonClient::new("http://localhost:8000/v2",PathBuf::from(&PATHS.task_dir_path))
                 .await
                 .map_err(|e| Error::Custom(format!("Failed to create Triton client: {}", e.to_string())))?;
             InferenceEngine::OpenInference(Arc::new(Mutex::new(triton_client)))
@@ -141,7 +146,7 @@ pub async fn spawn_inference_server(
         TaskKind::NeuroZK(_) => {
             let neurozk_engine = NeuroZKEngine::new(PathBuf::from(format!(
                 "{}/{}",
-                paths.task_dir_path, paths.task_file_name
+                PATHS.task_dir_path, PATHS.task_file_name
             )))
             .map_err(|e| Error::Custom(format!("Failed to create engine: {}", e.to_string())))?;
             InferenceEngine::NeuroZk(Arc::new(Mutex::new(neurozk_engine)))
@@ -150,12 +155,16 @@ pub async fn spawn_inference_server(
             match fi {
                 FlashInferTask::Huggingface(hf) => {
                     let hf_identifier = String::from_utf8(hf.hf_identifier.0.clone())?;
-                    let flash_infer_port = get_flash_infer_port()?;
-                    let fi_engine = FlashInferEngine::new(&hf_identifier, *flash_infer_port, &task.container_name)
+                    let fi_engine = FlashInferEngine::new(&hf_identifier, *FLASH_INFER_PORT, &task.read().await.container_name)
                         .map_err(|e| Error::Custom(format!("Failed to create engine: {}", e.to_string())))?;
                     InferenceEngine::FlashInference(Arc::new(Mutex::new(fi_engine)))
                 }
             }
+        }
+        TaskKind::CyCloud => {
+            let cl_engine = CyCloudEngine::new(&task.read().await.container_name)
+                .map_err(|e| Error::Custom(format!("Failed to create engine: {}", e.to_string())))?;
+            InferenceEngine::CyCloud(Arc::new(Mutex::new(cl_engine)))
         }
     };
     
@@ -191,11 +200,22 @@ pub async fn spawn_inference_server(
                     } 
                 }
             }
+            InferenceEngine::CyCloud(engine_clone) => {
+                match engine_clone.lock().await.setup().await {
+                    Ok(()) => {
+                        let _ = status_tx.send(EngineStatus::Ready);
+                    }
+                    Err(e) => {
+                        println!("Error setting up inference engine: {}", e);
+                        let _ = status_tx.send(EngineStatus::Failed(e.to_string()));
+                    } 
+                }
+            }
         }
     });
 
     let state = AppState {
-        task: task.clone(),
+        task: Arc::clone(&task),
         engine: engine.clone(),
         status: Arc::new(status_rx),
         shutdown: shutdown_rx.clone()
@@ -206,7 +226,7 @@ pub async fn spawn_inference_server(
         default_port = port
     }
 
-    let route_path = format!("/{}", &task.id);
+    let route_path = format!("/{}", &task.read().await.id);
     let state_clone = state.clone();
 
     let handle = tokio::spawn(async move {
@@ -237,15 +257,6 @@ pub async fn spawn_inference_server(
             }
         };
 
-        let tailnet = match config::get_tailscale_net() {
-            Ok(net) => net,
-            Err(e) => {
-                tracing::error!("Error while setting up inference engine, please contact support.");
-                println!("Failed to get tailscale net: {}", e);
-                return;
-            }
-        };
-
         let hostname = match std::process::Command::new("hostname").output() {
             Ok(output) => String::from_utf8_lossy(&output.stdout).to_string(),
             Err(e) => {
@@ -255,7 +266,7 @@ pub async fn spawn_inference_server(
             }
         };
 
-        tracing::info!("Inference engine ready, miner is reachable at wss://{}.{}/inference{}", hostname, tailnet, route_path);
+        tracing::info!("Inference engine ready, miner is reachable at wss://{}.{}/inference{}", hostname, *TAILSCALE_NET, route_path);
 
         if let Err(e) = axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>())
             .with_graceful_shutdown(async move {
@@ -354,6 +365,9 @@ async fn handle_socket(socket: WebSocket, state: AppState) -> Result<()> {
                     if let Err(e) = engine.lock().await.run(request_stream, response_stream).await {
                         tracing::error!("Error running FlashInfer engine: {}", e);
                     }
+                }
+                InferenceEngine::CyCloud(ref engine) => {
+                    return;
                 }
             }
         })

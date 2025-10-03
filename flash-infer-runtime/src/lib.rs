@@ -208,7 +208,7 @@ impl FlashInferEngine {
             .inspect_container(&self.container_name, None::<InspectContainerOptions>) 
             .await.ok();
 
-        if let Some(container) = container {
+        if let Some(_container) = container {
             docker
                 .remove_container(
                     container_id,
