@@ -5,10 +5,26 @@ set -euo pipefail
 REPO="Cyborg-Network/Cyborg-miner"
 MINER_ASSET_NAME="cyborg-miner"
 PLATFORM="linux"
-ARCH="aarch64"
+
+case "$(uname -m)" in
+    x86_64)
+        ARCH="x86_64"
+        ;;
+    aarch64 | arm64)
+        ARCH="aarch64"
+        ;;
+    *)
+        echo "Unsupported architecture: $(uname -m)"
+        exit 1
+        ;;
+esac
+
 TAG=$(curl -s https://api.github.com/repos/${REPO}/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
 ASSET="${MINER_ASSET_NAME}-${PLATFORM}-${ARCH}.tar.gz"
 URL="https://github.com/${REPO}/releases/download/${TAG}/${ASSET}"
+
+echo "Detected architecture: ${ARCH}"
+echo "Downloading release asset: ${ASSET}"
 
 # File names as they appear after installation
 MINER_FILE_NAME="cyborg-miner"
