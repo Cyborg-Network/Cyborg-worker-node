@@ -1,20 +1,34 @@
-use bollard::{query_parameters::{ListContainersOptions, RemoveContainerOptions}, Docker};
+use crate::{
+    error::{Error, Result},
+    global_config::{
+        self, get_parachain_client, update_config_file, CONTAINER_PREFIX, CURRENT_TASK_PATH, PATHS,
+    },
+    log,
+    parent_runtime::inference::CURRENT_SERVER,
+    substrate_interface::api::{
+        runtime_types::cyborg_primitives::task::TaskStatusType,
+        task_management::events::task_scheduled::TaskId,
+    },
+    traits::InferenceServer,
+    types::{CurrentTask, Miner, ParentRuntime},
+    utils::{
+        substrate_queries::{
+            get_currently_assigned_task_id, get_miner_id_assigned_to_task, get_task,
+        },
+        tx_builder::{confirm_miner_vacation, pub_confirm_task_reception},
+        tx_queue::TxOutput,
+    },
+};
+use bollard::{
+    query_parameters::{ListContainersOptions, RemoveContainerOptions},
+    Docker,
+};
 use serde::Serialize;
+use std::{fs, sync::Arc};
 use subxt::utils::AccountId32;
 use tokio::{sync::RwLock, task::JoinHandle};
-use std::{fs, sync::Arc};
-use crate::{
-    error::{Error, Result}, global_config::{
-        self, get_parachain_client, CONTAINER_PREFIX, CURRENT_TASK_PATH, PATHS, update_config_file
-    }, log, parent_runtime::inference::CURRENT_SERVER, substrate_interface::api::{
-        runtime_types::cyborg_primitives::task::TaskStatusType, 
-        task_management::events::task_scheduled::TaskId
-    }, traits::InferenceServer, types::{
-        CurrentTask, Miner, ParentRuntime
-    }, utils::{substrate_queries::{
-        get_currently_assigned_task_id, get_miner_id_assigned_to_task, get_task
-    }, tx_builder::{confirm_miner_vacation, pub_confirm_task_reception}, tx_queue::TxOutput}
-};
+
+use crate::parachain_interactor::registration::update_operational_status;
 
 #[derive(Serialize)]
 struct TaskOwner {
@@ -23,7 +37,7 @@ struct TaskOwner {
 
 pub enum TaskPickupReturnType {
     Success(JoinHandle<()>),
-    Failure(())
+    Failure(()),
 }
 
 /// Write the current task id to the drive
@@ -43,19 +57,19 @@ fn update_current_task_file(task_id: TaskId) -> Result<()> {
 }
 
 /// Set the task that the miner is currently executing
-pub async fn set_current_task(miner: Arc<Miner>, task: CurrentTask) -> Result<(TaskId, JoinHandle<()>)> {
+pub async fn set_current_task(
+    miner: Arc<Miner>,
+    task: CurrentTask,
+) -> Result<(TaskId, JoinHandle<()>)> {
     println!("Setting current task...");
 
-    let task_owner_string = serde_json::to_string(&TaskOwner{
+    let task_owner_string = serde_json::to_string(&TaskOwner {
         address: task.task_owner.clone(),
     })?;
 
     let task_owner_path = &PATHS.task_owner_path;
 
-    update_config_file(
-        task_owner_path,
-        &task_owner_string,
-    )?;
+    update_config_file(task_owner_path, &task_owner_string)?;
 
     update_current_task_file(task.id)?;
 
@@ -63,9 +77,10 @@ pub async fn set_current_task(miner: Arc<Miner>, task: CurrentTask) -> Result<(T
 
     let task_id = task.id;
     let handle = handle_spawn_inference_server(
-        Arc::clone(&miner.parent_runtime), 
+        Arc::clone(&miner.parent_runtime),
         Arc::clone(&miner.current_task().await?),
-    ).await;
+    )
+    .await;
 
     Ok((task_id, handle))
 }
@@ -76,7 +91,13 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
 
     let api = get_parachain_client()?;
 
-    let task_id = match get_currently_assigned_task_id(api, &miner.identity.miner_id , Arc::clone(&miner.miner_type)).await {
+    let task_id = match get_currently_assigned_task_id(
+        api,
+        &miner.identity.miner_id,
+        Arc::clone(&miner.miner_type),
+    )
+    .await
+    {
         Ok(val) => val,
         Err(e) => {
             eprintln!("Reading taskid from parachain failed: {}", e);
@@ -131,7 +152,7 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
                     task_type: task.task_kind,
                     task_owner: task.task_owner,
                     id: task_id,
-                    container_name: return_task_container_name(task_id)
+                    container_name: return_task_container_name(task_id),
                 };
 
                 // This is required because task vacation will require the miner to actually hold a task
@@ -153,18 +174,24 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
             TaskStatusType::Assigned => {
                 println!("Assigned task found, confirming task reception...");
 
+                // Update operational status to Busy when picking up a task
+                update_operational_status(Arc::clone(&miner), OperationalStatus::Busy).await?;
+
                 let task = CurrentTask {
                     task_type: task.task_kind,
                     task_owner: task.task_owner,
                     id: task_id,
-                    container_name: return_task_container_name(task_id)
+                    container_name: return_task_container_name(task_id),
                 };
                 let (_, handle) = set_current_task(Arc::clone(&miner), task).await?;
 
                 let keypair = miner.keypair.clone();
                 tokio::spawn(async move {
                     if let Err(e) = pub_confirm_task_reception(keypair, &task_id).await {
-                        println!("Critical error encountered, please contact the support: {}", e);
+                        println!(
+                            "Critical error encountered, please contact the support: {}",
+                            e
+                        );
                     }
                 });
 
@@ -172,11 +199,14 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
             }
             // Task should already be running and only needs to be picked back up
             TaskStatusType::Running => {
+                // Update operational status to Busy when picking up a running task
+                update_operational_status(Arc::clone(&miner), OperationalStatus::Busy).await?;
+
                 let task = CurrentTask {
                     task_type: task.task_kind,
                     task_owner: task.task_owner,
                     id: task_id,
-                    container_name: return_task_container_name(task_id)
+                    container_name: return_task_container_name(task_id),
                 };
                 let (_, handle) = set_current_task(miner, task).await?;
 
@@ -232,7 +262,10 @@ pub async fn handle_spawn_inference_server(
     current_task: Arc<RwLock<CurrentTask>>,
 ) -> JoinHandle<()> {
     tokio::spawn(async move {
-        if !check_if_task_container_exists(&current_task.read().await.container_name).await.unwrap_or(false) {
+        if !check_if_task_container_exists(&current_task.read().await.container_name)
+            .await
+            .unwrap_or(false)
+        {
             println!("No container exists for the current task, creating...");
 
             if let Err(e) = parent_runtime
@@ -269,13 +302,16 @@ async fn check_if_task_container_exists(task_container_name: &str) -> Result<boo
 
     for container in containers {
         if let Some(names) = container.names {
-            if names.iter().any(|n| n.trim_start_matches('/') == task_container_name) {
+            if names
+                .iter()
+                .any(|n| n.trim_start_matches('/') == task_container_name)
+            {
                 return Ok(true);
             }
         }
     }
 
-    Ok(false) 
+    Ok(false)
 }
 
 /// Return the container name for the current task (utility that makes sure that the name is always absolutely the same)
@@ -287,6 +323,9 @@ pub fn return_task_container_name(task_id: TaskId) -> String {
 pub async fn clean_up_current_task_and_vacate(miner: Arc<Miner>) -> Result<()> {
     nuke_all_running_task_containers().await?;
 
+    // Update operational status back to Available after task completion
+    update_operational_status(Arc::clone(&miner), OperationalStatus::Available).await?;
+
     let keypair = Arc::clone(&miner.keypair);
     let current_task_id = miner.current_task().await?.read().await.id;
     let miner_type = Arc::clone(&miner.miner_type);
@@ -295,14 +334,17 @@ pub async fn clean_up_current_task_and_vacate(miner: Arc<Miner>) -> Result<()> {
         if let Err(e) = async {
             let tx_queue = global_config::get_tx_queue()?;
 
-            let rx = tx_queue.enqueue(move || {
-                let keypair = Arc::clone(&keypair);
-                let miner_type = Arc::clone(&miner_type);
-                async move {
-                    let _ = confirm_miner_vacation(keypair, current_task_id, miner_type).await?;
-                    Ok(TxOutput::Success)
-                }
-            }).await?;
+            let rx = tx_queue
+                .enqueue(move || {
+                    let keypair = Arc::clone(&keypair);
+                    let miner_type = Arc::clone(&miner_type);
+                    async move {
+                        let _ =
+                            confirm_miner_vacation(keypair, current_task_id, miner_type).await?;
+                        Ok(TxOutput::Success)
+                    }
+                })
+                .await?;
 
             match rx.await {
                 Ok(Ok(TxOutput::Success)) => println!("Miner vacation confirmed!"),
@@ -311,12 +353,17 @@ pub async fn clean_up_current_task_and_vacate(miner: Arc<Miner>) -> Result<()> {
             }
 
             Ok::<_, Error>(())
-        }.await {
+        }
+        .await
+        {
             println!("Error confirming miner vacation: {}", e);
         }
     });
 
-    let (task_dir, task_owner_path) = (&global_config::PATHS.task_dir_path, &global_config::PATHS.task_owner_path);
+    let (task_dir, task_owner_path) = (
+        &global_config::PATHS.task_dir_path,
+        &global_config::PATHS.task_owner_path,
+    );
 
     // Remove task owner file
     fs::remove_file(&task_owner_path)?;
@@ -329,11 +376,9 @@ pub async fn clean_up_current_task_and_vacate(miner: Arc<Miner>) -> Result<()> {
 
     miner.deactivate_task().await;
 
-    let server_control = CURRENT_SERVER
-        .lock()
-        .await
-        .take()
-        .ok_or(Error::Custom("There is no inference server initialized in CURRENT_SERVER!".to_string()))?;
+    let server_control = CURRENT_SERVER.lock().await.take().ok_or(Error::Custom(
+        "There is no inference server initialized in CURRENT_SERVER!".to_string(),
+    ))?;
 
     server_control.shutdown(task_dir).await?;
 

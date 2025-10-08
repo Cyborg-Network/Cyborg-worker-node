@@ -8,9 +8,11 @@ use crate::{
     error::{Error, Result},
     types::{Miner, MinerIdentity},
 };
-use subxt::{events::EventDetails, PolkadotConfig};
 use std::fs;
 use std::sync::Arc;
+use subxt::{events::EventDetails, PolkadotConfig};
+
+use super::registration::update_operational_status;
 
 pub async fn process_event(miner: Arc<Miner>, event: &EventDetails<PolkadotConfig>) -> Result<()> {
     // Extract the task_id before matching to avoid having to clone miner
@@ -56,20 +58,39 @@ pub async fn process_event(miner: Arc<Miner>, event: &EventDetails<PolkadotConfi
         _ => {} // Skip non-matching events
     }
 
-    // Check for MinerStatusUpdated event
-    match event.as_event::<substrate_interface::api::edge_connect::events::MinerStatusUpdated>() {
+    // Check for OracleStatusUpdated event
+    match event.as_event::<substrate_interface::api::edge_connect::events::OracleStatusUpdated>() {
         Ok(Some(status_updated)) => {
-            let creator = &status_updated.creator;
-            let miner_id = &status_updated.miner_id;
-            let miner_status = &status_updated.miner_status;
+            let worker = &status_updated.worker;
+            let online = &status_updated.online;
 
             println!(
-                "Miner Status Updated: Creator: {:?}, Miner ID: {:?}, Status: {:?}",
-                creator, miner_id, miner_status
+                "Oracle Status Updated: Worker: {:?}, Online: {:?}",
+                worker, online
             );
         }
         Err(e) => {
-            println!("Error decoding MinerStatusUpdated event: {:?}", e);
+            println!("Error decoding OracleStatusUpdated event: {:?}", e);
+            return Err(Error::Subxt(e.into()));
+        }
+        _ => {} // Skip non-matching events
+    }
+
+    // Check for OperationalStatusUpdated event
+    match event
+        .as_event::<substrate_interface::api::edge_connect::events::OperationalStatusUpdated>()
+    {
+        Ok(Some(status_updated)) => {
+            let worker = &status_updated.worker;
+            let status = &status_updated.status;
+
+            println!(
+                "Operational Status Updated: Worker: {:?}, Status: {:?}",
+                worker, status
+            );
+        }
+        Err(e) => {
+            println!("Error decoding OperationalStatusUpdated event: {:?}", e);
             return Err(Error::Subxt(e.into()));
         }
         _ => {} // Skip non-matching events
@@ -87,6 +108,9 @@ pub async fn process_event(miner: Arc<Miner>, event: &EventDetails<PolkadotConfi
             if assigned_miner == &miner_data.miner_id {
                 println!("New task scheduled: {:?}", task_scheduled.task_id);
 
+                // Update operational status to Busy when task is assigned
+                update_operational_status(Arc::clone(&miner), OperationalStatus::Busy).await?;
+
                 let current_task = CurrentTask {
                     task_owner: task_scheduled.task_owner,
                     task_type: task_scheduled.task_kind,
@@ -94,15 +118,18 @@ pub async fn process_event(miner: Arc<Miner>, event: &EventDetails<PolkadotConfi
                     id: task_scheduled.task_id,
                 };
 
-                let (current_task_id, _handle) = set_current_task(Arc::clone(&miner), current_task).await?;
+                let (current_task_id, _handle) =
+                    set_current_task(Arc::clone(&miner), current_task).await?;
 
                 let keypair = Arc::clone(&miner.keypair);
                 tokio::spawn(async move {
                     if let Err(e) = pub_confirm_task_reception(keypair, &current_task_id).await {
-                        println!("Critical error encountered, please contact the support: {}", e);
+                        println!(
+                            "Critical error encountered, please contact the support: {}",
+                            e
+                        );
                     }
                 });
-
             }
         }
         Err(e) => {
@@ -113,7 +140,9 @@ pub async fn process_event(miner: Arc<Miner>, event: &EventDetails<PolkadotConfi
     }
 
     if let Some(current_task_id) = current_task_id {
-        match event.as_event::<substrate_interface::api::task_management::events::TaskStopRequested>() {
+        match event
+            .as_event::<substrate_interface::api::task_management::events::TaskStopRequested>()
+        {
             Ok(Some(requested_task_stop)) => {
                 let task_id = &requested_task_stop.task_id;
 

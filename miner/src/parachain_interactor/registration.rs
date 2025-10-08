@@ -2,7 +2,7 @@ use crate::global_config::{PATHS, self, update_config_file};
 use crate::error::Result;
 use crate::self_update::try_apply_update_if_available;
 use crate::substrate_interface;
-use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType;
+use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::{MinerType, OperationalStatus};
 use crate::utils::task_handling::pick_up_task;
 use crate::traits::ParachainInteractor;
 use crate::types::{Miner, MinerIdentity};
@@ -92,8 +92,36 @@ pub async fn retrieve_identity(keypair: Arc<Keypair>, miner_type: Arc<MinerType>
     Ok(identity)
 }
 
+// Add new function to update operational status
+pub async fn update_operational_status(miner: Arc<Miner>, status: OperationalStatus) -> Result<()> {
+    let client = global_config::get_parachain_client()?;
+    
+    let tx = substrate_interface::api::tx()
+        .edge_connect()
+        .update_operational_status(
+            miner.miner_type.as_ref().clone(),
+            miner.identity.miner_id.1,
+            status
+        );
+
+    println!("Updating operational status to: {:?}", status);
+    
+    let _ = client
+        .tx()
+        .sign_and_submit_then_watch_default(&tx, miner.keypair.as_ref())
+        .await?
+        .wait_for_finalized_success()
+        .await?;
+
+    println!("Operational status updated successfully");
+    Ok(())
+}
+
 pub async fn start_miner(miner: Arc<Miner>) -> Result<()> {
     println!("Starting miner...");
+
+    // Set operational status to Available when starting
+    update_operational_status(Arc::clone(&miner), OperationalStatus::Available).await?;
 
     println!("Waiting for tasks...");
 
