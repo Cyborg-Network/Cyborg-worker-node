@@ -95,6 +95,8 @@ pub async fn retrieve_identity(keypair: Arc<Keypair>, miner_type: Arc<MinerType>
 // Add new function to update operational status
 pub async fn update_operational_status(miner: Arc<Miner>, status: OperationalStatus) -> Result<()> {
     let client = global_config::get_parachain_client()?;
+
+    println!("Updating operational status to: {:?}", status);
     
     let tx = substrate_interface::api::tx()
         .edge_connect()
@@ -103,8 +105,6 @@ pub async fn update_operational_status(miner: Arc<Miner>, status: OperationalSta
             miner.identity.miner_id.1,
             status
         );
-
-    println!("Updating operational status to: {:?}", status);
     
     let _ = client
         .tx()

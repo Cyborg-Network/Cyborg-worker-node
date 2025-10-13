@@ -6,7 +6,7 @@ use crate::{
     log,
     parent_runtime::inference::CURRENT_SERVER,
     substrate_interface::api::{
-        runtime_types::cyborg_primitives::task::TaskStatusType,
+        runtime_types::cyborg_primitives::{miner::OperationalStatus, task::TaskStatusType},
         task_management::events::task_scheduled::TaskId,
     },
     traits::InferenceServer,

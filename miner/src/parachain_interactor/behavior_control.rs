@@ -1,4 +1,5 @@
 use crate::error::Result;
+use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::OperationalStatus;
 use crate::types::Miner;
 use crate::{global_config, substrate_interface};
 
@@ -9,7 +10,7 @@ pub async fn _miner_self_suspend(miner: &Miner) -> Result<()> {
     // TODO This needs a special function and miners need a quarantine or other way to punish suspicious behavior
     let worker_suspension = substrate_interface::api::tx()
         .edge_connect()
-        .toggle_miner_visibility(miner.miner_type.as_ref().clone(), miner_id.1, false);
+        .update_operational_status(miner.miner_type.as_ref().clone(), miner_id.1, OperationalStatus::Suspended);
 
     println!("Transaction Details:");
     println!("Module: {:?}", worker_suspension.pallet_name());
@@ -28,7 +29,7 @@ pub async fn _miner_self_suspend(miner: &Miner) -> Result<()> {
         .await?;
 
     let suspension_event = miner_suspension_events
-        .find_first::<substrate_interface::api::edge_connect::events::MinerStatusUpdated>(
+        .find_first::<substrate_interface::api::edge_connect::events::OperationalStatusUpdated>(
     )?;
 
     if let Some(event) = suspension_event {
