@@ -16,8 +16,8 @@ pub enum Script {
 impl Script {
     fn file_name(&self) -> &'static str {
         match self {
-            Script::Setup => "setup.sh",
-            Script::Reset => "reset.sh",
+            Script::Setup => "cycloud_container_setup.sh",
+            Script::Reset => "cycloud_container_reset.sh",
         }
     }
 
@@ -30,6 +30,10 @@ pub fn run_script(script: Script) -> Result<(), Box<dyn std::error::Error>>{
     let embedded_file = script.get().ok_or("Script not found")?;
     
     let temp_path = format!("/tmp/{}", script.file_name());
+
+    if std::path::Path::new(&temp_path).exists() {
+        fs::remove_file(&temp_path)?;
+    }
     fs::write(&temp_path, embedded_file.data.as_ref())?;
     fs::set_permissions(&temp_path, fs::Permissions::from_mode(0o755))?;
 
