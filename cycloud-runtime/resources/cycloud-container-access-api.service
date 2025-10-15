@@ -1,6 +1,5 @@
 [Unit]
-Description=Container Access Control API
-Documentation=https://docs.example.com/container-access-api
+Description=CyCloud Container Access Control API
 After=network.target docker.service
 Requires=docker.service
 

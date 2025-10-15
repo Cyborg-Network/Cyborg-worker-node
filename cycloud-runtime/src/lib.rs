@@ -8,8 +8,8 @@ use bollard::query_parameters::{
 
 use crate::util::provision_container;
 
-mod run_script;
 mod util;
+mod resources;
 
 static PORT: u16 = 22;
 const MAX_SETUP_ATTEMPTS: u8 = 100;
