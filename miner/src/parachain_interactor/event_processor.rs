@@ -106,7 +106,7 @@ pub async fn process_event(miner: Arc<Miner>, event: &EventDetails<PolkadotConfi
             let file_content = fs::read_to_string(identity_path)?;
             let miner_data: MinerIdentity = serde_json::from_str(&file_content)?;
 
-            if assigned_miner == &miner_data.miner_id {
+           if assigned_miner.1.0.to_vec() == miner_data.miner_id.0.to_vec(){
                 println!("New task scheduled: {:?}", task_scheduled.task_id);
 
                 // Update operational status to Busy when task is assigned

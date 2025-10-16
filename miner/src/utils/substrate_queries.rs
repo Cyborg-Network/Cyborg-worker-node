@@ -1,10 +1,12 @@
 use std::sync::Arc;
-
 use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType;
 use crate::substrate_interface::api::runtime_types::cyborg_primitives::task::TaskInfo;
 use crate::types::MinerIdentity;
+use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 use crate::{error::Result, substrate_interface};
 use subxt::utils::AccountId32;
+use crate::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
+
 use subxt::{OnlineClient, PolkadotConfig};
 
 // Struct that contains the data that the worker needs to execute a task
@@ -17,7 +19,7 @@ pub struct CyborgTask {
 
 /// Query the current task id of a miner from the parachain
 // No good for producion, but miners need a different ID in order to efficiently query them due to subxt bug when querying tuples
-pub async fn get_currently_assigned_task_id(api: &OnlineClient<PolkadotConfig>, miner_id: &(AccountId32, u64), miner_type: Arc<MinerType>) -> Result<u64> {
+pub async fn get_currently_assigned_task_id(api: &OnlineClient<PolkadotConfig>, miner_id: &MinerId, miner_type: Arc<MinerType>) -> Result<u64> {
     let miner_iter_address = match miner_type.as_ref() {
         MinerType::Edge => {
             substrate_interface::api::storage()
@@ -39,7 +41,7 @@ pub async fn get_currently_assigned_task_id(api: &OnlineClient<PolkadotConfig>, 
         .await?;
 
     while let Some(Ok(fetched_miner)) = miner_iter_query.next().await {
-       if fetched_miner.value.owner == miner_id.0 && fetched_miner.value.id == miner_id.1 {
+       if  fetched_miner.value.id == miner_id.clone() {
             if let Some(task_id) = fetched_miner.value.current_task {
                 return Ok(task_id);
             } else {
@@ -70,12 +72,12 @@ pub async fn get_task(api: &OnlineClient<PolkadotConfig>, task_id: u64) -> Resul
     }
 }
 
-pub async fn get_miner_id_assigned_to_task(api: &OnlineClient<PolkadotConfig>, task_id: u64) -> Result<(AccountId32, u64)> {
+pub async fn get_miner_id_assigned_to_task(api: &OnlineClient<PolkadotConfig>, task_id: u64) -> Result<(AccountId32, BoundedVec<u8>)> {
     let task_address = substrate_interface::api::storage()
         .task_management()
         .task_allocations(task_id);
 
-    let task_query: Option<(AccountId32, u64)> = api
+    let task_query: Option<(AccountId32, BoundedVec<u8>)> = api
         .storage()
         .at_latest()
         .await?
@@ -116,7 +118,7 @@ pub async fn get_miner_by_domain(api: &OnlineClient<PolkadotConfig>, domain: &St
         if *domain == queried_domain {
             return Ok(MinerIdentity {
                 miner_owner: miner.value.owner.clone(),
-                miner_id: (miner.value.owner, miner.value.id),
+                miner_id: miner.value.id.clone(),
                 miner_type: miner_type.as_ref().clone(),
             });
         }

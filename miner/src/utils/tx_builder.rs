@@ -20,7 +20,7 @@ use crate::substrate_interface::{self, api::runtime_types::cyborg_primitives::mi
 ///
 /// # Returns
 /// A `Result` containing a `String` witht the miner identity if successful, or an `Error` if registration fails.
-pub async fn register(keypair: Arc<Keypair>, miner_type: Arc<MinerType>) -> Result<MinerIdentity> {
+pub async fn register(keypair: Arc<Keypair>, miner_type: Arc<MinerType>, miner_uuid: Vec<u8>) -> Result<MinerIdentity> {
     let client = global_config::get_parachain_client()?;
 
     let worker_specs = specs::gather_worker_spec().await?;
@@ -29,6 +29,7 @@ pub async fn register(keypair: Arc<Keypair>, miner_type: Arc<MinerType>) -> Resu
         .edge_connect()
         .register_miner(
             miner_type.as_ref().clone(),
+            miner_uuid.clone(),
             BoundedVec::from(BoundedVec(worker_specs.domain.clone().as_bytes().to_vec())),
             worker_specs.latitude,
             worker_specs.longitude,
@@ -64,7 +65,7 @@ pub async fn register(keypair: Arc<Keypair>, miner_type: Arc<MinerType>) -> Resu
 
                 return Ok(MinerIdentity{
                     miner_owner: event.miner.0.clone(),
-                    miner_id: (event.miner.0, event.miner.1),
+                    miner_id: BoundedVec(miner_uuid.clone()),
                     miner_type: miner_type.as_ref().clone()
                 })
             } else {
@@ -77,7 +78,11 @@ pub async fn register(keypair: Arc<Keypair>, miner_type: Arc<MinerType>) -> Resu
             } else {
                 match get_miner_by_domain(client, &worker_specs.domain, miner_type).await {
                     Ok(miner_identity) => {
-                        println!("Registered miner found: {}, {}", miner_identity.miner_id.1, miner_identity.miner_owner); 
+                                println!(
+                                "Registered miner found: {:?}, {}",
+                                miner_identity.miner_id,
+                                miner_identity.miner_owner
+                            );
 
                         return Ok(miner_identity)
                     },
@@ -90,14 +95,15 @@ pub async fn register(keypair: Arc<Keypair>, miner_type: Arc<MinerType>) -> Resu
     }
 }
 
-pub async fn pub_register(keypair: Arc<Keypair>, miner_type: Arc<MinerType>) -> Result<MinerIdentity>{
+pub async fn pub_register(keypair: Arc<Keypair>, miner_type: Arc<MinerType>, miner_uuid: Vec<u8>) -> Result<MinerIdentity>{
     let tx_queue = global_config::get_tx_queue()?;
 
     let rx = tx_queue.enqueue( move || {
         let keypair = Arc::clone(&keypair);
         let miner_type = miner_type.clone();
+        let value = miner_uuid.clone();
         async move {
-            let result = register(keypair, miner_type).await?;
+            let result = register(keypair, miner_type, value).await?;
             Ok(TxOutput::RegistrationInfo(result))
         }
     })

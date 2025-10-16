@@ -44,6 +44,7 @@ async fn main() -> Result<()> {
             parachain_url,
             account_seed,
             miner_type,
+            miner_uuid,
         }) => {
             // This is done separately from the miner, as these likely will remain constant, even when running multiple miners
             // Fails fast, am error here is unrecoverable
@@ -52,11 +53,14 @@ async fn main() -> Result<()> {
             // Fails fast, am error here is unrecoverable
             log::init_logger().expect("Could not initialize logger!");
 
+            let miner_uuid_bytes = miner_uuid.clone().into_bytes();
+
+
             // Fails fast, am error here is unrecoverable
             let miner = MinerBuilder::new()
                 .miner_type(miner_type).expect("Failed to set miner type")
                 .parachain_url(parachain_url.to_string())
-                .keypair(account_seed).expect("Failed to set keypair")
+                .keypair(account_seed, miner_uuid_bytes).expect("Failed to set keypair")
                 .build()
                 .await.expect("Failed to build miner");
 

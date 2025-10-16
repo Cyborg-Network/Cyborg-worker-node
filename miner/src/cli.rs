@@ -36,6 +36,13 @@ pub enum Commands {
         /// The type of miner (eg. cloud / edge)
         #[clap(long, value_name = "MINER_TYPE")]
         miner_type: String,
+
+         /// Unique miner UUID (e.g. CL-1234abcd or ED-5678efgh).
+        #[clap(long, value_name = "MINER_UUID")]
+        miner_uuid: String,
+        
+
+        
     },
 }
 

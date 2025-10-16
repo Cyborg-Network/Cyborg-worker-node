@@ -16,6 +16,7 @@ pub struct MinerBuilder {
 pub struct MinerBuilderStage2 {
     miner_type: MinerType,
     keypair: SR25519Keypair,
+    miner_uuid: Vec<u8>,
 }
 
 impl MinerBuilder {
@@ -40,13 +41,14 @@ impl MinerBuilder {
         self
     }
 
-    pub fn keypair(self, seed: &str) -> Result<MinerBuilderStage2> {
+    pub fn keypair(self, seed: &str,miner_uuid: Vec<u8>) -> Result<MinerBuilderStage2> {
         let uri = SecretUri::from_str(seed).map_err(|e| Error::Custom(e.to_string()))?;
         let keypair = SR25519Keypair::from_uri(&uri).map_err(|e| Error::Custom(e.to_string()))?;
 
         Ok(MinerBuilderStage2 {
             miner_type: self.miner_type.ok_or("Miner type must be set")?,
             keypair,
+            miner_uuid,
         })
     }
 }
@@ -58,7 +60,8 @@ impl MinerBuilderStage2 {
 
         let miner_identity = retrieve_identity(
             Arc::clone(&keypair), 
-            Arc::clone(&miner_type)
+            Arc::clone(&miner_type),
+            self.miner_uuid.clone(),
         ).await?;
 
         Ok(Arc::new(Miner {

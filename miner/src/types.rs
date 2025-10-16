@@ -5,11 +5,12 @@ use subxt_signer::sr25519::Keypair;
 use tokio::sync::RwLock;
 
 use crate::{error::Result, substrate_interface::api::runtime_types::cyborg_primitives::{miner::MinerType, task::TaskKind}};
+use crate::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct MinerIdentity {
     pub miner_owner: AccountId32,
-    pub miner_id: (AccountId32, u64),
+    pub miner_id: MinerId,
     pub miner_type: MinerType,
 }
 
