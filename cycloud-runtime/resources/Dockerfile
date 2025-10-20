@@ -1,7 +1,6 @@
 FROM ubuntu:22.04
 
-LABEL maintainer="your-email@example.com"
-LABEL description="SSH-enabled container for user workloads with API access"
+LABEL description="SSH-enabled container for cycloud runtime"
 LABEL version="1.0"
 
 # Prevent interactive prompts during package installation

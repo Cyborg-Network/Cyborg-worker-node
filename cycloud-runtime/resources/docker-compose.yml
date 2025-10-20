@@ -22,7 +22,6 @@ services:
       - SETUID
       - NET_BIND_SERVICE
     
-    
     mem_limit: ${MEM_LIMIT}
     memswap_limit: ${MEM_SWAP_LIMIT}
     # CPU shares will onyl become relevant when we start to enable multiple users/containers on the same machine
@@ -34,13 +33,16 @@ services:
       # Mount API socket for container-access client
       - /var/run/container-access-api.sock:/var/run/container-access-api.sock:ro
       # Mount client script
-      - /usr/local/bin/container-access:/usr/local/bin/container-access:ro
+      - /opt/container-management:/usr/local/bin/container-access:ro
       # Persistent storage for user data
-      - user-${USER_ID}-home:/root:rw
-      - user-${USER_ID}-workspace:/workspace:rw
+      - user-home:/root:rw
+      - user-workspace:/workspace:rw
       # Temporary directories
       - /tmp
       - /var/tmp
+
+    ports:
+      - "${SSH_PORT}:22"
     
     networks:
       - container-network
@@ -50,8 +52,7 @@ services:
       - 8.8.4.4
     
     environment:
-      - CONTAINER_USER_ID=${USER_ID}
-      - CONTAINER_NAME=user-${USER_ID}
+      - CONTAINER_NAME=${CONTAINER_NAME}
     
     logging:
       driver: "json-file"
@@ -71,7 +72,6 @@ services:
     
     labels:
       com.cycloud.type: "cycloud-user-container"
-      com.cycloud.user_id: "${USER_ID}"
       com.cycloud.created: "${CREATED_DATE}"
 
 networks:
@@ -90,10 +90,8 @@ volumes:
     driver: local
     labels:
       com.cycloud.volume_type: "home"
-      com.cycloud.user_id: "${USER_ID}"
   
   user-${USER_ID}-workspace:
     driver: local
     labels:
       com.cycloud.volume_type: "workspace"
-      com.cycloud.user_id: "${USER_ID}"

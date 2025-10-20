@@ -5,7 +5,7 @@ mod container_manager;
 use container_manager::{ContainerManager, ProvisionArgs, ConfigureArgs};
 
 const MAX_SETUP_ATTEMPTS: u8 = 100;
-const SSH_PORT: u16 = 22;
+const SSH_PORT: u16 = 2222;
 
 #[derive(Debug)]
 pub struct CyCloudEngine {
@@ -178,38 +178,6 @@ impl CyCloudEngine {
         }).await?;
 
         Ok(())
-    }
-
-    /// Open a port for the container
-    ///
-    /// # Arguments
-    /// * `protocol` - "tcp", "udp", or "both"
-    /// * `port` - Port number or range (e.g., "8080" or "8000-8100")
-    /// * `source_ip` - Optional source IP/CIDR restriction
-    pub async fn open_port(
-        &self,
-        protocol: &str,
-        port: &str,
-        source_ip: Option<String>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        use container_manager::open_container_port;
-
-        open_container_port(&self.manager, &self.container_name, protocol, port, source_ip).await
-    }
-
-    /// Close a port for the container
-    ///
-    /// # Arguments
-    /// * `protocol` - "tcp", "udp", or "both"
-    /// * `port` - Port number or range
-    pub async fn close_port(
-        &self,
-        protocol: &str,
-        port: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        use container_manager::close_container_port;
-
-        close_container_port(&self.manager, &self.container_name, protocol, port).await
     }
 
     /// Get container status

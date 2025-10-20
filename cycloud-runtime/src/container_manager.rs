@@ -1,12 +1,69 @@
 use std::path::PathBuf;
 use std::fs;
 use std::process::Command;
-use std::os::unix::fs::PermissionsExt;
-use bollard::query_parameters::{InspectContainerOptions, InspectNetworkOptions, RemoveContainerOptions, StartContainerOptions, StopContainerOptions};
+use bollard::query_parameters::{
+    InspectContainerOptions, 
+    InspectNetworkOptions, 
+    RemoveContainerOptions, 
+    StartContainerOptions, 
+    StopContainerOptions
+};
 use bollard::Docker;
-use include_dir::{include_dir, Dir};
+use std::os::unix::fs::PermissionsExt;
 
-static RESOURCES: Dir = include_dir!("$CARGO_MANIFEST_DIR/resources");
+pub struct Resource {
+    pub content: &'static str,
+    pub target: &'static str,
+}
+
+// We have this function with a closure to make sure that the file is fresh each time (to avoid eg. stale files after updates or removed temp files)
+fn use_file<F>(
+    file_path: &PathBuf, 
+    file_content: &str, 
+    action: F
+) -> Result<(), Box<dyn std::error::Error>> 
+where
+    F: Fn(&PathBuf) -> Result<(), Box<dyn std::error::Error>>
+{
+    if file_path.metadata().is_ok() {
+        fs::remove_file(&file_path)?;
+    }
+
+    if let Some(parent) = file_path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+
+    fs::write(file_path, file_content)?;
+
+    action(file_path)?;
+
+    Ok(())
+}
+
+macro_rules! define_resources {
+    ($($ident:ident => { filename: $filename:expr, target: $target:expr }),* $(,)?) => {
+        pub struct Resources;
+
+        impl Resources {
+            $(
+                pub const $ident: Resource = Resource {
+                    content: include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/", $filename)),
+                    target: concat!($target, "/", $filename),
+                };
+            )*
+        }
+    };
+}
+
+define_resources!(
+    DOCKERFILE => { filename: "Dockerfile", target: "/tmp/cycloud-resources" },
+    DOCKER_COMPOSE => {filename: "docker-compose.yml", target: "/tmp/cycloud-resources"},
+    CONTAINER_ACCESS_API_SERVICE => {filename: "cycloud-container-access-api.service", target: "/etc/systemd/system"},
+    CLEANUP_SCRIPT => {filename: "cycloud_cleanup_container.sh", target: "/tmp/cycloud-resources"},
+    CONTAINER_ACCESS_API => {filename: "cycloud_container_access_control_api.sh", target: "/opt/container-management"},
+    MODIFY_CONTAINER_ACCESS => {filename: "cycloud_modify_container_access.sh", target: "/opt/container-management"},
+    SETUP_CONTAINER => {filename: "cycloud_setup_container.sh", target: "/tmp/cycloud-resources"},
+);
 
 #[derive(Debug)]
 pub struct ProvisionArgs {
@@ -24,43 +81,14 @@ pub struct ConfigureArgs {
 }
 
 #[derive(Debug)]
-pub struct ModifyAccessArgs {
-    pub container_name: String,
-    pub action: String,
-    pub protocol: Option<String>,
-    pub port: Option<String>,
-    pub source_ip: Option<String>,
-}
-
-#[derive(Debug)]
 pub struct ContainerManager {
     docker: Docker,
-    resources_dir: PathBuf,
 }
 
 impl ContainerManager {
     pub async fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let resources_dir = PathBuf::from("/tmp/cycloud-resources");
-        
-        fs::create_dir_all(&resources_dir)?;
-
-        for file in RESOURCES.files() {
-            let dest_path = resources_dir.join(file.path());
-
-            if let Some(parent) = dest_path.parent() {
-                fs::create_dir_all(parent)?;
-            }
-
-            fs::write(&dest_path, file.contents())?;
-            
-            if dest_path.extension().and_then(|s| s.to_str()) == Some("sh") {
-                fs::set_permissions(&dest_path, fs::Permissions::from_mode(0o755))?;
-            }
-        }
-
         Ok(Self {
             docker: Docker::connect_with_local_defaults()?,
-            resources_dir,
         })
     }
 
@@ -70,37 +98,45 @@ impl ContainerManager {
     ) -> Result<(), Box<dyn std::error::Error>> {
         println!("Provisioning container: {}", args.container_name);
 
+        self.setup_api().await?;
         self.build_image().await?;
 
-        let compose_content = self.generate_compose_file(&args)?;
-        let compose_path = self.resources_dir.join(format!("docker-compose-{}.yml", args.container_name));
-        fs::write(&compose_path, compose_content)?;
+        let memory = args.memory_limit.as_deref().unwrap_or("4g");
+        let cpu = args.cpu_limit.unwrap_or(2.0);
 
-        let output = Command::new("docker")
-            .arg("compose")
-            .arg("-f")
-            .arg(&compose_path)
-            .arg("up")
-            .arg("-d")
-            .current_dir(&self.resources_dir)
-            .output()?;
+        // TODO: replace with something like minijinja for reliable variable substitution
+        let compose_content = Resources::DOCKER_COMPOSE.content
+            .replace("${SSH_PORT}", &args.ssh_port.to_string())
+            .replace("${CONTAINER_NAME}", &args.container_name)
+            .replace("${MEMORY_LIMIT}", memory)
+            .replace("${CPU_LIMIT}", &cpu.to_string());
 
-        if !output.status.success() {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(format!("Failed to run docker-compose up: {}", stderr).into());
-        }
+        use_file(
+            &Resources::DOCKER_COMPOSE.target.into(), 
+            &compose_content,
+            |compose_path| {
+                let output = Command::new("docker")
+                    .arg("compose")
+                    .arg("-f")
+                    .arg(&compose_path)
+                    .arg("up")
+                    .arg("-d")
+                    .output()?;
 
-        println!("Container {} provisioned successfully", args.container_name);
-        Ok(())
+                if !output.status.success() {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    return Err(format!("Failed to run docker-compose up: {}", stderr).into());
+                }
+
+                println!("Container {} provisioned successfully", args.container_name);
+                Ok(())
+            }
+        )?;
+
+        Ok(()) 
     }
 
     async fn build_image(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let dockerfile_path = self.resources_dir.join("Dockerfile.container");
-        
-        if !dockerfile_path.exists() {
-            return Err("Dockerfile.container not found in resources".into());
-        }
-
         if self.docker.inspect_image("cycloud-user-container:latest").await.is_ok() {
             println!("Image cycloud-user-container:latest already exists");
             return Ok(());
@@ -108,43 +144,30 @@ impl ContainerManager {
 
         println!("Building Docker image...");
 
-        let output = Command::new("docker")
-            .arg("build")
-            .arg("-t")
-            .arg("cycloud-user-container:latest")
-            .arg("-f")
-            .arg(&dockerfile_path)
-            .arg(&self.resources_dir)
-            .output()?;
+        use_file(
+            &Resources::DOCKERFILE.target.into(), 
+            Resources::DOCKERFILE.content,
+            |dockerfile_path| {
+                let output = Command::new("docker")
+                    .arg("build")
+                    .arg("-t")
+                    .arg("cycloud-user-container:latest")
+                    .arg("-f")
+                    .arg(dockerfile_path)
+                    .arg(dockerfile_path.parent().ok_or("Failed to get parent directory")?)
+                    .output()?;
 
-        if !output.status.success() {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(format!("Failed to build Docker image: {}", stderr).into());
-        }
+                if !output.status.success() {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    return Err(format!("Failed to build Docker image: {}", stderr).into());
+                }
 
-        println!("Docker image built successfully");
+                println!("Docker image built successfully");
+                Ok(())
+            }
+        )?;
+
         Ok(())
-    }
-
-    fn generate_compose_file(&self, args: &ProvisionArgs) -> Result<String, Box<dyn std::error::Error>> {
-        let template_path = self.resources_dir.join("docker-compose.template.yml");
-        
-        if !template_path.exists() {
-            return Err("docker-compose.template.yml not found in resources".into());
-        }
-
-        let template = fs::read_to_string(template_path)?;
-        
-        let memory = args.memory_limit.as_deref().unwrap_or("4g");
-        let cpu = args.cpu_limit.unwrap_or(2.0);
-
-        // Perform variable substitution
-        let compose_content = template
-            .replace("${CONTAINER_NAME}", &args.container_name)
-            .replace("${MEMORY_LIMIT}", memory)
-            .replace("${CPU_LIMIT}", &cpu.to_string());
-
-        Ok(compose_content)
     }
 
     pub async fn ensure_network(&self) -> Result<(), Box<dyn std::error::Error>> {
@@ -179,62 +202,26 @@ impl ContainerManager {
     ) -> Result<(), Box<dyn std::error::Error>> {
         println!("Configuring SSH access for: {}", args.container_name);
 
-        let script_path = self.resources_dir.join("cycloud_configure_container.sh");
-        
-        if !script_path.exists() {
-            return Err("Configure script not found".into());
-        }
+        use_file(
+            &Resources::SETUP_CONTAINER.target.into(), 
+            Resources::SETUP_CONTAINER.content, 
+            |script_path| {
+                let output = Command::new("bash")
+                    .arg(&script_path)
+                    .arg("--container-name").arg(&args.container_name)
+                    .arg("--ssh-public-key").arg(&args.ssh_pub_key)
+                    .arg("--ssh-port").arg(args.ssh_port.to_string())
+                    .output()?;
 
-        let output = Command::new("bash")
-            .arg(&script_path)
-            .arg("--container-name").arg(&args.container_name)
-            .arg("--ssh-public-key").arg(&args.ssh_pub_key)
-            .arg("--ssh-port").arg(args.ssh_port.to_string())
-            .output()?;
+                if !output.status.success() {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    return Err(format!("Failed to configure SSH: {}", stderr).into());
+                }
 
-        if !output.status.success() {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(format!("Failed to configure SSH: {}", stderr).into());
-        }
-
-        println!("SSH configured successfully for {}", args.container_name);
-        Ok(())
-    }
-
-    pub async fn modify_access(
-        &self,
-        args: ModifyAccessArgs,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        let script_path = self.resources_dir.join("cycloud_modify_container_access.sh");
-        
-        if !script_path.exists() {
-            return Err("Modify access script not found".into());
-        }
-
-        let mut cmd = Command::new("bash");
-        cmd.arg(&script_path)
-           .arg("--container-name").arg(&args.container_name)
-           .arg("--action").arg(&args.action)
-           .arg("--force"); // Skip confirmation prompts
-
-        if let Some(protocol) = &args.protocol {
-            cmd.arg("--protocol").arg(protocol);
-        }
-
-        if let Some(port) = &args.port {
-            cmd.arg("--port").arg(port);
-        }
-
-        if let Some(source) = &args.source_ip {
-            cmd.arg("--source-ip").arg(source);
-        }
-
-        let output = cmd.output()?;
-
-        if !output.status.success() {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(format!("Failed to modify access: {}", stderr).into());
-        }
+                println!("SSH configured successfully for {}", args.container_name);
+                Ok(())
+            }
+        )?; 
 
         Ok(())
     }
@@ -244,20 +231,24 @@ impl ContainerManager {
         container_name: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
         println!("Cleaning up container: {}", container_name);
-
-        let script_path = self.resources_dir.join("cycloud_configure_container.sh");
         
-        if script_path.exists() {
-            let output = Command::new("bash")
-                .arg(&script_path)
-                .arg("--container-name").arg(container_name)
-                .arg("--cleanup")
-                .output()?;
+        use_file(
+            &Resources::CLEANUP_SCRIPT.target.into(), 
+            Resources::CLEANUP_SCRIPT.content, 
+            |cleanup_path| {
+                let output = Command::new("bash")
+                    .arg(cleanup_path)
+                    .arg("--container-name").arg(container_name)
+                    .arg("--cleanup")
+                    .output()?;
 
-            if !output.status.success() {
-                eprintln!("Warning: Cleanup script had errors");
+                if !output.status.success() {
+                    eprintln!("Warning: Cleanup script had errors");
+                }
+
+                Ok(())
             }
-        }
+        )?;
 
         if let Err(e) = self.stop_container(container_name).await {
             eprintln!("Warning: Failed to stop container: {}", e);
@@ -271,10 +262,6 @@ impl ContainerManager {
             .arg(format!("{}-home", container_name))
             .arg(format!("{}-workspace", container_name))
             .output();
-
-        // Remove compose file
-        let compose_path = self.resources_dir.join(format!("docker-compose-{}.yml", container_name));
-        let _ = fs::remove_file(compose_path);
 
         println!("Container {} cleaned up successfully", container_name);
         Ok(())
@@ -348,43 +335,90 @@ impl ContainerManager {
         
         Ok(status)
     }
-}
-
-pub async fn open_container_port(
-    manager: &ContainerManager,
-    container_name: &str,
-    protocol: &str,
-    port: &str,
-    source_ip: Option<String>,
-) -> Result<(), Box<dyn std::error::Error>> {
     
-    manager.modify_access(ModifyAccessArgs {
-        container_name: container_name.to_string(),
-        action: "open".to_string(),
-        protocol: Some(protocol.to_string()),
-        port: Some(port.to_string()),
-        source_ip,
-    }).await?;
+    pub async fn setup_api(
+        &self,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        use_file(
+            &Resources::CONTAINER_ACCESS_API.target.into(), 
+            Resources::CONTAINER_ACCESS_API.content, 
+            |api_path| {
+                let mut permissions = fs::metadata(api_path)?
+                    .permissions();
+                permissions.set_mode(0o755);
+                fs::set_permissions(api_path, permissions)?;
 
-    Ok(())
-}
+                Ok(())
+            }
+        )?;
 
-pub async fn close_container_port(
-    manager: &ContainerManager,
-    container_name: &str,
-    protocol: &str,
-    port: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
-    
-    manager.modify_access(ModifyAccessArgs {
-        container_name: container_name.to_string(),
-        action: "close".to_string(),
-        protocol: Some(protocol.to_string()),
-        port: Some(port.to_string()),
-        source_ip: None,
-    }).await?;
+        use_file(
+            &Resources::MODIFY_CONTAINER_ACCESS.target.into(), 
+            Resources::MODIFY_CONTAINER_ACCESS.content, 
+            |modify_path| {
+                let mut permissions = fs::metadata(modify_path)?
+                    .permissions();
+                permissions.set_mode(0o755);
+                fs::set_permissions(modify_path, permissions)?;
 
-    Ok(())
+                Ok(())
+            }
+        )?;
+
+        let out = Command::new("ls")
+            .arg("-l")
+            .arg(Resources::CONTAINER_ACCESS_API.target)
+            .output()?;
+
+        if !out.status.success() {
+            return Err(format!("Failed to check file permissions: {}", String::from_utf8_lossy(&out.stderr)).into());
+        } else {
+            println!("File permissions checked successfully: {}", String::from_utf8_lossy(&out.stdout)); 
+        }
+
+
+
+        use_file(
+            &Resources::CONTAINER_ACCESS_API_SERVICE.target.into(), 
+            Resources::CONTAINER_ACCESS_API_SERVICE.content, 
+            |service_path| {
+                let unit_name = service_path
+                    .file_name()
+                    .ok_or("Invalid unit path")?
+                    .to_str()
+                    .ok_or("Invalid unit name")?;
+
+                Command::new("systemctl")
+                    .arg("daemon-reload")
+                    .output()?;
+
+                Command::new("systemctl")
+                    .arg("enable")
+                    .arg(unit_name)
+                    .output()?;
+
+                let restart_output = Command::new("systemctl")
+                    .arg("restart")
+                    .arg(unit_name)
+                    .output()?;
+
+                if !restart_output.status.success() {
+                    let start_output = Command::new("systemctl")
+                        .arg("start")
+                        .arg(unit_name)
+                        .output()?;
+
+                    if !start_output.status.success() {
+                        return Err(format!("Failed to start container access API service: {}", String::from_utf8_lossy(&start_output.stderr)).into());
+                    }
+                }
+
+                Ok(())
+            }
+        )?;
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -407,9 +441,10 @@ mod tests {
             cpu_limit: Some(2.0),
         };
 
-        let compose = manager.generate_compose_file(&args).unwrap();
-        assert!(compose.contains("test123"));
-        assert!(compose.contains("mem_limit: 4g"));
-        assert!(compose.contains("cpus: 2"));
+        manager.provision_container(args).await.unwrap();
+
+        assert!(Resources::DOCKER_COMPOSE.content.contains("test123"));
+        assert!(Resources::DOCKER_COMPOSE.content.contains("mem_limit: 4g"));
+        assert!(Resources::DOCKER_COMPOSE.content.contains("cpus: 2"));
     }
 }
