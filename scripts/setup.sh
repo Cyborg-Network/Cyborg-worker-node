@@ -202,6 +202,7 @@ prepare_triton() {
 setup_systemd() {
     local PARACHAIN_URL="$1"
     local ACCOUNT_SEED="$2"
+    local MINER_TYPE="$3"
 
     echo "Creating systemd service for worker node: $MINER_SERVICE_FILE"
 
@@ -225,7 +226,8 @@ setup_systemd() {
     Environment=CURRENT_TASK_PATH=$MINER_CONFIG_DIR/current_task.json
     Environment=TAILSCALE_NET=$TAILSCALE_NET
     Environment=FLASH_INFER_PORT=$FLASH_INFER_PORT
-    ExecStart=$MINER_BINARY_PATH start-miner --parachain-url \$PARACHAIN_URL --account-seed "\$ACCOUNT_SEED"
+    Environment=MINER_TYPE=$MINER_TYPE
+    ExecStart=$MINER_BINARY_PATH start-miner --parachain-url \$PARACHAIN_URL --account-seed "\$ACCOUNT_SEED" --miner-type $MINER_TYPE
     Restart=always
     SuccessExitStatus=75
     RestartSec=3
@@ -342,8 +344,9 @@ install() {
 
     PARACHAIN_URL="${PARACHAIN_URL:-}"
     ACCOUNT_SEED="${ACCOUNT_SEED:-}"
+    MINER_TYPE="${MINER_TYPE:-}"
 
-    if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" ]]; then
+    if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" || -z "$MINER_TYPE" ]]; then
         echo "ERROR: PARACHAIN_URL and ACCOUNT_SEED must be set in environment."
         exit 1
     fi
@@ -352,7 +355,7 @@ install() {
     prepare_environment
     setup_docker
     move_files
-    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED"
+    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE"
     open_firewall
     #prepare_triton
 }
@@ -372,14 +375,16 @@ update() {
 
     PARACHAIN_URL=$(systemctl show cyborg-miner.service -p Environment | grep -o 'PARACHAIN_URL=[^ ]*' | cut -d= -f2)
     ACCOUNT_SEED=$(systemctl show cyborg-miner.service -p Environment | grep -o 'ACCOUNT_SEED=[^ ]*' | cut -d= -f2)
+    MINER_TYPE=$(systemctl show cyborg-miner.service -p Environment | grep -o 'MINER_TYPE=[^ ]*' | cut -d= -f2)
 
-    if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" ]]; then
+    if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" || -z "$MINER_TYPE" ]]; then
         echo "Failed to extract required variables from $SERVICE_FILE"
         exit 1
     fi
 
     echo "PARACHAIN_URL: $PARACHAIN_URL"
     echo "ACCOUNT_SEED: $ACCOUNT_SEED"
+    echo "MINER_TYPE: $MINER_TYPE"
 
     ###############################################################################################################
 
@@ -404,7 +409,7 @@ update() {
     systemctl stop cyborg-agent.service
 
     move_files
-    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED"
+    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE"
     open_firewall
 
     echo "Update complete: $CURRENT_VERSION to $TAG"
