@@ -72,6 +72,10 @@ async fn main() -> Result<()> {
             self_management::install_self(parachain_url, miner_type, account_seed).expect("Failed to install");
         }
 
+        Some(Commands::Version) => {
+            println!("Version: {}", env!("CARGO_PKG_VERSION"));
+        }
+
         _ => {
             println!("No command provided. Exiting.");
         }

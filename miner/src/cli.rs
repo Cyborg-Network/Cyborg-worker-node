@@ -37,6 +37,7 @@ pub enum Commands {
         #[clap(long, value_name = "MINER_TYPE")]
         miner_type: String,
     },
+
     Install {
         /// API URL for starting the miner
         #[clap(long, value_name = "API_URL")]
@@ -50,6 +51,8 @@ pub enum Commands {
         #[clap(long, value_name = "MINER_TYPE")]
         miner_type: String,
     },
+
+    Version
 }
 
 /*
