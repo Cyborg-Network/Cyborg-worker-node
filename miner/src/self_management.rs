@@ -4,7 +4,7 @@ use std::{
     io::Write,
 };
 
-use crate::{builder::validate_miner_type, error::{Error, Result}};
+use crate::{builder::validate_miner_type, error::{Error, Result}, global_config};
 
 const INSTALLER: &[u8] = include_bytes!("../../scripts/setup.sh");
 
@@ -59,27 +59,27 @@ pub fn try_apply_update_if_available() -> Result<()> {
 
     println!("Trying to update from version {} to latest.", current_version);
 
-    let mut child = Command::new("bash")
-        .arg("-s") // read commands from stdin
+    let mut installer_path = std::env::temp_dir();
+    installer_path.push("update.sh");
+    std::fs::write(&installer_path, INSTALLER)?;
+
+    let log_file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&global_config::PATHS.updater_log_path)?;
+
+    writeln!(&log_file, "\n===== Starting update from {} at {:?} =====", current_version, chrono::Utc::now())?;
+
+    Command::new("bash")
+        .arg(&installer_path) // read commands from stdin
         .arg("update")
         .arg(current_version)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
+        .stdin(Stdio::null())
+        .stdout(Stdio::from(log_file.try_clone()?))
+        .stderr(Stdio::from(log_file))
         .spawn()?;
 
-    {
-        let stdin = child.stdin.as_mut().ok_or("Failed to get stdin")?;
-        stdin.write_all(INSTALLER)?;
-    }
+    println!("Updater launched, check {} for logs", global_config::PATHS.updater_log_path.display());
 
-    let output = child.wait_with_output()?;
-
-    if !output.status.success() {
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(Error::Custom(format!("Update failed (exit: {:?}). stdout: {}\nstderr: {}", output.status.code(), stdout, stderr)))
-    }
-
-    Ok(())
+    std::process::exit(0);
 }

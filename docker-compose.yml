@@ -32,11 +32,12 @@ services:
       - IDENTITY_FILE_PATH=miner/config/miner_identity.json
       - TASK_OWNER_FILE_PATH=miner/config/task_owner.json
       - PARACHAIN_URL=${PARACHAIN_URL}
-      - UPDATE_STAGER_PATH=/var/lib/cyborg/miner/update
+      - UPDATER_LOG_FILE_PATH=miner/logs/updater.log
       - TAILSCALE_NET=tail78ea2b.ts.net
       - CYBORG_MINER_TEST_IP=127.0.0.1
       - FLASH_INFER_PORT=3005
       - CURRENT_TASK_PATH=miner/config/current_task.json
+      - MINER_TYPE=${MINER_TYPE}
 
 volumes:
   zk-artifacts:
