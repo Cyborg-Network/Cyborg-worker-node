@@ -27,7 +27,7 @@ pub fn install_self(
         .spawn()?;
 
     {
-        let stdin = child.stdin.as_mut().ok_or("Failed to get stdin")?;
+        let stdin = child.stdin.as_mut().ok_or(Error::custom("Failed to get stdin"))?;
         stdin.write_all(INSTALLER)?;
     }
 
@@ -54,14 +54,34 @@ pub fn try_apply_update_if_available() -> Result<()> {
     // TODO: validate binary before updating with checksum or version
     // Depending on time taken to update, we might need to add a call to the parachain to set miner to inactive before update and to active after
 
-    // We get the current version of the binary:
     let current_version = env!("CARGO_PKG_VERSION");
-
     println!("Trying to update from version {} to latest.", current_version);
 
     let mut installer_path = std::env::temp_dir();
     installer_path.push("update.sh");
     std::fs::write(&installer_path, INSTALLER)?;
+
+    let output = Command::new("bash")
+        .arg(&installer_path)
+        .arg("check-update")
+        .arg(current_version)
+        .output()?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let latest_tag = stdout.trim();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    if !output.status.success() {
+        eprintln!("Update check failed: {stderr}");
+        return Ok(());
+    }
+
+    if stdout.is_empty() {
+        println!("No update available.");
+        return Ok(());
+    }
+
+    println!("Update available: {}", latest_tag);
 
     let log_file = std::fs::OpenOptions::new()
         .create(true)
@@ -74,6 +94,7 @@ pub fn try_apply_update_if_available() -> Result<()> {
         .arg(&installer_path) // read commands from stdin
         .arg("update")
         .arg(current_version)
+        .arg(latest_tag)
         .stdin(Stdio::null())
         .stdout(Stdio::from(log_file.try_clone()?))
         .stderr(Stdio::from(log_file))

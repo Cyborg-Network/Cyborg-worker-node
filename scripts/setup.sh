@@ -24,12 +24,7 @@ case "$(uname -m)" in
         ;;
 esac
 
-TAG=$(curl -s https://api.github.com/repos/${REPO}/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
-ASSET="${MINER_ASSET_NAME}-${PLATFORM}-${ARCH}.tar.gz"
-URL="https://github.com/${REPO}/releases/download/${TAG}/${ASSET}"
-
 echo "Detected architecture: ${ARCH}"
-echo "Downloading release asset: ${ASSET}"
 
 # File names as they appear after installation
 MINER_FILE_NAME="cyborg-miner"
@@ -79,13 +74,23 @@ verify_release() {
 
 # ======================================= UTIL ===============================================================
 download_and_extract() {
+    local tag="$1"
+
+    if [[ -z "$tag" ]]; then
+        echo "No tag provided, fetching latest release..."
+        tag=$(curl -s https://api.github.com/repos/${REPO}/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
+    fi
+
+    local asset="${MINER_ASSET_NAME}-${PLATFORM}-${ARCH}.tar.gz"
+    local url="https://github.com/${REPO}/releases/download/${tag}/${asset}"
+
     verify_release
 
     TMP_DIR=$(mktemp -d)
     trap "rm -rf \"$TMP_DIR\"" EXIT
 
-    echo "Downloading latest release: $TAG..."
-    curl -L "$URL" -o "$TMP_DIR/release.tar.gz"
+    echo "Downloading latest release: $tag..."
+    curl -L "$url" -o "$TMP_DIR/release.tar.gz"
     tar -xf "$TMP_DIR/release.tar.gz" -C "$TMP_DIR"
     
     MINER_BIN=$(find "$TMP_DIR" -type f -executable -name '*miner*' | head -n 1)
@@ -362,7 +367,8 @@ install() {
 }
 
 update() {
-    CURRENT_VERSION="$1"
+    local current_version="$1"
+    local latest_tag="$2"
 
     ################### WARNING this is not safe, we need proper key management ##########################
     echo "Reading current configuration from systemd service file..."
@@ -389,19 +395,8 @@ update() {
 
     ###############################################################################################################
 
-    echo "Current version: $CURRENT_VERSION"
-    echo "Fetching latest release tag..."
-
-    TAG=$(curl -s https://api.github.com/repos/${REPO}/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
-    echo "Latest version available: $TAG"
-
-    if [[ "$TAG" == "v$CURRENT_VERSION" || "$TAG" == "$CURRENT_VERSION" ]]; then
-        echo "Already up-to-date (version $CURRENT_VERSION)."
-        exit 0
-    fi
-
-    echo "Updating from $CURRENT_VERSION to $TAG..."
-    download_and_extract
+    echo "Updating from $current_version to $latest_tag..."
+    download_and_extract "$latest_tag"
     prepare_environment
     setup_docker
 
@@ -413,7 +408,26 @@ update() {
     setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE"
     open_firewall
 
-    echo "Update complete: $CURRENT_VERSION to $TAG"
+    echo "Update complete: $CURRENT_VERSION to $latest_tag"
+}
+
+check_update() {
+    local current_version="$1"
+
+    echo "Fetching latest release tag..."
+
+    local latest_tag
+    latest_tag=$(curl -s https://api.github.com/repos/${REPO}/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
+
+    echo "Current version: $current_version"
+    echo "Latest version available: $latest_tag"
+
+    if [[ "$latest_tag" == "v$current_version" || "$latest_tag" == "$current_version" ]]; then
+        echo "Already up-to-date."
+        exit 0
+    fi
+
+    echo "$latest_tag"
 }
 
 # ======================================== DISPATCH ==================================================
@@ -425,6 +439,10 @@ case "${1:-install}" in
   update)
     CURRENT_VERSION="${2:-unknown}"
     update "$CURRENT_VERSION"
+    ;;
+  check-update)
+    CURRENT_VERSION="${2:-unknown}"
+    check_update "$CURRENT_VERSION"
     ;;
   *)
     echo "Usage: $0 {install|update} [current_version]"
