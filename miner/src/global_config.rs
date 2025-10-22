@@ -1,11 +1,11 @@
 use once_cell::sync::Lazy;
 use once_cell::sync::OnceCell;
 use serde::Deserialize;
+use std::fs;
 use std::{env, path::PathBuf};
 use subxt::utils::AccountId32;
 use subxt::OnlineClient;
 use subxt::PolkadotConfig;
-use std::fs;
 
 use crate::error::{Error, Result};
 use crate::utils::tx_queue::TransactionQueue;
@@ -30,34 +30,42 @@ struct MinerIdentity {
 // We're setting a few global variables here for easy access throughout. If editing, make sure to add appropriate Lazy::force to `run_global_config` - THIS IS NOT COMPILE-TIME ENFORCED
 // Paths required throughout
 pub static PATHS: Lazy<Paths> = Lazy::new(|| Paths {
-    log_path: env::var("LOG_FILE_PATH").expect("LOG_PATH must be set").into(),
+    log_path: env::var("LOG_FILE_PATH")
+        .expect("LOG_PATH must be set")
+        .into(),
     task_file_name: env::var("TASK_FILE_NAME").expect("TASK_FILE_NAME must be set"),
     task_dir_path: env::var("TASK_DIR_PATH").expect("TASK_DIR_PATH must be set"),
     task_owner_path: env::var("TASK_OWNER_FILE_PATH").expect("TASK_OWNER_PATH must be set"),
     identity_path: env::var("IDENTITY_FILE_PATH").expect("IDENTITY_PATH must be set"),
-    update_path: env::var("UPDATE_STAGER_PATH").expect("UPDATE_STAGER_PATH must be set").into(),
+    update_path: env::var("UPDATE_STAGER_PATH")
+        .expect("UPDATE_STAGER_PATH must be set")
+        .into(),
 });
 
 // The tailscale network that the miner is currently operating under
-pub static TAILSCALE_NET: Lazy<String> = Lazy::new(|| {
-    env::var("TAILSCALE_NET").expect("TAILSCALE_NET must be set")
-});
+pub static TAILSCALE_NET: Lazy<String> =
+    Lazy::new(|| env::var("TAILSCALE_NET").expect("TAILSCALE_NET must be set"));
 
 // The port reserved for the FlashInfer service
 pub static FLASH_INFER_PORT: Lazy<u16> = Lazy::new(|| {
-    env::var("FLASH_INFER_PORT").expect("FLASH_INFER_PORT must be set").parse().expect("Failed to parse FLASH_INFER_PORT")
+    env::var("FLASH_INFER_PORT")
+        .expect("FLASH_INFER_PORT must be set")
+        .parse()
+        .expect("Failed to parse FLASH_INFER_PORT")
 });
 
 /*
 // The gateway for CESS network
-pub static CESS_GATEWAY: Lazy<Arc<RwLock<String>>> = Lazy::new(|| 
+pub static CESS_GATEWAY: Lazy<Arc<RwLock<String>>> = Lazy::new(||
     Arc::new(RwLock::new(String::from("https://deoss-sgp.cess.network")))
 );
 */
 
 /// The metadata for the current task in case the miner shuts down unexpectedly and has to restart a running task
 pub static CURRENT_TASK_PATH: Lazy<PathBuf> = Lazy::new(|| {
-    env::var("CURRENT_TASK_PATH").expect("CURRENT_TASK_PATH must be set").into()
+    env::var("CURRENT_TASK_PATH")
+        .expect("CURRENT_TASK_PATH must be set")
+        .into()
 });
 
 /// The client used to connect to the parachain
@@ -110,9 +118,9 @@ pub fn get_parachain_client() -> Result<&'static OnlineClient<PolkadotConfig>> {
 }
 
 pub fn get_tx_queue() -> Result<&'static TransactionQueue> {
-    TRANSACTION_QUEUE
-        .get()
-        .ok_or(Error::Custom("Transaction queue not initialized".to_string())) 
+    TRANSACTION_QUEUE.get().ok_or(Error::Custom(
+        "Transaction queue not initialized".to_string(),
+    ))
 }
 
 /*

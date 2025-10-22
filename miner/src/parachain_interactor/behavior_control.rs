@@ -1,7 +1,7 @@
 use crate::error::Result;
+use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::OperationalStatus;
 use crate::types::Miner;
-use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 
 use crate::{global_config, substrate_interface};
 
@@ -10,11 +10,14 @@ pub async fn _miner_self_suspend(miner: &Miner) -> Result<()> {
     let miner_id = &miner.identity.miner_id;
     let miner_id_bounded = BoundedVec(miner_id.0.clone());
 
-
     // TODO This needs a special function and miners need a quarantine or other way to punish suspicious behavior
     let worker_suspension = substrate_interface::api::tx()
         .edge_connect()
-        .update_operational_status(miner.miner_type.as_ref().clone(), miner_id_bounded, OperationalStatus::Suspended);
+        .update_operational_status(
+            miner.miner_type.as_ref().clone(),
+            miner_id_bounded,
+            OperationalStatus::Suspended,
+        );
 
     println!("Transaction Details:");
     println!("Module: {:?}", worker_suspension.pallet_name());

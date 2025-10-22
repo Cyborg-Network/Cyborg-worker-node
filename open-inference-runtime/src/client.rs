@@ -1,13 +1,13 @@
 use crate::models::ModelExtractor;
 use futures::{stream::StreamExt, Future, Stream};
+use rand::distr::weighted::WeightedIndex;
+use rand::distr::Distribution;
+use rand::thread_rng;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use serde_json::Value;
 use std::collections::HashMap;
-use rand::distr::weighted::WeightedIndex;
-use rand::distr::Distribution;
-use rand::thread_rng;
 use std::path::PathBuf;
 
 #[derive(Clone, Debug)]
@@ -721,10 +721,10 @@ impl TritonClient {
                         .replace("[INST]", "")
                         .replace("[/INST]", "")
                         .replace("\n", " ")
-                        .replace("\r", " ") 
-                        .split_whitespace() 
+                        .replace("\r", " ")
+                        .split_whitespace()
                         .collect::<Vec<_>>()
-                        .join(" ") 
+                        .join(" ")
                         .trim()
                         .to_string();
 
@@ -788,7 +788,6 @@ fn get_help_message() -> &'static str {
     Example : infer 
     "#
 }
-
 
 fn sample_from_logits(logits: &[f32], temperature: f32) -> i64 {
     let mut scaled: Vec<f32> = logits.iter().map(|&x| x / temperature).collect();

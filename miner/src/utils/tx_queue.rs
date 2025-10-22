@@ -1,26 +1,27 @@
+use crate::{error::Result, types::MinerIdentity};
+use once_cell::sync::OnceCell;
 use std::{
     collections::VecDeque,
     future::Future,
     pin::Pin,
     sync::{
         atomic::{AtomicBool, Ordering},
-        Arc
+        Arc,
     },
 };
-use once_cell::sync::OnceCell;
-use tokio::time::{sleep, Duration};
 use tokio::sync::{oneshot, Mutex};
-use crate::{error::Result, types::MinerIdentity};
+use tokio::time::{sleep, Duration};
 
 const MAX_RETRIES: u32 = 500;
 
 /// The type of an async transaction executor closure: no args, returns a Future Result
-type TxExecutor = Box<dyn Fn() -> Pin<Box<dyn Future<Output = Result<TxOutput>> + Send>> + Send + Sync>;
+type TxExecutor =
+    Box<dyn Fn() -> Pin<Box<dyn Future<Output = Result<TxOutput>> + Send>> + Send + Sync>;
 
 #[derive(Debug)]
-pub enum TxOutput{
+pub enum TxOutput {
     RegistrationInfo(MinerIdentity),
-    Success
+    Success,
 }
 
 pub struct Transaction {
@@ -95,33 +96,31 @@ impl TransactionQueue {
                 };
 
                 match tx_opt {
-                    Some(mut tx) => {
-                        match tx.execute().await{
-                            Ok(result) => {
-                                println!("Transaction succeeded: {result:?}");
-                                if let Some(responder) = tx.responder.take() {
-                                    let _ = responder.send(Ok(result));
-                                }
-                            }
-                            Err(e) if tx.retry_count < MAX_RETRIES => {
-                                println!("Transaction failed: {}", e);
-                                tx.increment_retry();
-
-                                let delay_ms = 1000 * 2u64.pow(tx.retry_count().min(10));
-                                println!("Retrying after {} ms", delay_ms);
-                                sleep(Duration::from_millis(delay_ms)).await;
-
-                                let mut queue = inner.lock().await;
-                                queue.push_front(tx);
-                            }
-                            Err(e) => {
-                                println!("Transaction failed: {}", e);
-                                if let Some(responder) = tx.responder.take() {
-                                    let _ = responder.send(Err(e));
-                                }
+                    Some(mut tx) => match tx.execute().await {
+                        Ok(result) => {
+                            println!("Transaction succeeded: {result:?}");
+                            if let Some(responder) = tx.responder.take() {
+                                let _ = responder.send(Ok(result));
                             }
                         }
-                    }
+                        Err(e) if tx.retry_count < MAX_RETRIES => {
+                            println!("Transaction failed: {}", e);
+                            tx.increment_retry();
+
+                            let delay_ms = 1000 * 2u64.pow(tx.retry_count().min(10));
+                            println!("Retrying after {} ms", delay_ms);
+                            sleep(Duration::from_millis(delay_ms)).await;
+
+                            let mut queue = inner.lock().await;
+                            queue.push_front(tx);
+                        }
+                        Err(e) => {
+                            println!("Transaction failed: {}", e);
+                            if let Some(responder) = tx.responder.take() {
+                                let _ = responder.send(Err(e));
+                            }
+                        }
+                    },
                     None => {
                         processing_flag.store(false, Ordering::SeqCst);
                         println!("Transaction queue is empty");

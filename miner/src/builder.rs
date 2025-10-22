@@ -1,8 +1,8 @@
 use crate::{
-    error::{Error, Result}, 
-    parachain_interactor::registration::retrieve_identity, 
-    substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType, 
-    types::{Miner, ParentRuntime}
+    error::{Error, Result},
+    parachain_interactor::registration::retrieve_identity,
+    substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType,
+    types::{Miner, ParentRuntime},
 };
 use std::{str::FromStr, sync::Arc};
 use subxt_signer::{sr25519::Keypair as SR25519Keypair, SecretUri};
@@ -41,7 +41,7 @@ impl MinerBuilder {
         self
     }
 
-    pub fn keypair(self, seed: &str,miner_uuid: Vec<u8>) -> Result<MinerBuilderStage2> {
+    pub fn keypair(self, seed: &str, miner_uuid: Vec<u8>) -> Result<MinerBuilderStage2> {
         let uri = SecretUri::from_str(seed).map_err(|e| Error::Custom(e.to_string()))?;
         let keypair = SR25519Keypair::from_uri(&uri).map_err(|e| Error::Custom(e.to_string()))?;
 
@@ -59,20 +59,21 @@ impl MinerBuilderStage2 {
         let keypair = Arc::new(self.keypair);
 
         let miner_identity = retrieve_identity(
-            Arc::clone(&keypair), 
+            Arc::clone(&keypair),
             Arc::clone(&miner_type),
             self.miner_uuid.clone(),
-        ).await?;
+        )
+        .await?;
 
         Ok(Arc::new(Miner {
             miner_type,
             parent_runtime: Arc::new(RwLock::new(ParentRuntime { port: None })),
             keypair,
             identity: Arc::new(miner_identity),
-            current_task: Arc::new(RwLock::new(None))
+            current_task: Arc::new(RwLock::new(None)),
         }))
     }
 }
 
 #[cfg(test)]
-mod tests { }
+mod tests {}

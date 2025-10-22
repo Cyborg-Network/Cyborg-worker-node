@@ -14,23 +14,23 @@
 /// Run the executable with appropriate arguments to start mining.
 mod builder;
 mod cli;
-mod global_config;
 mod error;
+mod global_config;
 mod log;
 mod parachain_interactor;
 mod parent_runtime;
+mod self_update;
 mod specs;
 mod substrate_interface;
 mod traits;
 mod types;
-mod self_update;
 mod utils;
 
 use builder::MinerBuilder;
 use clap::Parser;
 use cli::{Cli, Commands};
-use global_config::run_global_config;
 use error::Result;
+use global_config::run_global_config;
 use traits::ParachainInteractor;
 
 #[tokio::main]
@@ -48,21 +48,25 @@ async fn main() -> Result<()> {
         }) => {
             // This is done separately from the miner, as these likely will remain constant, even when running multiple miners
             // Fails fast, am error here is unrecoverable
-            run_global_config(parachain_url).await.expect("Error running the global config!");
+            run_global_config(parachain_url)
+                .await
+                .expect("Error running the global config!");
 
             // Fails fast, am error here is unrecoverable
             log::init_logger().expect("Could not initialize logger!");
 
             let miner_uuid_bytes = miner_uuid.clone().into_bytes();
 
-
             // Fails fast, am error here is unrecoverable
             let miner = MinerBuilder::new()
-                .miner_type(miner_type).expect("Failed to set miner type")
+                .miner_type(miner_type)
+                .expect("Failed to set miner type")
                 .parachain_url(parachain_url.to_string())
-                .keypair(account_seed, miner_uuid_bytes).expect("Failed to set keypair")
+                .keypair(account_seed, miner_uuid_bytes)
+                .expect("Failed to set keypair")
                 .build()
-                .await.expect("Failed to build miner");
+                .await
+                .expect("Failed to build miner");
 
             // Start the mining session using the built miner.
             miner.start_miner().await?;

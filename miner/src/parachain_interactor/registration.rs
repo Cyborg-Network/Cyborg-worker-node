@@ -1,19 +1,21 @@
-use crate::global_config::{PATHS, self, update_config_file};
 use crate::error::Result;
+use crate::global_config::{self, update_config_file, PATHS};
 use crate::self_update::try_apply_update_if_available;
 use crate::substrate_interface;
-use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::{MinerType, OperationalStatus};
-use crate::utils::task_handling::pick_up_task;
 use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
+use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::{
+    MinerType, OperationalStatus,
+};
+use crate::utils::task_handling::pick_up_task;
 
 use crate::traits::ParachainInteractor;
 use crate::types::{Miner, MinerIdentity};
 use crate::utils::tx_builder::pub_register;
-use subxt_signer::sr25519::Keypair;
 use std::fs;
 use std::sync::Arc;
+use subxt_signer::sr25519::Keypair;
 
-pub enum RegistrationStatus{
+pub enum RegistrationStatus {
     Registered(MinerIdentity),
     Unknown,
 }
@@ -33,19 +35,14 @@ async fn confirm_registration() -> Result<RegistrationStatus> {
 
     println!("identity: {:?}", miner_id);
 
-
     // Since there seems to be a bug in subxt that should have been resolved (and we possibly won't have a separate storage map for querying workers by id)
     let miner_registration_confirmation_query = match miner_type {
-        MinerType::Cloud => {
-            substrate_interface::api::storage()
-                .edge_connect()
-                .cloud_miners_iter()
-        }
-        MinerType::Edge => {
-            substrate_interface::api::storage()
-                .edge_connect()
-                .edge_miners_iter()
-        }
+        MinerType::Cloud => substrate_interface::api::storage()
+            .edge_connect()
+            .cloud_miners_iter(),
+        MinerType::Edge => substrate_interface::api::storage()
+            .edge_connect()
+            .edge_miners_iter(),
     };
 
     let mut result = client
@@ -58,13 +55,11 @@ async fn confirm_registration() -> Result<RegistrationStatus> {
     while let Some(Ok(miner)) = result.next().await {
         // if miner.value.owner == identity.0 && miner.value.id == identity.1 {
         if miner.value.id.0 == miner_id_bounded.0 {
-            return Ok(RegistrationStatus::Registered(
-                MinerIdentity {
-                    miner_owner: miner.value.owner.clone(),
-                    miner_id: BoundedVec(miner.value.id.0.clone()),
-                    miner_type: miner_type,
-                }
-            ));
+            return Ok(RegistrationStatus::Registered(MinerIdentity {
+                miner_owner: miner.value.owner.clone(),
+                miner_id: BoundedVec(miner.value.id.0.clone()),
+                miner_type: miner_type,
+            }));
         }
     }
 
@@ -72,21 +67,28 @@ async fn confirm_registration() -> Result<RegistrationStatus> {
     Ok(RegistrationStatus::Unknown)
 }
 
-pub async fn retrieve_identity(keypair: Arc<Keypair>, miner_type: Arc<MinerType>, miner_uuid: Vec<u8>) -> Result<MinerIdentity> {
+pub async fn retrieve_identity(
+    keypair: Arc<Keypair>,
+    miner_type: Arc<MinerType>,
+    miner_uuid: Vec<u8>,
+) -> Result<MinerIdentity> {
     let identity: MinerIdentity;
-    let value=miner_uuid.clone();
+    let value = miner_uuid.clone();
 
     match confirm_registration().await {
         Ok(RegistrationStatus::Registered(miner_identity)) => {
             println!("Miner is registered, using existing identity.");
             identity = miner_identity;
-        }, 
+        }
         Ok(RegistrationStatus::Unknown) => {
             println!("Registration status unknown, attempting registration.");
             identity = pub_register(keypair, miner_type, value).await?;
-        },
+        }
         Err(e) => {
-            println!("Error confirming miner registration: {}, attempting registration.", e);
+            println!(
+                "Error confirming miner registration: {}, attempting registration.",
+                e
+            );
             identity = pub_register(keypair, miner_type, value).await?;
         }
     }
@@ -103,15 +105,15 @@ pub async fn update_operational_status(miner: Arc<Miner>, status: OperationalSta
     let client = global_config::get_parachain_client()?;
 
     println!("Updating operational status to: {:?}", status);
-    
+
     let tx = substrate_interface::api::tx()
         .edge_connect()
         .update_operational_status(
             miner.miner_type.as_ref().clone(),
             miner.identity.miner_id.clone(),
-            status
+            status,
         );
-    
+
     let _ = client
         .tx()
         .sign_and_submit_then_watch_default(&tx, miner.keypair.as_ref())
@@ -134,7 +136,7 @@ pub async fn start_miner(miner: Arc<Miner>) -> Result<()> {
     let client = global_config::get_parachain_client()?;
 
     if let Err(e) = pick_up_task(Arc::clone(&miner)).await {
-        println!("No task to pick up, performing clean startup: {}", e);        
+        println!("No task to pick up, performing clean startup: {}", e);
     }
 
     let mut blocks = client.blocks().subscribe_finalized().await?;

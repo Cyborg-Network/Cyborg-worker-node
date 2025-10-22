@@ -1,14 +1,9 @@
-use std::{
-    env,
-    fs,
-    os::unix::fs::PermissionsExt,
-    process::Command,
-};
+use std::{env, fs, os::unix::fs::PermissionsExt, process::Command};
 
 use std::os::unix::process::CommandExt;
 
-use crate::global_config;
 use crate::error::{Error, Result};
+use crate::global_config;
 
 pub fn try_apply_update_if_available() -> Result<()> {
     let current_exe = env::current_exe()?;
@@ -40,12 +35,10 @@ pub fn try_apply_update_if_available() -> Result<()> {
 
         println!("Update applied. Restarting self with new binary...");
 
-        let e = Command::new(current_exe)
-            .args(env::args().skip(1))
-            .exec();
+        let e = Command::new(current_exe).args(env::args().skip(1)).exec();
 
         unreachable!("exec failed: {e}");
-    } else { 
+    } else {
         println!("No update available.");
     }
 

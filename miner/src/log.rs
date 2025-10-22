@@ -1,5 +1,5 @@
-use crate::global_config;
 use crate::error::{Error, Result};
+use crate::global_config;
 use once_cell::sync::Lazy;
 use std::sync::Mutex;
 use tracing_appender::non_blocking;
@@ -13,17 +13,13 @@ pub fn init_logger() -> Result<()> {
 
     let log_file_path = &global_config::PATHS.log_path;
 
-    let log_dir_path = log_file_path
-        .parent()
-        .ok_or(Error::Custom(
-            "Could not get parent of log path".to_string()
-        ))?;
+    let log_dir_path = log_file_path.parent().ok_or(Error::Custom(
+        "Could not get parent of log path".to_string(),
+    ))?;
 
-    let log_file = log_file_path
-        .file_name()
-        .ok_or(Error::Custom(
-            "Could not get file name of log path".to_string()
-        ))?;
+    let log_file = log_file_path.file_name().ok_or(Error::Custom(
+        "Could not get file name of log path".to_string(),
+    ))?;
 
     let file_appender = tracing_appender::rolling::never(log_dir_path, log_file);
 
@@ -35,13 +31,18 @@ pub fn init_logger() -> Result<()> {
         .with_level(true)
         .init();
 
-    *LOG_GUARD.lock().map_err(|_| Error::Custom("Failed to lock log guard => poisoned?".to_string()))? = Some(guard);
+    *LOG_GUARD
+        .lock()
+        .map_err(|_| Error::Custom("Failed to lock log guard => poisoned?".to_string()))? =
+        Some(guard);
 
     Ok(())
 }
 
 pub fn reset_log_file() -> Result<()> {
-    *LOG_GUARD.lock().map_err(|_| Error::Custom("Failed to lock log guard => poisoned".to_string()))? = None;
+    *LOG_GUARD
+        .lock()
+        .map_err(|_| Error::Custom("Failed to lock log guard => poisoned".to_string()))? = None;
 
     let log_file_path = &global_config::PATHS.log_path;
 
