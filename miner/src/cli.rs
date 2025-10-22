@@ -37,7 +37,19 @@ pub enum Commands {
         #[clap(long, value_name = "MINER_TYPE")]
         miner_type: String,
     },
-    Install,
+    Install {
+        /// API URL for starting the miner
+        #[clap(long, value_name = "API_URL")]
+        parachain_url: String,
+
+        /// Account ID for the miner registration.
+        #[clap(long, value_name = "ACCOUNT_SEED")]
+        account_seed: String,
+
+        /// The type of miner (eg. cloud / edge)
+        #[clap(long, value_name = "MINER_TYPE")]
+        miner_type: String,
+    },
 }
 
 /*

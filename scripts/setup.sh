@@ -340,12 +340,12 @@ open_firewall() {
 install() {
     echo "Initiating miner registration..."
 
-    if [[ -z "${PARACHAIN_URL:-}" ]]; then
-    read -p "Please provide an endpoint to the parachain that the worker will be registered on: " PARACHAIN_URL
-    fi
+    PARACHAIN_URL="${PARACHAIN_URL:-}"
+    ACCOUNT_SEED="${ACCOUNT_SEED:-}"
 
-    if [[ -z "${ACCOUNT_SEED:-}" ]]; then
-    read -p "Please enter the seed phrase of the account that will be managing the worker node: " ACCOUNT_SEED
+    if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" ]]; then
+        echo "ERROR: PARACHAIN_URL and ACCOUNT_SEED must be set in environment."
+        exit 1
     fi
 
     download_and_extract

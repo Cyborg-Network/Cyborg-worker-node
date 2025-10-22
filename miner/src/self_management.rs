@@ -4,17 +4,26 @@ use std::{
     io::Write,
 };
 
-use crate::error::{Error, Result};
+use crate::{builder::validate_miner_type, error::{Error, Result}};
 
 const INSTALLER: &[u8] = include_bytes!("../../scripts/setup.sh");
 
-pub fn install_self() -> Result<()> {
+pub fn install_self(
+    parachain_url: &str,
+    miner_type: &str,
+    account_seed: &str,
+) -> Result<()> {
+    validate_miner_type(miner_type)?;
+
     let mut child = Command::new("bash")
         .arg("-s") // read commands from stdin
         .arg("install")
         .stdin(Stdio::piped())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
+        .env("PARACHAIN_URL", parachain_url)
+        .env("MINER_TYPE", miner_type)
+        .env("ACCOUNT_SEED", account_seed)
         .spawn()?;
 
     {
