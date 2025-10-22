@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root" 
+   exit 1
+fi
+
 # =================================== SHARED CONFIG ==========================================
 REPO="Cyborg-Network/Cyborg-miner"
 MINER_ASSET_NAME="cyborg-miner"
@@ -54,17 +59,28 @@ AGENT_SERVICE_FILE="/etc/systemd/system/$AGENT_FILE_NAME.service"
 MINER_TASK_DIR="/var/lib/cyborg/miner/task"
 MINER_CONFIG_DIR="/etc/cyborg/miner"
 MINER_LOG_DIR="/var/log/cyborg/miner"
-MINER_UPDATE_PATH="/var/lib/cyborg/miner/update/cyborg-miner.new"
-STAGE_DIR="/var/lib/cyborg/miner/update"
 
 # The tailscale network (only for testnet) on which the miner will be reachable
 TAILSCALE_NET="tail78ea2b.ts.net"
 
-# User
-CYBORG_USER="cyborg-user"
+verify_release() {
+    #local file="$1"
+    #local sig_file="${file}.sig"
+    
+    #curl -L "${URL}.sig" -o "$sig_file"
+    
+    #if ! minisign -Vm "$file" -P "<YOUR_PUBLIC_KEY>"; then
+        #echo "SIGNATURE VERIFICATION FAILED!"
+        #exit 1
+    #fi
+    
+    echo "CRITICAL WARNING: Signature verification is not implemented yet!"
+}
 
 # ======================================= UTIL ===============================================================
 download_and_extract() {
+    verify_release
+
     TMP_DIR=$(mktemp -d)
     trap "rm -rf \"$TMP_DIR\"" EXIT
 
@@ -93,7 +109,6 @@ prepare_environment() {
         "$MINER_TASK_DIR" \
         "$MINER_CONFIG_DIR" \
         "$MINER_LOG_DIR" \
-        "$STAGE_DIR" \
         "/var/log/cyborg/agent" \
         "/var/lib/cyborg" \
         "/var/log/cyborg" \
@@ -105,15 +120,9 @@ prepare_environment() {
         fi
     done
 
-    if ! id "$CYBORG_USER" &>/dev/null; then
-        echo "Creating system user: $CYBORG_USER"
-        sudo useradd -r -s /bin/false "$CYBORG_USER"
-    fi
-
-    # Set ownership and permissions, only if needed
     echo "Setting ownership and permissions..."
-    sudo chown -R "$CYBORG_USER:$CYBORG_USER" /var/lib/cyborg /var/log/cyborg /etc/cyborg "$STAGE_DIR"
-    sudo chmod -R 700 /var/lib/cyborg /var/log/cyborg /etc/cyborg "$STAGE_DIR"
+    sudo chown -R root:root /var/lib/cyborg /var/log/cyborg /etc/cyborg
+    sudo chmod -R 755 /var/lib/cyborg /var/log/cyborg /etc/cyborg
 }
 
 setup_docker() {
@@ -136,20 +145,7 @@ setup_docker() {
         echo "Docker is already installed."
     fi
 
-    if ! getent group docker > /dev/null; then
-        echo "[*] Creating docker group..."
-        sudo groupadd docker
-    fi
-
-    if id -nG "$CYBORG_USER" | grep -qw docker; then
-        echo "$CYBORG_USER is already in the docker group."
-    else
-        echo "Adding $CYBORG_USER to docker group..."
-        sudo usermod -aG docker "$CYBORG_USER"
-        echo "$CYBORG_USER added to docker group."
-    fi
-
-    echo "Docker setup complete. $CYBORG_USER may need to log out/in for group changes to take effect - supplementary docker group as workaround until restart."
+    echo "Docker setup complete."
 }
 
 prepare_triton() {
@@ -203,43 +199,21 @@ prepare_triton() {
     fi
 }
 
-install() {
-    echo "Initiating miner registration..."
-
-    download_and_extract
-    prepare_environment
-    setup_docker
-    prepare_triton
-
-    echo "Moving the miner to $BIN_DIR..."
-    echo "Moving the agent to $BIN_DIR..."
-    echo "Moving the setup script to $SCRIPT_DIR..."
-
-    sudo mv "$MINER_BIN" "$MINER_BINARY_PATH"
-    sudo mv "$AGENT_BIN" "$AGENT_BINARY_PATH"
-    sudo mv "$SETUP_SCRIPT" "$SETUP_SCRIPT_PATH"
-
-    if [[ -z "${PARACHAIN_URL:-}" ]]; then
-    read -p "Please provide an endpoint to the parachain that the worker will be registered on: " PARACHAIN_URL
-    fi
-
-    if [[ -z "${ACCOUNT_SEED:-}" ]]; then
-    read -p "Please enter the seed phrase of the account that will be managing the worker node: " ACCOUNT_SEED
-    fi
-
-    if ! id "$CYBORG_USER" &>/dev/null; then
-        sudo useradd -r -s /bin/false "$CYBORG_USER"
-    fi
+setup_systemd() {
+    local PARACHAIN_URL="$1"
+    local ACCOUNT_SEED="$2"
 
     echo "Creating systemd service for worker node: $MINER_SERVICE_FILE"
+
     sudo bash -c "cat > $MINER_SERVICE_FILE" << EOL
     [Unit]
     Description=Service running the cyborg-miner.
     After=network.target
+    Requires=docker.service
 
     [Service]
-    User=$CYBORG_USER
-    Group=$CYBORG_USER
+    Type=simple
+    User=root
     SupplementaryGroups=docker
     Environment=PARACHAIN_URL=$PARACHAIN_URL
     Environment="ACCOUNT_SEED=\"$ACCOUNT_SEED\""
@@ -249,7 +223,6 @@ install() {
     Environment=IDENTITY_FILE_PATH=$MINER_CONFIG_DIR/miner_identity.json
     Environment=TASK_OWNER_FILE_PATH=$MINER_CONFIG_DIR/task_owner.json
     Environment=CURRENT_TASK_PATH=$MINER_CONFIG_DIR/current_task.json
-    Environment=UPDATE_STAGER_PATH=$MINER_UPDATE_PATH
     Environment=TAILSCALE_NET=$TAILSCALE_NET
     Environment=FLASH_INFER_PORT=$FLASH_INFER_PORT
     ExecStart=$MINER_BINARY_PATH start-miner --parachain-url \$PARACHAIN_URL --account-seed "\$ACCOUNT_SEED"
@@ -264,14 +237,15 @@ EOL
     echo "systemd service for $MINER_FILE_NAME created successfully!"
 
     echo "Creating systemd service for agent: $AGENT_SERVICE_FILE"
+
     sudo bash -c "cat > $AGENT_SERVICE_FILE" << EOL
     [Unit]
     Description=Agent that is able to check the health of the miner, provide required info to the cyborg-parachain, and stream usage metrics and logs of the cyborg node.
     After=network.target
 
     [Service]
-    User=$CYBORG_USER
-    Group=$CYBORG_USER
+    User=root
+    Group=root
     SupplementaryGroups=docker
     Environment=LOG_FILE_PATH=$MINER_LOG_DIR/miner.log
     Environment=TASK_OWNER_FILE_PATH=$MINER_CONFIG_DIR/task_owner.json
@@ -284,9 +258,10 @@ EOL
     WantedBy=multi-user.target
 EOL
 
-    echo "Agent service created successfully!"
+    echo "systemd service for $AGENT_FILE_NAME created successfully!"
 
     echo "Reloading systemd, enabling and starting $MINER_FILE_NAME and $AGENT_FILE_NAME services..."
+
     sudo systemctl daemon-reexec
     sudo systemctl daemon-reload
     sudo systemctl enable "$MINER_FILE_NAME"
@@ -298,7 +273,19 @@ EOL
     sudo systemctl status "$AGENT_FILE_NAME" --no-pager
 
     echo "Cyborg Miner and Agent are installed and running. Binaries are located at $MINER_BINARY_PATH and $AGENT_BINARY_PATH. Now attempting to open Port $AGENT_HTTP_PORT, $AGENT_WS_PORT and $MINER_INFERENCE_PORT to enable communication with Cyborg Connect and provide an inference endpoint."
+}
 
+move_files() {
+    echo "Moving the miner to $BIN_DIR..."
+    echo "Moving the agent to $BIN_DIR..."
+    echo "Moving the setup script to $SCRIPT_DIR..."
+
+    sudo mv "$MINER_BIN" "$MINER_BINARY_PATH"
+    sudo mv "$AGENT_BIN" "$AGENT_BINARY_PATH"
+    sudo mv "$SETUP_SCRIPT" "$SETUP_SCRIPT_PATH"
+}
+
+open_firewall() {
     if command -v ufw &> /dev/null; then
         FIREWALL="ufw"
     elif command -v firewall-cmd &> /dev/null; then
@@ -348,38 +335,79 @@ EOL
             ;;
         esac
     fi
-
-    CRON_JOB="0 * * * * $SETUP_SCRIPT_PATH stage-update >> /var/log/cyborg/miner/updater.log 2>&1"
-
-    echo "Update cron job installed: $CRON_JOB"
-
-    ( sudo crontab -l 2>/dev/null | grep -v "$SETUP_SCRIPT_FILE_NAME"; echo "$CRON_JOB" ) | sudo crontab -
 }
 
-stage_update() {
-    download_and_extract
-    prepare_environment
-    prepare_triton
+install() {
+    echo "Initiating miner registration..."
 
-    if [[ -z "$MINER_BIN" || -z "$AGENT_BIN" || -z "$SETUP_SCRIPT" ]]; then
-    echo "Required files not found in archive."
-    exit 1
+    if [[ -z "${PARACHAIN_URL:-}" ]]; then
+    read -p "Please provide an endpoint to the parachain that the worker will be registered on: " PARACHAIN_URL
     fi
 
-    MINER_TARGET="$STAGE_DIR/$(basename "$MINER_BIN").new"
-    AGENT_TARGET="$STAGE_DIR/$(basename "$AGENT_BIN").new"
-    SETUP_TARGET="$STAGE_DIR/$(basename "$SETUP_SCRIPT").new"
+    if [[ -z "${ACCOUNT_SEED:-}" ]]; then
+    read -p "Please enter the seed phrase of the account that will be managing the worker node: " ACCOUNT_SEED
+    fi
 
-    echo "Staging miner to $MINER_TARGET"
-    cp "$MINER_BIN" "$MINER_TARGET"
+    download_and_extract
+    prepare_environment
+    setup_docker
+    move_files
+    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED"
+    open_firewall
+    #prepare_triton
+}
 
-    echo "Staging agent to $AGENT_TARGET"
-    cp "$AGENT_BIN" "$AGENT_TARGET"
+update() {
+    CURRENT_VERSION="$1"
 
-    echo "Staging update script to $SETUP_TARGET"
-    cp "$SETUP_SCRIPT" "$SETUP_TARGET"
+    ################### WARNING this is not safe, we need proper key management ##########################
+    echo "Reading current configuration from systemd service file..."
+    SERVICE_FILE="/etc/systemd/system/cyborg-miner.service"
 
-    echo "Update files staged to: $STAGE_DIR"
+    if [[ ! -f "$SERVICE_FILE" ]]; then
+        echo "Service file not found: $SERVICE_FILE"
+        echo "Cannot extract PARACHAIN_URL or ACCOUNT_SEED."
+        exit 1
+    fi
+
+    PARACHAIN_URL=$(systemctl show cyborg-miner.service -p Environment | grep -o 'PARACHAIN_URL=[^ ]*' | cut -d= -f2)
+    ACCOUNT_SEED=$(systemctl show cyborg-miner.service -p Environment | grep -o 'ACCOUNT_SEED=[^ ]*' | cut -d= -f2)
+
+    if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" ]]; then
+        echo "Failed to extract required variables from $SERVICE_FILE"
+        exit 1
+    fi
+
+    echo "PARACHAIN_URL: $PARACHAIN_URL"
+    echo "ACCOUNT_SEED: $ACCOUNT_SEED"
+
+    ###############################################################################################################
+
+    echo "Current version: $CURRENT_VERSION"
+    echo "Fetching latest release tag..."
+
+    TAG=$(curl -s https://api.github.com/repos/${REPO}/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
+    echo "Latest version available: $TAG"
+
+    if [[ "$TAG" == "v$CURRENT_VERSION" || "$TAG" == "$CURRENT_VERSION" ]]; then
+        echo "Already up-to-date (version $CURRENT_VERSION)."
+        exit 0
+    fi
+
+    echo "Updating from $CURRENT_VERSION to $TAG..."
+    download_and_extract
+    prepare_environment
+    setup_docker
+
+    # Avoid race condition
+    sudo systemctl stop cyborg-miner.service
+    sudo systemctl stop cyborg-agent.service
+
+    move_files
+    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED"
+    open_firewall
+
+    echo "Update complete: $CURRENT_VERSION to $TAG"
 }
 
 # ======================================== DISPATCH ==================================================
@@ -388,11 +416,12 @@ case "${1:-install}" in
   install)
     install
     ;;
-  stage-update)
-    stage_update
+  update)
+    CURRENT_VERSION="${2:-unknown}"
+    update "$CURRENT_VERSION"
     ;;
   *)
-    echo "Usage: $0 {install|stage-update}"
+    echo "Usage: $0 {install|update} [current_version]"
     exit 1
     ;;
 esac

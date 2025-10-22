@@ -23,7 +23,7 @@ mod specs;
 mod substrate_interface;
 mod traits;
 mod types;
-mod self_update;
+mod self_management;
 mod utils;
 
 use builder::MinerBuilder;
@@ -62,6 +62,10 @@ async fn main() -> Result<()> {
 
             // Start the mining session using the built miner.
             miner.start_miner().await?;
+        }
+
+        Some(Commands::Install) => {
+            self_management::install_self().expect("Failed to install");
         }
 
         _ => {

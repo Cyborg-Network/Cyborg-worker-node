@@ -1,6 +1,6 @@
 use crate::global_config::{PATHS, self, update_config_file};
 use crate::error::Result;
-use crate::self_update::try_apply_update_if_available;
+use crate::self_management::try_apply_update_if_available;
 use crate::substrate_interface;
 use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::{MinerType, OperationalStatus};
 use crate::utils::task_handling::pick_up_task;
