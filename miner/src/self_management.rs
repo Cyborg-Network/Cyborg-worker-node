@@ -9,7 +9,7 @@ use crate::error::{Error, Result};
 const INSTALLER: &[u8] = include_bytes!("../../scripts/setup.sh");
 
 pub fn install_self() -> Result<()> {
-    let mut child = Command::new("sh")
+    let mut child = Command::new("bash")
         .arg("-s") // read commands from stdin
         .arg("install")
         .stdin(Stdio::piped())
@@ -24,13 +24,21 @@ pub fn install_self() -> Result<()> {
 
     let output = child.wait_with_output()?;
 
-    if output.status.success() {
-        Ok(())
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    if !output.status.success() {
+        return Err(Error::Custom(format!(
+            "Installer failed (exit: {:?}).\nstdout:\n{}\nstderr:\n{}",
+            output.status.code(),
+            stdout,
+            stderr
+        )));
     } else {
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        Err(Error::Custom(format!("Installer failed (exit: {:?}). stdout: {}\nstderr: {}", output.status.code(), stdout, stderr)))
+        println!("{}", stdout);
     }
+
+    Ok(())
 }
 
 pub fn try_apply_update_if_available() -> Result<()> {
@@ -42,7 +50,7 @@ pub fn try_apply_update_if_available() -> Result<()> {
 
     println!("Trying to update from version {} to latest.", current_version);
 
-    let mut child = Command::new("sh")
+    let mut child = Command::new("bash")
         .arg("-s") // read commands from stdin
         .arg("update")
         .arg(current_version)

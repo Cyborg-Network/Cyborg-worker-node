@@ -116,30 +116,30 @@ prepare_environment() {
     do
         if [[ ! -d "$dir" ]]; then
             echo "Creating directory: $dir"
-            sudo mkdir -p "$dir"
+            mkdir -p "$dir"
         fi
     done
 
     echo "Setting ownership and permissions..."
-    sudo chown -R root:root /var/lib/cyborg /var/log/cyborg /etc/cyborg
-    sudo chmod -R 755 /var/lib/cyborg /var/log/cyborg /etc/cyborg
+    chown -R root:root /var/lib/cyborg /var/log/cyborg /etc/cyborg
+    chmod -R 755 /var/lib/cyborg /var/log/cyborg /etc/cyborg
 }
 
 setup_docker() {
     if ! command -v docker &> /dev/null; then
         echo "[!] Docker not found. Installing Docker..."
-        sudo apt-get update
-        sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+        apt-get update
+        apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
 
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 
         echo \
         "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] \
         https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
-        sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-        sudo apt-get update
-        sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+        apt-get update
+        apt-get install -y docker-ce docker-ce-cli containerd.io
         echo "Docker installed successfully."
     else
         echo "Docker is already installed."
@@ -159,18 +159,18 @@ prepare_triton() {
 
     if ! command -v docker &> /dev/null; then
         echo "[!] Docker is not installed. Installing Docker..."
-        sudo apt-get update
-        sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+        apt-get update
+        apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
 
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 
         echo \
         "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] \
         https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
-        sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-        sudo apt-get update
-        sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+        apt-get update
+        apt-get install -y docker-ce docker-ce-cli containerd.io
         echo "[✓] Docker installed."
     else
         echo "[✓] Docker is already installed."
@@ -179,19 +179,19 @@ prepare_triton() {
     TRITON_IMAGE="nvcr.io/nvidia/tritonserver:25.06-py3"
     TRITON_CONTAINER_NAME="triton_server"
 
-    if sudo docker ps -a --format '{{.Names}}' | grep -q "^$TRITON_CONTAINER_NAME\$"; then
-        if sudo docker inspect -f '{{.State.Running}}' "$TRITON_CONTAINER_NAME" | grep -q "true"; then
+    if docker ps -a --format '{{.Names}}' | grep -q "^$TRITON_CONTAINER_NAME\$"; then
+        if docker inspect -f '{{.State.Running}}' "$TRITON_CONTAINER_NAME" | grep -q "true"; then
             echo "[✓] Triton container '$TRITON_CONTAINER_NAME' is already running."
         else
             echo "[~] Triton container exists but is not running. Restarting..."
-            sudo docker start "$TRITON_CONTAINER_NAME"
+            docker start "$TRITON_CONTAINER_NAME"
         fi
     else
         echo "[*] Pulling Triton server image..."
-        sudo docker pull "$TRITON_IMAGE"
+        docker pull "$TRITON_IMAGE"
 
         echo "[🚀] Starting Triton server..."
-        sudo docker run -d --name "$TRITON_CONTAINER_NAME" --restart unless-stopped \
+        docker run -d --name "$TRITON_CONTAINER_NAME" --restart unless-stopped \
             -p8000:8000 -p8001:8001 -p8002:8002 \
             -v "$MINER_TASK_DIR":/models \
             "$TRITON_IMAGE" \
@@ -205,7 +205,7 @@ setup_systemd() {
 
     echo "Creating systemd service for worker node: $MINER_SERVICE_FILE"
 
-    sudo bash -c "cat > $MINER_SERVICE_FILE" << EOL
+    bash -c "cat > $MINER_SERVICE_FILE" << EOL
     [Unit]
     Description=Service running the cyborg-miner.
     After=network.target
@@ -238,7 +238,7 @@ EOL
 
     echo "Creating systemd service for agent: $AGENT_SERVICE_FILE"
 
-    sudo bash -c "cat > $AGENT_SERVICE_FILE" << EOL
+    bash -c "cat > $AGENT_SERVICE_FILE" << EOL
     [Unit]
     Description=Agent that is able to check the health of the miner, provide required info to the cyborg-parachain, and stream usage metrics and logs of the cyborg node.
     After=network.target
@@ -262,15 +262,15 @@ EOL
 
     echo "Reloading systemd, enabling and starting $MINER_FILE_NAME and $AGENT_FILE_NAME services..."
 
-    sudo systemctl daemon-reexec
-    sudo systemctl daemon-reload
-    sudo systemctl enable "$MINER_FILE_NAME"
-    sudo systemctl enable "$AGENT_FILE_NAME"
-    sudo systemctl restart "$MINER_FILE_NAME"
-    sudo systemctl restart "$AGENT_FILE_NAME"
+    systemctl daemon-reexec
+    systemctl daemon-reload
+    systemctl enable "$MINER_FILE_NAME"
+    systemctl enable "$AGENT_FILE_NAME"
+    systemctl restart "$MINER_FILE_NAME"
+    systemctl restart "$AGENT_FILE_NAME"
 
-    sudo systemctl status "$MINER_FILE_NAME" --no-pager
-    sudo systemctl status "$AGENT_FILE_NAME" --no-pager
+    systemctl status "$MINER_FILE_NAME" --no-pager
+    systemctl status "$AGENT_FILE_NAME" --no-pager
 
     echo "Cyborg Miner and Agent are installed and running. Binaries are located at $MINER_BINARY_PATH and $AGENT_BINARY_PATH. Now attempting to open Port $AGENT_HTTP_PORT, $AGENT_WS_PORT and $MINER_INFERENCE_PORT to enable communication with Cyborg Connect and provide an inference endpoint."
 }
@@ -280,9 +280,9 @@ move_files() {
     echo "Moving the agent to $BIN_DIR..."
     echo "Moving the setup script to $SCRIPT_DIR..."
 
-    sudo mv "$MINER_BIN" "$MINER_BINARY_PATH"
-    sudo mv "$AGENT_BIN" "$AGENT_BINARY_PATH"
-    sudo mv "$SETUP_SCRIPT" "$SETUP_SCRIPT_PATH"
+    mv "$MINER_BIN" "$MINER_BINARY_PATH"
+    mv "$AGENT_BIN" "$AGENT_BINARY_PATH"
+    mv "$SETUP_SCRIPT" "$SETUP_SCRIPT_PATH"
 }
 
 open_firewall() {
@@ -298,26 +298,26 @@ open_firewall() {
     fi
 
     open_ports_ufw() {
-        sudo ufw allow $AGENT_WS_PORT
-        sudo ufw allow $AGENT_HTTP_PORT
-        sudo ufw allow $MINER_INFERENCE_PORT
+        ufw allow $AGENT_WS_PORT
+        ufw allow $AGENT_HTTP_PORT
+        ufw allow $MINER_INFERENCE_PORT
         echo "Ports opened in UFW."
     }
 
     # Function to open ports with firewalld
     open_ports_firewalld() {
-        sudo firewall-cmd --permanent --add-port=$AGENT_HTTP_PORT/tcp
-        sudo firewall-cmd --permanent --add-port=$AGENT_WS_PORT/tcp
-        sudo firewall-cmd --permanent --add-port=$MINER_INFERENCE_PORT/tcp
-        sudo firewall-cmd --reload
+        firewall-cmd --permanent --add-port=$AGENT_HTTP_PORT/tcp
+        firewall-cmd --permanent --add-port=$AGENT_WS_PORT/tcp
+        firewall-cmd --permanent --add-port=$MINER_INFERENCE_PORT/tcp
+        firewall-cmd --reload
         echo "Ports opened in firewalld."
     }
 
     # Function to open ports with iptables
     open_ports_iptables() {
-        sudo iptables -A INPUT -p tcp --dport $AGENT_HTTP_PORT -j ACCEPT
-        sudo iptables -A INPUT -p tcp --dport $AGENT_WS_PORT -j ACCEPT
-        sudo iptables -A INPUT -p tcp --dport $MINER_INFERENCE_PORT -j ACCEPT
+        iptables -A INPUT -p tcp --dport $AGENT_HTTP_PORT -j ACCEPT
+        iptables -A INPUT -p tcp --dport $AGENT_WS_PORT -j ACCEPT
+        iptables -A INPUT -p tcp --dport $MINER_INFERENCE_PORT -j ACCEPT
         # Note: Rules added with iptables are not persistent across reboots unless saved.
         echo "Ports opened in iptables."
     }
@@ -400,8 +400,8 @@ update() {
     setup_docker
 
     # Avoid race condition
-    sudo systemctl stop cyborg-miner.service
-    sudo systemctl stop cyborg-agent.service
+    systemctl stop cyborg-miner.service
+    systemctl stop cyborg-agent.service
 
     move_files
     setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED"
