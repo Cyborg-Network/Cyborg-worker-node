@@ -76,7 +76,7 @@ verify_release() {
 
 # ======================================= UTIL ===============================================================
 download_and_extract() {
-    local tag="$1"
+    local tag="${1:-}"
 
     if [[ -z "$tag" ]]; then
         echo "No tag provided, fetching latest release..."
@@ -350,8 +350,6 @@ open_firewall() {
 }
 
 install() {
-    echo "Initiating miner registration..."
-
     PARACHAIN_URL="${PARACHAIN_URL:-}"
     ACCOUNT_SEED="${ACCOUNT_SEED:-}"
     MINER_TYPE="${MINER_TYPE:-}"
@@ -444,14 +442,15 @@ case "${1:-install}" in
     ;;
   update)
     CURRENT_VERSION="${2:-unknown}"
-    update "$CURRENT_VERSION"
+    LATEST_TAG="${3:-unknown}"
+    update "$CURRENT_VERSION" "$LATEST_TAG"
     ;;
   check-update)
     CURRENT_VERSION="${2:-unknown}"
     check_update "$CURRENT_VERSION"
     ;;
   *)
-    echo "Usage: $0 {install|update} [current_version]"
+    echo "Usage: $0 {install|update current_version latest_tag|check-update current_version}"
     exit 1
     ;;
 esac
