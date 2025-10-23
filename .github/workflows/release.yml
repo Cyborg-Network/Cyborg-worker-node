@@ -38,6 +38,7 @@ jobs:
 
       - name: Build project
         run: |
+         export RUSTFLAGS="-Awarnings"
           if [ "${{ matrix.use_cross }}" = "true" ]; then
             cross build --target ${{ matrix.target }} --release
           else
