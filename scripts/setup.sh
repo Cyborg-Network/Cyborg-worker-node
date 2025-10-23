@@ -209,7 +209,7 @@ install() {
     download_and_extract
     prepare_environment
     setup_docker
-    prepare_triton
+    # prepare_triton
 
     echo "Moving the miner to $BIN_DIR..."
     echo "Moving the agent to $BIN_DIR..."
@@ -359,7 +359,7 @@ EOL
 stage_update() {
     download_and_extract
     prepare_environment
-    prepare_triton
+    # prepare_triton
 
     if [[ -z "$MINER_BIN" || -z "$AGENT_BIN" || -z "$SETUP_SCRIPT" ]]; then
     echo "Required files not found in archive."

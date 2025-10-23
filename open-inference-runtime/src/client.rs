@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 use crate::models::ModelExtractor;
 use futures::{stream::StreamExt, Future, Stream};
 use rand::distr::weighted::WeightedIndex;
@@ -656,7 +657,7 @@ impl TritonClient {
                     let mut past = Some(build_past_from(&prefill_out));
 
                     // ----------------- DECODE LOOP -----------------
-                    let mut text = String::new();
+                    let mut _text = String::new();
                     let mut generated: Vec<i64> = Vec::new();
                     for step in 0..max_len {
                         // Greedy argmax
@@ -790,7 +791,7 @@ fn get_help_message() -> &'static str {
 }
 
 fn sample_from_logits(logits: &[f32], temperature: f32) -> i64 {
-    let mut scaled: Vec<f32> = logits.iter().map(|&x| x / temperature).collect();
+    let  scaled: Vec<f32> = logits.iter().map(|&x| x / temperature).collect();
     let max = scaled.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
     let exp: Vec<f32> = scaled.iter().map(|&x| (x - max).exp()).collect();
     let sum: f32 = exp.iter().sum();
