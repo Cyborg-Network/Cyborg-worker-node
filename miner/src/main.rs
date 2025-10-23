@@ -23,7 +23,7 @@ mod specs;
 mod substrate_interface;
 mod traits;
 mod types;
-mod self_update;
+mod self_management;
 mod utils;
 
 use builder::MinerBuilder;
@@ -62,6 +62,18 @@ async fn main() -> Result<()> {
 
             // Start the mining session using the built miner.
             miner.start_miner().await?;
+        }
+
+        Some(Commands::Install {
+            parachain_url,
+            account_seed,
+            miner_type,
+        }) => {
+            self_management::install_self(parachain_url, miner_type, account_seed).expect("Failed to install");
+        }
+
+        Some(Commands::Version) => {
+            println!("Version: {}", env!("CARGO_PKG_VERSION"));
         }
 
         _ => {

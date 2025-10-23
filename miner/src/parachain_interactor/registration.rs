@@ -1,15 +1,20 @@
 use crate::global_config::{PATHS, self, update_config_file};
 use crate::error::Result;
-use crate::self_update::try_apply_update_if_available;
+use crate::self_management::try_apply_update_if_available;
 use crate::substrate_interface;
 use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::{MinerType, OperationalStatus};
 use crate::utils::task_handling::pick_up_task;
 use crate::traits::ParachainInteractor;
 use crate::types::{Miner, MinerIdentity};
 use crate::utils::tx_builder::pub_register;
+use once_cell::sync::Lazy;
 use subxt_signer::sr25519::Keypair;
 use std::fs;
 use std::sync::Arc;
+use std::time::{Duration, Instant};
+use tokio::sync::Mutex;
+
+static LAST_UPDATE_CHECK: Lazy<Mutex<Option<Instant>>> = Lazy::new(|| Mutex::new(None));
 
 pub enum RegistrationStatus{
     Registered(MinerIdentity),
@@ -141,8 +146,19 @@ pub async fn start_miner(miner: Arc<Miner>) -> Result<()> {
         println!("Active miner identity: {:?}", miner_identity);
 
         if miner.current_task.read().await.is_none() {
-            println!("Miner doesn't have an active task, trying to apply update!");
-            try_apply_update_if_available()?;
+            let mut last_check = LAST_UPDATE_CHECK.lock().await;
+            let now = Instant::now();
+
+            // Check if 6 hours have passed since the last update attempt
+            if last_check.map_or(true, |t| now.duration_since(t) > Duration::from_secs(24 * 3600)) {
+                println!("Miner doesn't have an active task, trying to apply update!");
+                if let Err(e) = try_apply_update_if_available() {
+                    println!("Update check failed: {:?}", e);
+                }
+                *last_check = Some(now);
+            } else {
+                println!("Skipping update check, last checked less than 6 hours ago.");
+            }
         }
 
         let events = block.events().await?;
