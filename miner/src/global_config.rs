@@ -14,7 +14,6 @@ use crate::utils::tx_queue::TRANSACTION_QUEUE;
 #[derive(Debug)]
 pub struct Paths {
     pub log_path: PathBuf,
-    pub updater_log_path: PathBuf,
     pub task_file_name: String,
     pub task_dir_path: String,
     pub task_owner_path: String,
@@ -33,7 +32,6 @@ struct MinerIdentity {
 // Paths required throughout
 pub static PATHS: Lazy<Paths> = Lazy::new(|| Paths {
     log_path: env::var("LOG_FILE_PATH").expect("LOG_PATH must be set").into(),
-    updater_log_path: env::var("UPDATER_LOG_FILE_PATH").expect("UPDATER_LOG_PATH must be set").into(),
     task_file_name: env::var("TASK_FILE_NAME").expect("TASK_FILE_NAME must be set"),
     task_dir_path: env::var("TASK_DIR_PATH").expect("TASK_DIR_PATH must be set"),
     task_owner_path: env::var("TASK_OWNER_FILE_PATH").expect("TASK_OWNER_PATH must be set"),

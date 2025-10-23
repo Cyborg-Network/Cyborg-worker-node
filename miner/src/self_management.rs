@@ -76,14 +76,6 @@ pub fn try_apply_update_if_available() -> Result<()> {
     
     println!("Update available: {}", latest_tag);
     
-    let log_file = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(&global_config::PATHS.updater_log_path)?;
-    
-    writeln!(&log_file, "\n===== Starting update from {} at {:?} =====", 
-             current_version, chrono::Utc::now())?;
-
     let temp_installer_path = PathBuf::from(&global_config::PATHS.safe_tmp_dir_path)
         .join("updater.sh");
 
@@ -104,11 +96,9 @@ pub fn try_apply_update_if_available() -> Result<()> {
         .arg("update")
         .arg(current_version)
         .arg(latest_tag)
-        .stdout(Stdio::from(log_file.try_clone()?))
-        .stderr(Stdio::from(log_file))
         .spawn()?
         .wait()?;
 
-    println!("Updater launched, check {} for logs", global_config::PATHS.updater_log_path.display());
+    println!("Updater launched, check `journctl -u cyborg-miner-updater` for logs");
     std::process::exit(0);
 }
