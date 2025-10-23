@@ -1,3 +1,5 @@
+#[allow(unused_variables)]
+
 use crate::{
     run_script::{self, Script},
     PORT,

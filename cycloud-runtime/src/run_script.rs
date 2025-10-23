@@ -1,3 +1,4 @@
+#[allow(unused_variables)]
 use rust_embed::EmbeddedFile;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
