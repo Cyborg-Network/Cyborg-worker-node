@@ -19,6 +19,8 @@ pub struct Paths {
     pub task_dir_path: String,
     pub task_owner_path: String,
     pub identity_path: String,
+    // We use this instead of tempdir so that we can have multiple processes access it
+    pub safe_tmp_dir_path: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -36,6 +38,7 @@ pub static PATHS: Lazy<Paths> = Lazy::new(|| Paths {
     task_dir_path: env::var("TASK_DIR_PATH").expect("TASK_DIR_PATH must be set"),
     task_owner_path: env::var("TASK_OWNER_FILE_PATH").expect("TASK_OWNER_PATH must be set"),
     identity_path: env::var("IDENTITY_FILE_PATH").expect("IDENTITY_PATH must be set"),
+    safe_tmp_dir_path: env::var("MINER_TMP_DIR").expect("MINER_TMP_DIR must be set"),
 });
 
 // The tailscale network that the miner is currently operating under

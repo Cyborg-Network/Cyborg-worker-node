@@ -1,9 +1,7 @@
 use std::{
-    env,
-    process::{Command, Stdio},
-    io::Write,
+    env, io::Write, path::PathBuf, process::{Command, Stdio}
 };
-use std::os::unix::process::CommandExt;
+use std::os::unix::fs::PermissionsExt;
 
 use crate::{builder::validate_miner_type, error::{Error, Result}, global_config};
 
@@ -17,7 +15,7 @@ pub fn install_self(
     validate_miner_type(miner_type)?;
 
     let mut child = Command::new("bash")
-        .arg("-s") // read commands from stdin
+        .arg("-s")
         .arg("install")
         .stdin(Stdio::piped())
         .stdout(Stdio::inherit())
@@ -31,20 +29,14 @@ pub fn install_self(
         .ok_or(Error::custom("Failed to get stdin"))?
         .write_all(INSTALLER)?;
 
-    let output = child.wait_with_output()?;
+    let status = child.wait()
+        .map_err(|e| Error::Custom(format!("Failed to wait for installer: {}", e)))?;
 
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let stderr = String::from_utf8_lossy(&output.stderr);
-
-    if !output.status.success() {
+    if !status.success() {
         return Err(Error::Custom(format!(
-            "Installer failed (exit: {:?}).\nstdout:\n{}\nstderr:\n{}",
-            output.status.code(),
-            stdout,
-            stderr
+            "Installer failed with exit code: {:?}",
+            status.code()
         )));
-    } else {
-        println!("{}", stdout);
     }
 
     Ok(())
@@ -77,7 +69,7 @@ pub fn try_apply_update_if_available() -> Result<()> {
         return Ok(());
     }
     
-    if stdout.is_empty() {
+    if latest_tag.is_empty() {
         println!("No update available.");
         return Ok(());
     }
@@ -91,27 +83,27 @@ pub fn try_apply_update_if_available() -> Result<()> {
     
     writeln!(&log_file, "\n===== Starting update from {} at {:?} =====", 
              current_version, chrono::Utc::now())?;
-    
-    unsafe {
-        let mut update_cmd = Command::new("bash")
-            .arg("-s")
-            .arg("update")
-            .arg(current_version)
-            .arg(latest_tag)
-            .stdin(Stdio::piped())
-            .stdout(Stdio::from(log_file.try_clone()?))
-            .stderr(Stdio::from(log_file))
-            .pre_exec(|| {
-                libc::setsid();
-                Ok(())
-            })
-            .spawn()?;
 
-        update_cmd.stdin.take()
-            .ok_or_else(|| Error::from("Failed to open stdin"))?
-            .write_all(INSTALLER)?;
-    }
-    
+    let temp_installer_path = PathBuf::from(&global_config::PATHS.safe_tmp_dir_path)
+        .join("updater.sh");
+
+    std::fs::write(&temp_installer_path, INSTALLER)?;
+    std::fs::set_permissions(&temp_installer_path, std::fs::Permissions::from_mode(0o700))?;
+
+    Command::new("systemd-run")
+        .arg("--unit=cyborg-miner-updater")
+        .arg("--description=Cyborg Miner Update Process")
+        .arg("--collect")
+        .arg("bash")
+        .arg(&temp_installer_path)
+        .arg("update")
+        .arg(current_version)
+        .arg(latest_tag)
+        .stdout(Stdio::from(log_file.try_clone()?))
+        .stderr(Stdio::from(log_file))
+        .spawn()?
+        .wait()?;
+
     println!("Updater launched, check {} for logs", global_config::PATHS.updater_log_path.display());
     std::process::exit(0);
 }

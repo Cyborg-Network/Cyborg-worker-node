@@ -1,7 +1,7 @@
 [package]
 name = "cyborg-miner"
 description = "An AI inference mine, designed to connect to the cyborg-network, built, among others with Polkadot SDK."
-version = "0.0.69"
+version = "0.0.70"
 license = "Unlicense"
 authors = ["Cyborg Network <https://github.com/Cyborg-Network>"]
 edition = "2021"
@@ -58,6 +58,7 @@ subxt-signer = "0.38.0"
 sys-info = { version = "0.9.1" }
 sysinfo = "0.32.0"
 tar = { version = "0.4.44" }
+tempfile = "3.23.0"
 tokio-stream = { version = "0.1.17" }
 url = { version = "2.5.2" }
 zbus = "5.1.1"

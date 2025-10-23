@@ -38,6 +38,7 @@ services:
       - FLASH_INFER_PORT=3005
       - CURRENT_TASK_PATH=miner/config/current_task.json
       - MINER_TYPE=${MINER_TYPE}
+      - MINER_TMP_DIR=miner/tmp
 
 volumes:
   zk-artifacts:

@@ -24,7 +24,8 @@ case "$(uname -m)" in
         ;;
 esac
 
-echo "Detected architecture: ${ARCH}"
+# We direct some output to stderr, as to not pollute stdout for check-update
+echo "Detected architecture: ${ARCH}" >&2
 
 # File names as they appear after installation
 MINER_FILE_NAME="cyborg-miner"
@@ -53,6 +54,7 @@ AGENT_SERVICE_FILE="/etc/systemd/system/$AGENT_FILE_NAME.service"
 # ENV variables for the miner
 MINER_TASK_DIR="/var/lib/cyborg/miner/task"
 MINER_CONFIG_DIR="/etc/cyborg/miner"
+MINER_TMP_DIR="/var/lib/cyborg/miner/tmp"
 MINER_LOG_DIR="/var/log/cyborg/miner"
 
 # The tailscale network (only for testnet) on which the miner will be reachable
@@ -114,6 +116,7 @@ prepare_environment() {
         "$MINER_TASK_DIR" \
         "$MINER_CONFIG_DIR" \
         "$MINER_LOG_DIR" \
+        "$MINER_TMP_DIR" \
         "/var/log/cyborg/agent" \
         "/var/lib/cyborg" \
         "/var/log/cyborg" \
@@ -230,6 +233,7 @@ setup_systemd() {
     Environment=IDENTITY_FILE_PATH=$MINER_CONFIG_DIR/miner_identity.json
     Environment=TASK_OWNER_FILE_PATH=$MINER_CONFIG_DIR/task_owner.json
     Environment=CURRENT_TASK_PATH=$MINER_CONFIG_DIR/current_task.json
+    Environment=MINER_TMP_DIR=$MINER_TMP_DIR
     Environment=TAILSCALE_NET=$TAILSCALE_NET
     Environment=FLASH_INFER_PORT=$FLASH_INFER_PORT
     Environment=MINER_TYPE=$MINER_TYPE
@@ -412,21 +416,23 @@ update() {
 }
 
 check_update() {
+    # We again direct some output to stderr, as to not pollute stdout for update
     local current_version="$1"
 
-    echo "Fetching latest release tag..."
+    echo "Fetching latest release tag..." >&2
 
     local latest_tag
     latest_tag=$(curl -s https://api.github.com/repos/${REPO}/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
 
-    echo "Current version: $current_version"
-    echo "Latest version available: $latest_tag"
+    echo "Current version: $current_version" >&2
+    echo "Latest version available: $latest_tag" >&2
 
     if [[ "$latest_tag" == "v$current_version" || "$latest_tag" == "$current_version" ]]; then
-        echo "Already up-to-date."
+        echo "Already up-to-date." >&2
         exit 0
     fi
 
+    # As we can see, either stdout should be empty or contain the latest tag
     echo "$latest_tag"
 }
 
