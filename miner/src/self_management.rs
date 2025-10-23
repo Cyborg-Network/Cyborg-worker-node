@@ -87,6 +87,11 @@ pub fn try_apply_update_if_available() -> Result<()> {
     let temp_installer_path = PathBuf::from(&global_config::PATHS.safe_tmp_dir_path)
         .join("updater.sh");
 
+    // To make sure that the updater is always up to date, we re-create it every time
+    if temp_installer_path.metadata().is_ok() {
+        std::fs::remove_file(&temp_installer_path)?;
+    }
+
     std::fs::write(&temp_installer_path, INSTALLER)?;
     std::fs::set_permissions(&temp_installer_path, std::fs::Permissions::from_mode(0o700))?;
 
