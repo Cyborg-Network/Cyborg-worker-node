@@ -102,15 +102,21 @@ impl ContainerManager {
         self.setup_api().await?;
         self.build_image().await?;
 
-        let memory = args.memory_limit.as_deref().unwrap_or("4g");
+        let memory_limit = args.memory_limit.as_deref().unwrap_or("4g");
         let cpu = args.cpu_limit.unwrap_or(2.0);
+        let memswap_limit = "4g";
+        let pids_limit = 1024;
+        let created_date = chrono::Utc::now().to_rfc3339();
 
         // TODO: replace with something like minijinja for reliable variable substitution
         let compose_content = Resources::DOCKER_COMPOSE.content
             .replace("${SSH_PORT}", &args.ssh_port.to_string())
             .replace("${CONTAINER_NAME}", &args.container_name)
-            .replace("${MEMORY_LIMIT}", memory)
-            .replace("${CPU_LIMIT}", &cpu.to_string());
+            .replace("${MEMORY_LIMIT}", memory_limit)
+            .replace("${CPU_LIMIT}", &cpu.to_string())
+            .replace("${MEM_SWAP_LIMIT}", memswap_limit)
+            .replace("${PIDS_LIMIT}", &pids_limit.to_string())
+            .replace("${CREATED_DATE}", &created_date);
 
         use_file(
             &Resources::DOCKER_COMPOSE.target.into(), 
