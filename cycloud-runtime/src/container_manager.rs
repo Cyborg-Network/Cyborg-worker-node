@@ -55,6 +55,7 @@ macro_rules! define_resources {
     };
 }
 
+//TODO Replace tmp with controlled path or tempfile
 define_resources!(
     DOCKERFILE => { filename: "Dockerfile", target: "/tmp/cycloud-resources" },
     DOCKER_COMPOSE => {filename: "docker-compose.yml", target: "/tmp/cycloud-resources"},
