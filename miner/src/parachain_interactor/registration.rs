@@ -153,7 +153,8 @@ pub async fn start_miner(miner: Arc<Miner>) -> Result<()> {
         if miner.current_task.read().await.is_none() {
             let mut last_check = LAST_UPDATE_CHECK.lock().await;
             let now = Instant::now();
-           // Check if 6 hours have passed since the last update attempt
+
+            // Check if 6 hours have passed since the last update attempt
             if last_check.map_or(true, |t| now.duration_since(t) > Duration::from_secs(24 * 3600)) {
                 println!("Miner doesn't have an active task, trying to apply update!");
                 if let Err(e) = try_apply_update_if_available() {
