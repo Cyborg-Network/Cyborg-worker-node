@@ -1,23 +1,19 @@
+use crate::global_config::{PATHS, self, update_config_file};
 use crate::error::Result;
-use crate::global_config::{self, update_config_file, PATHS};
 use crate::self_management::try_apply_update_if_available;
 use crate::substrate_interface;
-use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
-use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::{
-    MinerType, OperationalStatus,
-};
+use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::{MinerType, OperationalStatus};
 use crate::utils::task_handling::pick_up_task;
-
 use crate::traits::ParachainInteractor;
 use crate::types::{Miner, MinerIdentity};
 use crate::utils::tx_builder::pub_register;
+use once_cell::sync::Lazy;
+use subxt_signer::sr25519::Keypair;
 use std::fs;
 use std::sync::Arc;
-use subxt_signer::sr25519::Keypair;
-use once_cell::sync::Lazy;
 use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
-
+use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 
 static LAST_UPDATE_CHECK: Lazy<Mutex<Option<Instant>>> = Lazy::new(|| Mutex::new(None));
 

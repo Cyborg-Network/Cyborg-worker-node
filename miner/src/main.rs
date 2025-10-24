@@ -14,16 +14,16 @@
 /// Run the executable with appropriate arguments to start mining.
 mod builder;
 mod cli;
-mod error;
 mod global_config;
+mod error;
 mod log;
 mod parachain_interactor;
 mod parent_runtime;
-mod self_management;
 mod specs;
 mod substrate_interface;
 mod traits;
 mod types;
+mod self_management;
 mod utils;
 
 use builder::MinerBuilder;
