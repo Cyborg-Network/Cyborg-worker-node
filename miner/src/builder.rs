@@ -19,6 +19,14 @@ pub struct MinerBuilderStage2 {
     miner_uuid: Vec<u8>,
 }
 
+pub fn validate_miner_type(miner_type: &str) -> Result<MinerType> {
+    match miner_type {
+        "cloud" => Ok(MinerType::Cloud),
+        "edge" => Ok(MinerType::Edge),
+        _ => Err("The supplied miner type is not valid!".into()),
+    }
+}
+
 impl MinerBuilder {
     pub fn new() -> Self {
         MinerBuilder {
@@ -28,14 +36,9 @@ impl MinerBuilder {
     }
 
     pub fn miner_type(mut self, miner_type: &str) -> Result<Self> {
-        self.miner_type = match miner_type {
-            "cloud" => Some(MinerType::Cloud),
-            "edge" => Some(MinerType::Edge),
-            _ => return Err("The supplied miner type is not valid!".into()),
-        };
+        self.miner_type = Some(validate_miner_type(miner_type)?);
         Ok(self)
     }
-
     pub fn parachain_url(mut self, url: String) -> Self {
         self.parachain_url = Some(url);
         self

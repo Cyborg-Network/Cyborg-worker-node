@@ -19,7 +19,7 @@ mod global_config;
 mod log;
 mod parachain_interactor;
 mod parent_runtime;
-mod self_update;
+mod self_management;
 mod specs;
 mod substrate_interface;
 mod traits;
