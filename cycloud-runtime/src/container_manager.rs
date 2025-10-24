@@ -47,7 +47,7 @@ macro_rules! define_resources {
         impl Resources {
             $(
                 pub const $ident: Resource = Resource {
-                    content: include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/", $filename)),
+                    content: include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/docker/", $filename)),
                     target: concat!($target, "/", $filename),
                 };
             )*

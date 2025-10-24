@@ -2,7 +2,6 @@
 
 set -euo pipefail
 
-# Configuration
 API_SOCKET="/var/run/container-access-api.sock"
 LOG_FILE="/var/log/container-access-api.log"
 AUDIT_LOG="/var/log/container-access-audit.log"
@@ -10,7 +9,6 @@ RATE_LIMIT_FILE="/var/lib/container-access-api/rate-limits"
 MAX_REQUESTS_PER_MINUTE=10
 SCRIPTS_DIR="/opt/container-management"
 
-# Logging
 log() {
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"
 }
@@ -29,13 +27,11 @@ audit_log() {
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] AUDIT: container=$container action=$action user=$user result=$result details=\"$details\"" >> "$AUDIT_LOG"
 }
 
-# Check if running as root
 if [[ $EUID -ne 0 ]]; then
    error "This API must be run as root"
    exit 1
 fi
 
-# Get container name from caller
 get_caller_container() {
     local pid="$1"
     
@@ -50,7 +46,6 @@ get_caller_container() {
     docker inspect --format='{{.Name}}' "$container_id" 2>/dev/null | sed 's/^\///'
 }
 
-# Rate limiting
 check_rate_limit() {
     local container="$1"
     local now=$(date +%s)
@@ -58,7 +53,6 @@ check_rate_limit() {
     
     mkdir -p "$(dirname "$limit_file")"
     
-    # Clean old entries (older than 1 minute)
     local cutoff=$((now - 60))
     
     if [[ -f "$limit_file" ]]; then
@@ -74,18 +68,15 @@ check_rate_limit() {
             return 1
         fi
         
-        # Clean old entries
         grep "^[0-9]*$" "$limit_file" 2>/dev/null | \
             awk -v cutoff="$cutoff" '$1 > cutoff' > "${limit_file}.tmp" || true
         mv "${limit_file}.tmp" "$limit_file" 2>/dev/null || true
     fi
     
-    # Add current request
     echo "$now" >> "$limit_file"
     return 0
 }
 
-# Validate container ownership
 validate_container_ownership() {
     local caller_container="$1"
     local target_container="$2"
@@ -99,14 +90,12 @@ validate_container_ownership() {
     return 0
 }
 
-# Sanitize input
 sanitize_input() {
     local input="$1"
     # Remove any shell metacharacters
     echo "$input" | tr -cd '[:alnum:]._-'
 }
 
-# Validate port
 validate_port() {
     local port="$1"
     
@@ -132,7 +121,6 @@ validate_port() {
     return 0
 }
 
-# Validate protocol
 validate_protocol() {
     local protocol="$1"
     case "${protocol,,}" in
@@ -145,16 +133,13 @@ validate_protocol() {
     esac
 }
 
-# Validate source IP
 validate_source_ip() {
     local source="$1"
     
-    # Allow wildcard
     if [[ "$source" == "*" ]]; then
         return 0
     fi
     
-    # Validate CIDR notation
     if [[ "$source" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}(/[0-9]{1,2})?$ ]]; then
         return 0
     fi
@@ -162,7 +147,6 @@ validate_source_ip() {
     return 1
 }
 
-# Execute action with validation
 execute_action() {
     local caller_container="$1"
     local action="$2"
@@ -189,14 +173,12 @@ execute_action() {
     esac
 }
 
-# Execute open action
 execute_open() {
     local caller_container="$1"
     local protocol="${2:-}"
     local port="${3:-}"
     local source="${4:-*}"
     
-    # Validate inputs
     if [[ -z "$protocol" || -z "$port" ]]; then
         echo "{\"success\": false, \"error\": \"Protocol and port are required\"}"
         audit_log "$caller_container" "open" "$caller_container" "FAILED" "Missing parameters"
@@ -225,9 +207,8 @@ execute_open() {
         return 1
     fi
     
-    # Execute the script
     local output
-    if output=$("${SCRIPTS_DIR}/modify_access.sh" \
+    if output=$("${SCRIPTS_DIR}/modify_container_access.sh" \
         --container-name "$caller_container" \
         --action open \
         --protocol "$protocol" \
@@ -245,13 +226,11 @@ execute_open() {
     fi
 }
 
-# Execute close action
 execute_close() {
     local caller_container="$1"
     local protocol="${2:-}"
     local port="${3:-}"
     
-    # Validate inputs
     if [[ -z "$protocol" || -z "$port" ]]; then
         echo "{\"success\": false, \"error\": \"Protocol and port are required\"}"
         audit_log "$caller_container" "close" "$caller_container" "FAILED" "Missing parameters"
@@ -273,9 +252,8 @@ execute_close() {
         return 1
     fi
     
-    # Execute the script
     local output
-    if output=$("${SCRIPTS_DIR}/modify_access.sh" \
+    if output=$("${SCRIPTS_DIR}/modify_container_access.sh" \
         --container-name "$caller_container" \
         --action close \
         --protocol "$protocol" \
@@ -292,16 +270,14 @@ execute_close() {
     fi
 }
 
-# Execute list action
 execute_list() {
     local caller_container="$1"
     
     local output
-    if output=$("${SCRIPTS_DIR}/modify_access.sh" \
+    if output=$("${SCRIPTS_DIR}/modify_container_access.sh" \
         --container-name "$caller_container" \
         --action list 2>&1); then
         
-        # Parse output and return JSON (simplified)
         local mappings_file="/var/lib/container-ssh-mappings/${caller_container}_ports.json"
         if [[ -f "$mappings_file" ]]; then
             cat "$mappings_file"
@@ -318,12 +294,11 @@ execute_list() {
     fi
 }
 
-# Execute status action
 execute_status() {
     local caller_container="$1"
     
     local output
-    if output=$("${SCRIPTS_DIR}/modify_access.sh" \
+    if output=$("${SCRIPTS_DIR}/modify_container_access.sh" \
         --container-name "$caller_container" \
         --action status 2>&1); then
         
@@ -341,14 +316,12 @@ execute_status() {
     fi
 }
 
-# Handle request
 handle_request() {
     local request="$1"
     local caller_pid="${2:-unknown}"
     
     log "Received request from PID $caller_pid: $request"
     
-    # Parse JSON request
     local action=$(echo "$request" | jq -r '.action // empty')
     local protocol=$(echo "$request" | jq -r '.protocol // empty')
     local port=$(echo "$request" | jq -r '.port // empty')
@@ -359,7 +332,6 @@ handle_request() {
         return 1
     fi
     
-    # Get caller's container
     local caller_container
     if ! caller_container=$(get_caller_container "$caller_pid"); then
         error "Could not determine caller container for PID $caller_pid"
@@ -370,36 +342,29 @@ handle_request() {
     
     log "Request from container: $caller_container"
     
-    # Check rate limit
     if ! check_rate_limit "$caller_container"; then
         echo "{\"success\": false, \"error\": \"Rate limit exceeded. Max $MAX_REQUESTS_PER_MINUTE requests per minute.\"}"
         audit_log "$caller_container" "$action" "$caller_container" "RATE_LIMITED" ""
         return 1
     fi
     
-    # Execute action
     execute_action "$caller_container" "$action" "$protocol" "$port" "$source"
 }
 
-# Create socket directory
 mkdir -p "$(dirname "$API_SOCKET")"
 mkdir -p "$(dirname "$RATE_LIMIT_FILE")"
 mkdir -p "$(dirname "$LOG_FILE")"
 mkdir -p "$(dirname "$AUDIT_LOG")"
 
-# Remove old socket
 rm -f "$API_SOCKET"
 
-# Start listening on Unix socket
 log "Starting Container Access API on $API_SOCKET"
 
-# Use socat or nc to listen on Unix socket
 if command -v socat &>/dev/null; then
     while true; do
         socat UNIX-LISTEN:"$API_SOCKET",fork,mode=666 EXEC:"$0 --handle-connection",nofork
     done
-elif [[ "$1" == "--handle-connection" ]]; then
-    # Handle a single connection
+elif [[ "${1:-}" == "--handle-connection" ]]; then
     caller_pid=$(echo "$SOCAT_PEERADDR" | grep -oP '\d+' || echo "unknown")
     request=$(cat)
     handle_request "$request" "$caller_pid"

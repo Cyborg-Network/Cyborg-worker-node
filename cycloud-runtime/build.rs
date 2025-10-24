@@ -1,16 +1,16 @@
 fn main() {
     let required_resources = [
         // Container configuration
-        "resources/Dockerfile",
-        "resources/docker-compose.yml",
+        "resources/docker/Dockerfile",
+        "resources/docker/docker-compose.yml",
         
         // Shell scripts (these are your renamed original scripts)
-        "resources/cycloud_setup_container.sh",        // setup.sh logic
-        "resources/cycloud_modify_container_access.sh",    // modify_access.sh logic
+        "resources/docker/cycloud_setup_container.sh",        // setup.sh logic
+        "resources/docker/cycloud_modify_container_access.sh",    // modify_access.sh logic
         
         // API daemon and service (one-time host setup)
-        "resources/cycloud_container_access_control_api.sh",       // container-access-api.sh
-        "resources/cycloud-container-access-api.service",  // systemd service
+        "resources/docker/cycloud_container_access_control_api.sh",       // container-access-api.sh
+        "resources/docker/cycloud-container-access-api.service",  // systemd service
     ];
 
     for path in &required_resources {
