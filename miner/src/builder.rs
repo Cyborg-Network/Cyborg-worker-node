@@ -27,14 +27,6 @@ pub fn validate_miner_type(miner_type: &str) -> Result<MinerType> {
     }
 }
 
-pub fn validate_miner_type(miner_type: &str) -> Result<MinerType> {
-    match miner_type {
-        "cloud" => Ok(MinerType::Cloud),
-        "edge" => Ok(MinerType::Edge),
-        _ => Err("The supplied miner type is not valid!".into()),
-    }
-}
-
 impl MinerBuilder {
     pub fn new() -> Self {
         MinerBuilder {
