@@ -32,6 +32,7 @@ use cli::{Cli, Commands};
 use error::Result;
 use global_config::run_global_config;
 use traits::ParachainInteractor;
+use crate::utils::tx_queue::{TRANSACTION_QUEUE, TransactionQueue, TxOutput};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -47,17 +48,47 @@ async fn main() -> Result<()> {
             miner_uuid,
         }) => {
             // This is done separately from the miner, as these likely will remain constant, even when running multiple miners
-            // Fails fast, am error here is unrecoverable
+            // Fails fast, an error here is unrecoverable
             run_global_config(parachain_url)
                 .await
                 .expect("Error running the global config!");
 
-            // Fails fast, am error here is unrecoverable
+            // Initialize logger
             log::init_logger().expect("Could not initialize logger!");
+            
+            let queue = TRANSACTION_QUEUE.get_or_init(|| {
+                tokio::runtime::Handle::current().block_on(async {
+                    TransactionQueue::new().await
+                })
+            });
+
+           // --- FAKE PERSISTENCE TEST TX ---
+            {
+                let queue = TRANSACTION_QUEUE.get().unwrap();
+                println!("[TEST] Enqueuing persistent long-running tx...");
+
+                let rx = queue
+                    .enqueue(|| async {
+                        println!("[PERSISTENCE-TEST] Starting slow tx...");
+                        tokio::time::sleep(std::time::Duration::from_secs(120)).await;
+                        println!("[PERSISTENCE-TEST] Completed slow tx.");
+                        Ok(TxOutput::Success)
+                    })
+                    .await
+                    .expect("Failed to enqueue persistent tx");
+
+                tokio::spawn(async move {
+                    if let Ok(result) = rx.await {
+                        println!("[PERSISTENCE-TEST] Tx result: {:?}", result);
+                    } else {
+                        println!("[PERSISTENCE-TEST] Receiver dropped or failed");
+                    }
+                });
+            }
 
             let miner_uuid_bytes = miner_uuid.clone().into_bytes();
 
-            // Fails fast, am error here is unrecoverable
+            // Fails fast, an error here is unrecoverable
             let miner = MinerBuilder::new()
                 .miner_type(miner_type)
                 .expect("Failed to set miner type")
@@ -77,7 +108,8 @@ async fn main() -> Result<()> {
             account_seed,
             miner_type,
         }) => {
-            self_management::install_self(parachain_url, miner_type, account_seed).expect("Failed to install");
+            self_management::install_self(parachain_url, miner_type, account_seed)
+                .expect("Failed to install");
         }
 
         Some(Commands::Version) => {
@@ -88,5 +120,6 @@ async fn main() -> Result<()> {
             println!("No command provided. Exiting.");
         }
     }
+
     Ok(())
 }

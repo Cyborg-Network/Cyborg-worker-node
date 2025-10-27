@@ -1,5 +1,7 @@
 use crate::{error::Result, types::MinerIdentity};
 use once_cell::sync::OnceCell;
+use serde::{Deserialize, Serialize};
+use sled::{self, IVec};
 use std::{
     collections::VecDeque,
     future::Future,
@@ -13,21 +15,30 @@ use tokio::sync::{oneshot, Mutex};
 use tokio::time::{sleep, Duration};
 
 const MAX_RETRIES: u32 = 500;
+const DB_PATH: &str = "/var/lib/cyborg/tx_queue_db";
 
-/// The type of an async transaction executor closure: no args, returns a Future Result
+/// Async transaction executor closure type.
 type TxExecutor =
     Box<dyn Fn() -> Pin<Box<dyn Future<Output = Result<TxOutput>> + Send>> + Send + Sync>;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum TxOutput {
     RegistrationInfo(MinerIdentity),
     Success,
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+pub struct PersistentTx {
+    pub id: u64,
+    pub retry_count: u32,
+    pub timestamp: u64,
+}
+
 pub struct Transaction {
-    executor: TxExecutor,
-    responder: Option<oneshot::Sender<Result<TxOutput>>>,
-    retry_count: u32,
+    pub id: u64,
+    pub executor: TxExecutor,
+    pub responder: Option<oneshot::Sender<Result<TxOutput>>>,
+    pub retry_count: u32,
 }
 
 impl Transaction {
@@ -47,15 +58,41 @@ impl Transaction {
 pub struct TransactionQueue {
     inner: Arc<Mutex<VecDeque<Transaction>>>,
     processing: Arc<AtomicBool>,
+    db: sled::Db,
 }
 
 pub static TRANSACTION_QUEUE: OnceCell<TransactionQueue> = OnceCell::new();
 
 impl TransactionQueue {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
+        let db = tokio::task::spawn_blocking(|| {
+            sled::open(DB_PATH)
+        })
+        .await
+        .expect("Failed to join blocking task")
+        .expect("Failed to open sled DB");
+
+        let queue = Arc::new(Mutex::new(VecDeque::new()));
+
+        // Load existing queued transactions (for persistence test)
+        let restored_count = {
+            let mut count = 0;
+            for item in db.iter() {
+                if item.is_ok() {
+                    count += 1;
+                }
+            }
+            count
+        };
+
+        println!(
+            "[TX-QUEUE] Initialized sled DB at {DB_PATH}. Restored {restored_count} txs."
+        );
+
         Self {
-            inner: Arc::new(Mutex::new(VecDeque::new())),
+            inner: queue,
             processing: Arc::new(AtomicBool::new(false)),
+            db,
         }
     }
 
@@ -66,68 +103,141 @@ impl TransactionQueue {
     {
         let (tx, rx) = oneshot::channel();
 
-        let tx = Transaction {
+        let tx_id = self.next_id().await;
+
+        let tx_obj = Transaction {
+            id: tx_id,
             executor: Box::new(move || Box::pin(executor())),
             responder: Some(tx),
             retry_count: 0,
         };
 
-        self.inner.lock().await.push_back(tx);
+        // Persist to sled
+        let persistent_tx = PersistentTx {
+            id: tx_id,
+            retry_count: 0,
+            timestamp: chrono::Utc::now().timestamp_millis() as u64,
+        };
+
+        self.persist_tx(&persistent_tx).await;
+
+        // Push to in-memory queue
+        self.inner.lock().await.push_back(tx_obj);
+        println!(
+            "[TX-QUEUE] Enqueued tx #{}. Queue size: {}",
+            tx_id,
+            self.inner.lock().await.len()
+        );
+
         self.start_processing();
 
         Ok(rx)
     }
 
-    pub fn start_processing(&self) {
+    fn start_processing(&self) {
         if self.processing.swap(true, Ordering::SeqCst) {
-            // Already processing
             return;
         }
 
         let inner = Arc::clone(&self.inner);
         let processing_flag = Arc::clone(&self.processing);
+        let db = self.db.clone();
 
         tokio::spawn(async move {
             loop {
                 let tx_opt = {
                     let mut queue = inner.lock().await;
-                    println!("Queue size: {}", queue.len());
                     queue.pop_front()
                 };
 
                 match tx_opt {
-                    Some(mut tx) => match tx.execute().await {
-                        Ok(result) => {
-                            println!("Transaction succeeded: {result:?}");
-                            if let Some(responder) = tx.responder.take() {
-                                let _ = responder.send(Ok(result));
+                    Some(mut tx) => {
+                        println!(
+                            "[TX-QUEUE] Processing tx #{} (retry #{})",
+                            tx.id,
+                            tx.retry_count()
+                        );
+
+                        match tx.execute().await {
+                            Ok(result) => {
+                                println!("[TX-QUEUE] Tx #{} succeeded: {:?}", tx.id, result);
+                                TransactionQueue::delete_persisted(&db, tx.id).await;
+                                if let Some(responder) = tx.responder.take() {
+                                    let _ = responder.send(Ok(result));
+                                }
+                            }
+                            Err(e) if tx.retry_count < MAX_RETRIES => {
+                                println!("[TX-QUEUE] Tx #{} failed: {}", tx.id, e);
+                                tx.increment_retry();
+
+                                let delay_ms = 1000 * 2u64.pow(tx.retry_count().min(10));
+                                println!(
+                                    "[TX-QUEUE] Retrying tx #{} after {} ms (attempt #{})",
+                                    tx.id,
+                                    delay_ms,
+                                    tx.retry_count()
+                                );
+                                sleep(Duration::from_millis(delay_ms)).await;
+
+                                let mut queue = inner.lock().await;
+                                queue.push_front(tx);
+                            }
+                            Err(e) => {
+                                println!("[TX-QUEUE] Tx #{} permanently failed: {}", tx.id, e);
+                                TransactionQueue::delete_persisted(&db, tx.id).await;
+                                if let Some(responder) = tx.responder.take() {
+                                    let _ = responder.send(Err(e));
+                                }
                             }
                         }
-                        Err(e) if tx.retry_count < MAX_RETRIES => {
-                            println!("Transaction failed: {}", e);
-                            tx.increment_retry();
-
-                            let delay_ms = 1000 * 2u64.pow(tx.retry_count().min(10));
-                            println!("Retrying after {} ms", delay_ms);
-                            sleep(Duration::from_millis(delay_ms)).await;
-
-                            let mut queue = inner.lock().await;
-                            queue.push_front(tx);
-                        }
-                        Err(e) => {
-                            println!("Transaction failed: {}", e);
-                            if let Some(responder) = tx.responder.take() {
-                                let _ = responder.send(Err(e));
-                            }
-                        }
-                    },
+                    }
                     None => {
+                        println!("[TX-QUEUE] Queue empty. Halting processor.");
                         processing_flag.store(false, Ordering::SeqCst);
-                        println!("Transaction queue is empty");
                         break;
                     }
                 }
             }
         });
+    }
+
+    async fn persist_tx(&self, tx: &PersistentTx) {
+        let db = self.db.clone();
+        let key = tx.id.to_be_bytes();
+        let value = bincode::serialize(tx).unwrap();
+        let _ = tokio::task::spawn_blocking(move || db.insert(key, value)).await;
+    }
+
+    async fn delete_persisted(db: &sled::Db, id: u64) {
+        let key = id.to_be_bytes();
+        let db = db.clone();
+        let _ = tokio::task::spawn_blocking(move || db.remove(key)).await;
+    }
+
+    async fn next_id(&self) -> u64 {
+        let counter_key = b"tx_counter";
+        let db = self.db.clone();
+
+        tokio::task::spawn_blocking(move || {
+            let next_id = db
+                .update_and_fetch(counter_key, |old| {
+                    let next = match old {
+                        Some(v) => {
+                            let mut arr = [0u8; 8];
+                            arr.copy_from_slice(&v);
+                            u64::from_be_bytes(arr) + 1
+                        }
+                        None => 1,
+                    };
+                    Some(next.to_be_bytes().to_vec())
+                })
+                .unwrap();
+
+            let mut arr = [0u8; 8];
+            arr.copy_from_slice(&next_id.unwrap());
+            u64::from_be_bytes(arr)
+        })
+        .await
+        .unwrap()
     }
 }

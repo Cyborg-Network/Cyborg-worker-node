@@ -3292,6 +3292,7 @@ dependencies = [
  "async-trait 0.1.88 (git+https://github.com/dtolnay/async-trait.git)",
  "axum",
  "axum-macros",
+ "bincode",
  "bollard",
  "cess-rust-sdk",
  "chrono",
@@ -3319,6 +3320,7 @@ dependencies = [
  "reqwest 0.12.23",
  "serde",
  "serde_json",
+ "sled",
  "sp-api 33.0.0",
  "sp-blockchain",
  "sp-core 34.0.0",
@@ -12716,6 +12718,22 @@ name = "slab"
 version = "0.4.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04dc19736151f35336d325007ac991178d504a119863a2fcb3758cdb5e52c50d"
+
+[[package]]
+name = "sled"
+version = "0.34.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f96b4737c2ce5987354855aed3797279def4ebf734436c6aa4552cf8e169935"
+dependencies = [
+ "crc32fast",
+ "crossbeam-epoch",
+ "crossbeam-utils",
+ "fs2",
+ "fxhash",
+ "libc",
+ "log",
+ "parking_lot 0.11.2",
+]
 
 [[package]]
 name = "slice-group-by"

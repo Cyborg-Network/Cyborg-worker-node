@@ -88,7 +88,7 @@ pub async fn run_global_config(parachain_url: &str) -> Result<()> {
     Lazy::force(&CURRENT_TASK_PATH);
 
     // Set the transaction queue
-    if let Err(_) = TRANSACTION_QUEUE.set(TransactionQueue::new()) {
+    if let Err(_) = TRANSACTION_QUEUE.set(TransactionQueue::new().await) {
         panic!("Failed to set transaction queue.");
     }
 
