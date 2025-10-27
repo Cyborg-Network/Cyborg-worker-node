@@ -70,7 +70,10 @@ impl MinerBuilderStage2 {
             parent_runtime: Arc::new(RwLock::new(ParentRuntime { port: None })),
             keypair,
             identity: Arc::new(miner_identity),
-            current_task: Arc::new(RwLock::new(None))
+            current_task: Arc::new(RwLock::new(None)),
+            last_operational_status: Arc::new(RwLock::new(
+                crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::OperationalStatus::Available
+            )),
         }))
     }
 }

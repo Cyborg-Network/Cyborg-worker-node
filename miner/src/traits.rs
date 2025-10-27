@@ -104,6 +104,18 @@ pub trait ParachainInteractor {
     /// # Returns
     /// A `Result` indicating `Ok(())` if the miner is successfully suspended, or an `Error` if it fails.
     async fn suspend_miner(&self) -> Result<()>;
+
+    /// Updates the operational status on the parachain (non-blocking)
+    ///
+    /// # Arguments
+    /// * `status` - The new operational status to set
+    ///
+    /// # Returns
+    /// A `Result` indicating `Ok(())` if successful, or an `Error` if it fails.
+    async fn update_operational_status(
+        &self,
+        status: crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::OperationalStatus,
+    ) -> Result<()>;
 }
 
 /// Implementation of `ParachainInteractor` trait for `Miner`.
@@ -131,5 +143,12 @@ impl ParachainInteractor for Arc<Miner> {
 
     async fn suspend_miner(&self) -> Result<()> {
         behavior_control::_miner_self_suspend(self).await
+    }
+
+    async fn update_operational_status(
+        &self,
+        status: crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::OperationalStatus,
+    ) -> Result<()> {
+        behavior_control::update_operational_status(Arc::clone(self), status).await
     }
 }

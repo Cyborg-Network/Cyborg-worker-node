@@ -97,36 +97,18 @@ pub async fn retrieve_identity(keypair: Arc<Keypair>, miner_type: Arc<MinerType>
     Ok(identity)
 }
 
-// Add new function to update operational status
-pub async fn update_operational_status(miner: Arc<Miner>, status: OperationalStatus) -> Result<()> {
-    let client = global_config::get_parachain_client()?;
-
-    println!("Updating operational status to: {:?}", status);
-    
-    let tx = substrate_interface::api::tx()
-        .edge_connect()
-        .update_operational_status(
-            miner.miner_type.as_ref().clone(),
-            miner.identity.miner_id.1,
-            status
-        );
-    
-    let _ = client
-        .tx()
-        .sign_and_submit_then_watch_default(&tx, miner.keypair.as_ref())
-        .await?
-        .wait_for_finalized_success()
-        .await?;
-
-    println!("Operational status updated successfully");
-    Ok(())
-}
-
 pub async fn start_miner(miner: Arc<Miner>) -> Result<()> {
     println!("Starting miner...");
 
-    // Set operational status to Available when starting
-    update_operational_status(Arc::clone(&miner), OperationalStatus::Available).await?;
+     // Initialize operational status to Available
+     miner
+     .set_operational_status(OperationalStatus::Available)
+     .await;
+
+    // Set operational status to Available on parachain when starting
+    miner
+     .update_operational_status(OperationalStatus::Available)
+     .await?;
 
     println!("Waiting for tasks...");
 
