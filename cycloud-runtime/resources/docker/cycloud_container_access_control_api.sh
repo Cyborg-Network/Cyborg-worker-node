@@ -360,14 +360,18 @@ rm -f "$API_SOCKET"
 
 log "Starting Container Access API on $API_SOCKET"
 
-if command -v socat &>/dev/null; then
-    while true; do
-        socat UNIX-LISTEN:"$API_SOCKET",fork,mode=666 EXEC:"$0 --handle-connection",nofork
-    done
-elif [[ "${1:-}" == "--handle-connection" ]]; then
+if [[ "${1:-}" == "--handle-connection" ]]; then
     caller_pid=$(echo "$SOCAT_PEERADDR" | grep -oP '\d+' || echo "unknown")
     request=$(cat)
     handle_request "$request" "$caller_pid"
+    exit 0
+fi
+
+if command -v socat &>/dev/null; then
+    if [[ -S "$API_SOCKET" ]]; then
+        rm -f "$API_SOCKET"
+    fi
+    socat UNIX-LISTEN:"$API_SOCKET",fork,mode=666 EXEC:"$0 --handle-connection"
 else
     error "socat is required but not installed"
     exit 1

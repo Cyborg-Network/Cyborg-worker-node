@@ -4,7 +4,7 @@ After=network.target docker.service
 Requires=docker.service
 
 [Service]
-Type=simple
+Type=exec
 User=root
 Group=root
 
@@ -16,8 +16,8 @@ PrivateTmp=true
 
 Restart=always
 RestartSec=10
-StartLimitInterval=60
-StartLimitBurst=3
+StartLimitInterval=300
+StartLimitBurst=5
 
 LimitNOFILE=65536
 MemoryMax=512M
@@ -31,8 +31,6 @@ ExecReload=/bin/kill -HUP $MAINPID
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=container-access-api
-
-ExecStopPost=/bin/rm -f /var/run/container-access-api.sock
 
 [Install]
 WantedBy=multi-user.target

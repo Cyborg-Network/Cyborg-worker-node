@@ -1,12 +1,10 @@
-version: '3.8'
-
 services:
-  user-container-template:
+  user-container:
     build:
       context: .
       dockerfile: Dockerfile.container
-    image: cycloud-user-container:latest
-    container_name: cycloud-user-container
+    image: "${DOCKER_IMAGE_NAME}"
+    container_name: "${CONTAINER_NAME}"
     hostname: cycloud
     
     security_opt:
@@ -45,7 +43,7 @@ services:
       - "${SSH_PORT}:22"
     
     networks:
-      - container-network
+      - "${NETWORK}"
     
     dns:
       - 8.8.8.8
@@ -76,6 +74,7 @@ services:
 
 networks:
   container-network:
+    name: "${NETWORK}"
     driver: bridge
     ipam:
       driver: default
@@ -86,12 +85,14 @@ networks:
       com.docker.network.bridge.enable_ip_masquerade: "true"
 
 volumes:
-  user-${USER_ID}-home:
+  user-home:
+    name: user-${USER_ID}-home
     driver: local
     labels:
       com.cycloud.volume_type: "home"
   
-  user-${USER_ID}-workspace:
+  user-workspace:
+    name: user-${USER_ID}-workspace
     driver: local
     labels:
       com.cycloud.volume_type: "workspace"

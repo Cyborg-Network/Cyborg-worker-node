@@ -16,6 +16,8 @@ pub struct Resource {
     pub target: &'static str,
 }
 
+const DOCKER_IMAGE_NAME: &str = "cycloud-user-container:local";
+
 // We have this function with a closure to make sure that the file is fresh each time (to avoid eg. stale files after updates or removed temp files)
 fn use_file<F>(
     file_path: &PathBuf, 
@@ -98,25 +100,34 @@ impl ContainerManager {
         args: ProvisionArgs,
     ) -> Result<(), Box<dyn std::error::Error>> {
         println!("Provisioning container: {}", args.container_name);
+        let network_name = "container-network";
 
         self.setup_api().await?;
         self.build_image().await?;
+
+        if let Ok(_) = self.docker.inspect_network(network_name, None::<InspectNetworkOptions>).await {
+            self.docker.remove_network(network_name).await?;
+        }
 
         let memory_limit = args.memory_limit.as_deref().unwrap_or("4g");
         let cpu = args.cpu_limit.unwrap_or(2.0);
         let memswap_limit = "4g";
         let pids_limit = 1024;
         let created_date = chrono::Utc::now().to_rfc3339();
+        let user_id = uuid::Uuid::new_v4().to_string();
 
         // TODO: replace with something like minijinja for reliable variable substitution
         let compose_content = Resources::DOCKER_COMPOSE.content
             .replace("${SSH_PORT}", &args.ssh_port.to_string())
             .replace("${CONTAINER_NAME}", &args.container_name)
-            .replace("${MEMORY_LIMIT}", memory_limit)
+            .replace("${MEM_LIMIT}", memory_limit)
             .replace("${CPU_LIMIT}", &cpu.to_string())
             .replace("${MEM_SWAP_LIMIT}", memswap_limit)
             .replace("${PIDS_LIMIT}", &pids_limit.to_string())
-            .replace("${CREATED_DATE}", &created_date);
+            .replace("${CREATED_DATE}", &created_date)
+            .replace("${USER_ID}", &user_id)
+            .replace("${NETWORK}", network_name)
+            .replace("${DOCKER_IMAGE_NAME}", DOCKER_IMAGE_NAME);
 
         use_file(
             &Resources::DOCKER_COMPOSE.target.into(), 
@@ -144,8 +155,8 @@ impl ContainerManager {
     }
 
     async fn build_image(&self) -> Result<(), Box<dyn std::error::Error>> {
-        if self.docker.inspect_image("cycloud-user-container:latest").await.is_ok() {
-            println!("Image cycloud-user-container:latest already exists");
+        if self.docker.inspect_image(DOCKER_IMAGE_NAME).await.is_ok() {
+            println!("Image {} already exists", DOCKER_IMAGE_NAME);
             return Ok(());
         }
 
@@ -158,7 +169,7 @@ impl ContainerManager {
                 let output = Command::new("docker")
                     .arg("build")
                     .arg("-t")
-                    .arg("cycloud-user-container:latest")
+                    .arg(DOCKER_IMAGE_NAME)
                     .arg("-f")
                     .arg(dockerfile_path)
                     .arg(dockerfile_path.parent().ok_or("Failed to get parent directory")?)
@@ -371,19 +382,6 @@ impl ContainerManager {
                 Ok(())
             }
         )?;
-
-        let out = Command::new("ls")
-            .arg("-l")
-            .arg(Resources::CONTAINER_ACCESS_API.target)
-            .output()?;
-
-        if !out.status.success() {
-            return Err(format!("Failed to check file permissions: {}", String::from_utf8_lossy(&out.stderr)).into());
-        } else {
-            println!("File permissions checked successfully: {}", String::from_utf8_lossy(&out.stdout)); 
-        }
-
-
 
         use_file(
             &Resources::CONTAINER_ACCESS_API_SERVICE.target.into(), 

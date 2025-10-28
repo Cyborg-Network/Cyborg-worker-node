@@ -176,9 +176,11 @@ pub async fn spawn_inference_server(
         let _ = status_tx.send(EngineStatus::Initializing);
 
         match &engine_clone {
+
             InferenceEngine::OpenInference(_) => {
                 let _ = status_tx.send(EngineStatus::Ready);
             }
+
             InferenceEngine::NeuroZk(engine_clone) => {
                 match engine_clone.lock().await.setup().await {
                     Ok(()) => {
@@ -190,6 +192,7 @@ pub async fn spawn_inference_server(
                     }
                 }
             }
+
             InferenceEngine::FlashInference(engine_clone) => {
                 match engine_clone.lock().await.setup().await {
                     Ok(()) => {
@@ -201,6 +204,7 @@ pub async fn spawn_inference_server(
                     } 
                 }
             }
+
             InferenceEngine::CyCloud(engine_clone) => {
                 match engine_clone.lock().await.setup("key", None, None).await {
                     Ok(()) => {
@@ -212,6 +216,7 @@ pub async fn spawn_inference_server(
                     } 
                 }
             }
+
         }
     });
 
