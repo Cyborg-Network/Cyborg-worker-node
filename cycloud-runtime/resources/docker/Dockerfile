@@ -49,7 +49,7 @@ RUN apt-get update && apt-get install -y \
 # Configure SSH
 RUN mkdir -p /var/run/sshd \
     && mkdir -p /root/.ssh \
-    && chmod 699 /root/.ssh
+    && chmod 700 /root/.ssh
 
 # SSH configuration for security
 RUN sed -i 's/#*PermitRootLogin .*/PermitRootLogin yes/' /etc/ssh/sshd_config \
@@ -151,13 +151,6 @@ EOF
 RUN cat > /etc/supervisor/conf.d/cycloud-container.conf <<'EOF'
 [supervisord]
 nodaemon=true
-
-[program:start-message]
-command=/usr/local/bin/start-services.sh
-autostart=true
-autorestart=false
-stdout_logfile=/var/log/start-services.log
-stderr_logfile=/var/log/start-services_err.log
 
 [program:sshd]
 command=/usr/sbin/sshd -D
