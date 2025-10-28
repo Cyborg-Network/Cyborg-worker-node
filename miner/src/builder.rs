@@ -1,7 +1,7 @@
 use crate::{
     error::{Error, Result}, 
     parachain_interactor::registration::retrieve_identity, 
-    substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType, 
+    substrate_interface::api::runtime_types::cyborg_primitives::miner::{MinerType, OperationalStatus}, 
     types::{Miner, ParentRuntime}
 };
 use std::{str::FromStr, sync::Arc};
@@ -72,7 +72,7 @@ impl MinerBuilderStage2 {
             identity: Arc::new(miner_identity),
             current_task: Arc::new(RwLock::new(None)),
             last_operational_status: Arc::new(RwLock::new(
-                crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::OperationalStatus::Available
+                OperationalStatus::Available
             )),
         }))
     }
