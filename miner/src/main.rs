@@ -56,35 +56,13 @@ async fn main() -> Result<()> {
             // Initialize logger
             log::init_logger().expect("Could not initialize logger!");
             
-            let queue = TRANSACTION_QUEUE.get_or_init(|| {
-                tokio::runtime::Handle::current().block_on(async {
-                    TransactionQueue::new().await
-                })
+             let _queue = TRANSACTION_QUEUE.get_or_init(|| {
+            tokio::runtime::Handle::current().block_on(async {
+                TransactionQueue::new().await
+            })
             });
 
-           // --- FAKE PERSISTENCE TEST TX ---
-            {
-                let queue = TRANSACTION_QUEUE.get().unwrap();
-                println!("[TEST] Enqueuing persistent long-running tx...");
-
-                let rx = queue
-                    .enqueue(|| async {
-                        println!("[PERSISTENCE-TEST] Starting slow tx...");
-                        tokio::time::sleep(std::time::Duration::from_secs(120)).await;
-                        println!("[PERSISTENCE-TEST] Completed slow tx.");
-                        Ok(TxOutput::Success)
-                    })
-                    .await
-                    .expect("Failed to enqueue persistent tx");
-
-                tokio::spawn(async move {
-                    if let Ok(result) = rx.await {
-                        println!("[PERSISTENCE-TEST] Tx result: {:?}", result);
-                    } else {
-                        println!("[PERSISTENCE-TEST] Receiver dropped or failed");
-                    }
-                });
-            }
+       
 
             let miner_uuid_bytes = miner_uuid.clone().into_bytes();
 

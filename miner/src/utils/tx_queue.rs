@@ -1,7 +1,7 @@
 use crate::{error::Result, types::MinerIdentity};
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
-use sled::{self, IVec};
+use sled::{self};
 use std::{
     collections::VecDeque,
     future::Future,
@@ -32,6 +32,7 @@ pub struct PersistentTx {
     pub id: u64,
     pub retry_count: u32,
     pub timestamp: u64,
+    pub data: Option<Vec<u8>>,
 }
 
 pub struct Transaction {
@@ -65,35 +66,54 @@ pub static TRANSACTION_QUEUE: OnceCell<TransactionQueue> = OnceCell::new();
 
 impl TransactionQueue {
     pub async fn new() -> Self {
-        let db = tokio::task::spawn_blocking(|| {
-            sled::open(DB_PATH)
-        })
-        .await
-        .expect("Failed to join blocking task")
-        .expect("Failed to open sled DB");
+        let db = tokio::task::spawn_blocking(|| sled::open(DB_PATH))
+            .await
+            .expect("Failed to join blocking task")
+            .expect("Failed to open sled DB");
 
         let queue = Arc::new(Mutex::new(VecDeque::new()));
+        let mut restored_count = 0;
 
-        // Load existing queued transactions (for persistence test)
-        let restored_count = {
-            let mut count = 0;
+        // Restore persisted transactions
+        {
+            let mut queue_lock = queue.lock().await;
             for item in db.iter() {
-                if item.is_ok() {
-                    count += 1;
+                if let Ok((_, value)) = item {
+                    if let Ok(persistent_tx) = bincode::deserialize::<PersistentTx>(&value) {
+                        let tx_obj = Transaction {
+                            id: persistent_tx.id,
+                            executor: Box::new(|| {
+                                Box::pin(async {
+                                    println!("[TX-QUEUE] Restored tx executed.");
+                                    Ok(TxOutput::Success)
+                                })
+                            }),
+                            responder: None,
+                            retry_count: persistent_tx.retry_count,
+                        };
+                        queue_lock.push_back(tx_obj);
+                        restored_count += 1;
+                    }
                 }
             }
-            count
-        };
+        }
 
         println!(
             "[TX-QUEUE] Initialized sled DB at {DB_PATH}. Restored {restored_count} txs."
         );
 
-        Self {
+        let tx_queue = Self {
             inner: queue,
             processing: Arc::new(AtomicBool::new(false)),
             db,
+        };
+
+        if restored_count > 0 {
+            println!("[TX-QUEUE] Resuming restored transactions...");
+            tx_queue.start_processing();
         }
+
+        tx_queue
     }
 
     pub async fn enqueue<F, Fut>(&self, executor: F) -> Result<oneshot::Receiver<Result<TxOutput>>>
@@ -102,7 +122,6 @@ impl TransactionQueue {
         Fut: Future<Output = Result<TxOutput>> + Send + 'static,
     {
         let (tx, rx) = oneshot::channel();
-
         let tx_id = self.next_id().await;
 
         let tx_obj = Transaction {
@@ -112,17 +131,16 @@ impl TransactionQueue {
             retry_count: 0,
         };
 
-        // Persist to sled
         let persistent_tx = PersistentTx {
             id: tx_id,
             retry_count: 0,
             timestamp: chrono::Utc::now().timestamp_millis() as u64,
+            data: None,
         };
 
         self.persist_tx(&persistent_tx).await;
-
-        // Push to in-memory queue
         self.inner.lock().await.push_back(tx_obj);
+
         println!(
             "[TX-QUEUE] Enqueued tx #{}. Queue size: {}",
             tx_id,
