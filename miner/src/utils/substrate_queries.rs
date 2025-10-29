@@ -24,25 +24,34 @@ pub async fn get_currently_assigned_task_id(
     miner_id: &MinerId,
     miner_type: Arc<MinerType>,
 ) -> Result<u64> {
-    let miner_iter_address = match miner_type.as_ref() {
+    let miner_query = match miner_type.as_ref() {
         MinerType::Edge => substrate_interface::api::storage()
             .edge_connect()
-            .edge_miners_iter(),
+            .edge_miners(miner_id),
         MinerType::Cloud => substrate_interface::api::storage()
             .edge_connect()
-            .cloud_miners_iter(),
+            .cloud_miners(miner_id),
     };
 
-    let mut miner_iter_query = api
+    let mut miner_info = api
         .storage()
         .at_latest()
         .await?
-        .iter(miner_iter_address)
+        .fetch(&miner_query)
         .await?;
 
-    while let Some(Ok(fetched_miner)) = miner_iter_query.next().await {
-        if fetched_miner.value.id == miner_id.clone() {
-            if let Some(task_id) = fetched_miner.value.current_task {
+    // while let Some(Ok(fetched_miner)) = miner_iter_query.next().await {
+    //     if fetched_miner.value.id == miner_id.clone() {
+    //         if let Some(task_id) = fetched_miner.value.current_task {
+    //             return Ok(task_id);
+    //         } else {
+    //             return Err("Miner has no task assigned".into());
+    //         }
+    //     }
+    // }
+    if let Some(miner)=miner_info{
+        if miner.id==miner_id.clone(){
+            if let Some(task_id) = miner.current_task {
                 return Ok(task_id);
             } else {
                 return Err("Miner has no task assigned".into());

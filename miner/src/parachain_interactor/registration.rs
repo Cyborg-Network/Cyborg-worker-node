@@ -37,35 +37,42 @@ async fn confirm_registration() -> Result<RegistrationStatus> {
 
     println!("identity: {:?}", miner_id);
 
-    // Since there seems to be a bug in subxt that should have been resolved (and we possibly won't have a separate storage map for querying workers by id)
+  
+    let miner_id_bounded = BoundedVec(miner_id.clone());
+      // Since there seems to be a bug in subxt that should have been resolved (and we possibly won't have a separate storage map for querying workers by id)
     let miner_registration_confirmation_query = match miner_type {
         MinerType::Cloud => substrate_interface::api::storage()
             .edge_connect()
-            .cloud_miners_iter(),
+            .cloud_miners(miner_id_bounded.clone()),
         MinerType::Edge => substrate_interface::api::storage()
             .edge_connect()
-            .edge_miners_iter(),
+            .edge_miners(miner_id_bounded.clone()),
     };
 
     let mut result = client
         .storage()
         .at_latest()
         .await?
-        .iter(miner_registration_confirmation_query)
+        .fetch(&miner_registration_confirmation_query)
         .await?;
-    let miner_id_bounded = BoundedVec(miner_id.clone());
-    while let Some(Ok(miner)) = result.next().await {
-        // if miner.value.owner == identity.0 && miner.value.id == identity.1 {
-        if miner.value.id.0 == miner_id_bounded.0 {
+    if let Some(miner) = result {
+        if miner.id.0 == miner_id_bounded.0 {
+            println!("Miner successfully registered on-chain!");
             return Ok(RegistrationStatus::Registered(MinerIdentity {
-                miner_owner: miner.value.owner.clone(),
-                miner_id: BoundedVec(miner.value.id.0.clone()),
+                miner_owner: miner.owner.clone(),
+                miner_id: BoundedVec(miner.id.0.clone()),
                 miner_type: miner_type,
             }));
+        } else {
+            println!(
+                "Miner ID mismatch — expected {:?}, got {:?}",
+                miner_id_bounded.0, miner.id.0
+            );
         }
+    } else {
+        println!("No miner found on-chain for ID {:?}", miner_id_bounded.0);
     }
 
-    println!("Miner is not registered");
     Ok(RegistrationStatus::Unknown)
 }
 
