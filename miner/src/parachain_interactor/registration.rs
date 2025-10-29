@@ -136,7 +136,6 @@ pub async fn update_operational_status(miner: Arc<Miner>, status: OperationalSta
 
 pub async fn start_miner(miner: Arc<Miner>) -> Result<()> {
     println!("Starting miner...");
-    println!("This is for testing");
 
     // Set operational status to Available when starting
     update_operational_status(Arc::clone(&miner), OperationalStatus::Available).await?;
