@@ -49,7 +49,7 @@ async fn confirm_registration() -> Result<RegistrationStatus> {
             .edge_miners(miner_id_bounded.clone()),
     };
 
-    let mut result = client
+    let result = client
         .storage()
         .at_latest()
         .await?
