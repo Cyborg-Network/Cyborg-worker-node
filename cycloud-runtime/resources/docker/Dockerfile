@@ -50,8 +50,6 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir -p /etc/dropbear /root/.ssh /var/run/dropbear \
     && chmod 700 /root/.ssh
 
-RUN dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
-
 # Install container access client script
 # This will be mounted from outside of the container
 RUN mkdir -p /usr/local/bin
