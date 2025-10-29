@@ -1,7 +1,7 @@
 use flate2::read::GzDecoder;
 use std::fs::{remove_file, File};
 use std::io::{self, copy, BufReader};
-use std::path::{ PathBuf};
+use std::path::PathBuf;
 use tar::Archive;
 use zip::ZipArchive;
 

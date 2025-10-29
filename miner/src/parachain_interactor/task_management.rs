@@ -1,25 +1,19 @@
 use std::sync::Arc;
 
 use crate::{
-    global_config, 
-    error::Result, 
-    substrate_interface::{self, api::runtime_types::bounded_collections::bounded_vec::BoundedVec}, types::Miner, 
+    error::Result,
+    global_config,
+    substrate_interface::{self, api::runtime_types::bounded_collections::bounded_vec::BoundedVec},
+    types::Miner,
 };
 
 pub async fn confirm_task_reception(miner: Arc<Miner>) -> Result<()> {
     let client = global_config::get_parachain_client()?;
-    let current_task = miner
-        .current_task()
-        .await?
-        .read()
-        .await
-        .id;
+    let current_task = miner.current_task().await?.read().await.id;
 
     let task_confirmation = substrate_interface::api::tx()
         .task_management()
-        .confirm_task_reception(
-            current_task
-        );
+        .confirm_task_reception(current_task);
 
     println!("Transaction Details:");
     println!("Module: {:?}", task_confirmation.pallet_name());
@@ -31,7 +25,9 @@ pub async fn confirm_task_reception(miner: Arc<Miner>) -> Result<()> {
         .sign_and_submit_then_watch_default(&task_confirmation, miner.keypair.as_ref())
         .await
         .map(|e| {
-            println!("Task reception confirmation submitted, waiting for transaction to be finalized...");
+            println!(
+                "Task reception confirmation submitted, waiting for transaction to be finalized..."
+            );
             e
         })?
         .wait_for_finalized_success()
@@ -61,12 +57,7 @@ pub async fn submit_zkml_proof(miner: Arc<Miner>, proof: Vec<u8>) -> Result<()> 
     let proof: BoundedVec<u8> = BoundedVec::from(BoundedVec(proof));
 
     let client = global_config::get_parachain_client()?;
-    let current_task = miner
-        .current_task()
-        .await?
-        .read()
-        .await
-        .id;
+    let current_task = miner.current_task().await?.read().await.id;
 
     let proof_submission = substrate_interface::api::tx()
         .neuro_zk()

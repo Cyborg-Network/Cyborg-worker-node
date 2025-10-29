@@ -1,10 +1,8 @@
+use bollard::query_parameters::{
+    InspectContainerOptions, RemoveContainerOptions, StartContainerOptions,
+};
 use bollard::secret::ContainerStateStatusEnum;
 use bollard::Docker;
-use bollard::query_parameters::{
-    InspectContainerOptions, 
-    RemoveContainerOptions, 
-    StartContainerOptions
-};
 
 use crate::util::provision_container;
 
@@ -26,7 +24,6 @@ impl CyCloudEngine {
     /// # Returns
     /// A new `CyCloudEngine` instance
     pub fn new(containe_name: &str) -> Result<Self, Box<dyn std::error::Error>> {
-
         Ok(Self {
             container_name: containe_name.to_string(),
         })
@@ -46,7 +43,7 @@ impl CyCloudEngine {
         let docker = Docker::connect_with_local_defaults()?;
 
         //This would be for if an image is hosted
-        /* 
+        /*
         let mut stream = docker.create_image(
             Some(bollard::query_parameters::CreateImageOptions {
                 from_image: Some(image.to_string()),
@@ -67,13 +64,15 @@ impl CyCloudEngine {
             println!("Attempt {} of {}", attempt, MAX_SETUP_ATTEMPTS);
 
             let container = docker
-                .inspect_container(&self.container_name, None::<InspectContainerOptions>) 
-                .await.ok();
+                .inspect_container(&self.container_name, None::<InspectContainerOptions>)
+                .await
+                .ok();
 
             // Extract ID option without further nesting
-            if let Some((container_inspect_response, id)) = container.as_ref()
-                .and_then(|c| c.id.as_ref().map(|id| (c, id))) 
-            { 
+            if let Some((container_inspect_response, id)) = container
+                .as_ref()
+                .and_then(|c| c.id.as_ref().map(|id| (c, id)))
+            {
                 println!("Found existing container {}", id);
 
                 let container_state = match &container_inspect_response.state {
@@ -91,43 +90,58 @@ impl CyCloudEngine {
                             println!("Container {} is running", id);
                             container_running = true;
                             break;
-                        },
+                        }
                         ContainerStateStatusEnum::CREATED => {
-                            println!("Container {} is already provisioned, starting...", id); 
-                            if let Err(e) = docker.start_container(&self.container_name, None::<StartContainerOptions>).await {
+                            println!("Container {} is already provisioned, starting...", id);
+                            if let Err(e) = docker
+                                .start_container(
+                                    &self.container_name,
+                                    None::<StartContainerOptions>,
+                                )
+                                .await
+                            {
                                 println!("Failed to start container: {}", e);
                                 continue;
                             }
-                        },
+                        }
                         ContainerStateStatusEnum::PAUSED => {
                             println!("Container {} is paused, starting...", id);
                             if let Err(e) = docker.unpause_container(&self.container_name).await {
                                 println!("Failed to unpause container: {}", e);
                                 continue;
                             }
-                        },
+                        }
                         ContainerStateStatusEnum::RESTARTING => {
                             println!("Container {} is restarting, waiting...", id);
-                        },
+                        }
                         ContainerStateStatusEnum::EXITED => {
                             println!("Container {} was exited, restarting...", id);
-                            if let Err(e) = docker.start_container(&self.container_name, None::<StartContainerOptions>).await {
+                            if let Err(e) = docker
+                                .start_container(
+                                    &self.container_name,
+                                    None::<StartContainerOptions>,
+                                )
+                                .await
+                            {
                                 println!("Failed to start container: {}", e);
                                 continue;
                             }
-                        },
+                        }
                         ContainerStateStatusEnum::DEAD => {
                             return Err("Unrecoverable error: Miner Container is dead".into());
-                        },
+                        }
                         ContainerStateStatusEnum::EMPTY => {
                             println!("Container {} is empty, reprovisioning...", id);
                             if let Err(e) = provision_container(PORT, &self.container_name).await {
                                 println!("Failed to reprovision container: {}", e);
                                 continue;
                             }
-                        },
+                        }
                         _ => {
-                            println!("Container {} doesn't have a state assigned, provisioning...", id);
+                            println!(
+                                "Container {} doesn't have a state assigned, provisioning...",
+                                id
+                            );
                             if let Err(e) = provision_container(PORT, &self.container_name).await {
                                 println!("Failed to reprovision container: {}", e);
                                 continue;
@@ -140,7 +154,10 @@ impl CyCloudEngine {
                     continue;
                 }
             } else {
-                println!("Could not find container {}, provisioning...", self.container_name);
+                println!(
+                    "Could not find container {}, provisioning...",
+                    self.container_name
+                );
                 provision_container(PORT, &self.container_name).await?;
                 continue;
             }
@@ -167,16 +184,17 @@ impl CyCloudEngine {
 
         let docker = Docker::connect_with_local_defaults()?;
 
-        docker.remove_container(
-            &self.container_name,
-            Some(RemoveContainerOptions {
-                force: true,
-                ..Default::default()
-            }),
-        ).await?;
+        docker
+            .remove_container(
+                &self.container_name,
+                Some(RemoveContainerOptions {
+                    force: true,
+                    ..Default::default()
+                }),
+            )
+            .await?;
 
         println!("Force-removed container {}", &self.container_name);
         Ok(())
     }
 }
-

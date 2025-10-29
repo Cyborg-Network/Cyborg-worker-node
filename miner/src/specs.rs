@@ -1,3 +1,4 @@
+#[allow(unused_variables)]
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::process::{Command, Stdio};
@@ -6,12 +7,7 @@ use sysinfo::{MemoryRefreshKind, RefreshKind, System};
 
 use reqwest::Client;
 
-use crate::{
-    global_config,
-    error::Result,
-    types::MinerConfig,
-};
-
+use crate::{error::Result, global_config, types::MinerConfig};
 
 #[derive(Debug, Deserialize)]
 struct GoogleGeoResponse {
@@ -37,7 +33,6 @@ struct GeoRequest {
     wifiAccessPoints: Vec<WifiAccessPoint>,
 }
 
-
 #[derive(Deserialize, Debug)]
 struct IpLocation {
     loc: Option<String>,
@@ -59,24 +54,20 @@ pub async fn gather_worker_spec() -> Result<MinerConfig> {
     let domain = match env::var("CYBORG_MINER_TEST_IP") {
         Ok(val) => val,
         Err(_) => {
-            let output = Command::new("hostname")
-                .output()?
-                .stdout;
-            
-            let hostname = String::from_utf8(output)?
-                .trim().to_string();
+            let output = Command::new("hostname").output()?.stdout;
+
+            let hostname = String::from_utf8(output)?.trim().to_string();
 
             format!("https://{hostname}.{}", *global_config::TAILSCALE_NET)
-        }
-        /* 
-        Err(_) => {
-            reqwest::get("https://api.ipify.org?format=json")
-                .await?
-                .json::<IpResponse>()
-                .await?
-                .ip
-        }
-        */
+        } /*
+          Err(_) => {
+              reqwest::get("https://api.ipify.org?format=json")
+                  .await?
+                  .json::<IpResponse>()
+                  .await?
+                  .ip
+          }
+          */
     };
 
     //let response = worker::IpResponse { ip: String::from("127.0.0.1") };
@@ -90,7 +81,7 @@ pub async fn gather_worker_spec() -> Result<MinerConfig> {
     let storage = return_total_storage();
 
     Ok(MinerConfig {
-        domain, 
+        domain,
         latitude: location.coordinates.0,
         longitude: location.coordinates.1,
         ram,
@@ -126,7 +117,7 @@ impl Location {
         match get_geo_location().await {
             Ok((lat, lon)) => {
                 println!("Failed to get GPS location. Falling back to Wifi based geolocation.");
-                println!("Longitude and Latitude are {} {}",lat,lon);
+                println!("Longitude and Latitude are {} {}", lat, lon);
                 return Location {
                     coordinates: f64_to_i32_coordinates(lat, lon),
                 };
@@ -136,7 +127,7 @@ impl Location {
                 if let Ok((lat, lon)) = get_ip_location().await {
                     return Location {
                         coordinates: f64_to_i32_coordinates(lat, lon),
-                    }
+                    };
                 } else {
                     panic!("Failed to get the location: {}", e);
                 }
@@ -181,7 +172,6 @@ fn get_gps_location() -> Result<(f64, f64)> {
 }
 use crate::error::Error;
 async fn get_geo_location() -> Result<(f64, f64)> {
- 
     let output = Command::new("nmcli")
         .args(&["-t", "-f", "SSID,BSSID,SIGNAL", "dev", "wifi"])
         .output()?;
@@ -228,7 +218,7 @@ async fn get_geo_location() -> Result<(f64, f64)> {
     //     .json()
     //     .await?;
 
-    let url = "https://gpsproxy.taila87663.ts.net/geo"; 
+    let url = "https://gpsproxy.taila87663.ts.net/geo";
     let client = Client::new();
 
     #[derive(serde::Deserialize)]
@@ -239,12 +229,11 @@ async fn get_geo_location() -> Result<(f64, f64)> {
 
     let resp: LocationResponse = client
         .post(url)
-        .json(&geo_request)  
+        .json(&geo_request)
         .send()
         .await?
         .json()
         .await?;
-
 
     Ok((resp.lat, resp.lon))
 }
