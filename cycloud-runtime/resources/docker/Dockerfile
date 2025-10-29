@@ -9,7 +9,7 @@ ENV TZ=UTC
 
 RUN apt-get update && apt-get install -y \
     # SSH server
-    openssh-server \
+    dropbear \
     # Network tools
     curl \
     wget \
@@ -47,21 +47,10 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Configure SSH
-RUN mkdir -p /var/run/sshd \
-    && mkdir -p /root/.ssh \
+RUN mkdir -p /etc/dropbear /root/.ssh /var/run/dropbear \
     && chmod 700 /root/.ssh
 
-# SSH configuration for security
-RUN sed -i 's/#*PermitRootLogin .*/PermitRootLogin yes/' /etc/ssh/sshd_config \
-    && sed -i 's/#*PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config \
-    && sed -i 's/#*PubkeyAuthentication .*/PubkeyAuthentication yes/' /etc/ssh/sshd_config \
-    && sed -i 's/#*ChallengeResponseAuthentication .*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config \
-    && sed -i 's/#*X10Forwarding .*/X11Forwarding yes/' /etc/ssh/sshd_config \
-    && sed -i 's/#*PrintMotd .*/PrintMotd yes/' /etc/ssh/sshd_config \
-    && sed -i 's/#*UsePAM .*/UsePAM yes/' /etc/ssh/sshd_config
-
-# Generate SSH host keys
-RUN ssh-keygen -A
+RUN dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
 
 # Install container access client script
 # This will be mounted from outside of the container
@@ -130,39 +119,17 @@ if [ ! -f ~/.container_info_shown ]; then
 fi
 EOF
 
-RUN cat > /usr/local/bin/start-services.sh <<'EOF'
-#!/bin/bash
-set -e
-
-echo "Starting container services..."
-
-echo "Starting SSH server..."
-/usr/sbin/sshd -D &
-SSH_PID=$!
-
-echo "SSH server started (PID: $SSH_PID)"
-echo "Container is ready!"
-
-trap "kill $SSH_PID; exit -1" SIGTERM SIGINT
-
-wait $SSH_PID
-EOF
-
 RUN cat > /etc/supervisor/conf.d/cycloud-container.conf <<'EOF'
 [supervisord]
 nodaemon=true
 
-[program:sshd]
-command=/usr/sbin/sshd -D
+[program:dropbear]
+command=/usr/sbin/dropbear -F -E -s -r /etc/dropbear/dropbear_rsa_host_key
 autostart=true
 autorestart=true
-stdout_logfile=/var/log/sshd.log
-stderr_logfile=/var/log/sshd_err.log
+stdout_logfile=/var/log/dropbear.log
+stderr_logfile=/var/log/dropbear_err.log
 EOF
-
-RUN chmod +x /usr/local/bin/start-services.sh && \
-    ls -l /usr/local/bin/start-services.sh && \
-    head -n 4 /usr/local/bin/start-services.sh
 
 RUN mkdir -p /workspace \
     && chmod 754 /workspace
