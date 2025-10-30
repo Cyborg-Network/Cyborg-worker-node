@@ -65,7 +65,9 @@ pub static CURRENT_TASK_PATH: Lazy<PathBuf> = Lazy::new(|| {
 pub static PARACHAIN_CLIENT: OnceCell<OnlineClient<PolkadotConfig>> = OnceCell::new();
 
 /// Prefix used for container names so that all containers with this prefix can be managed at once by the miner
-pub static CONTAINER_PREFIX: &str = "cy-miner-task-container-";
+pub static CONTAINER_PREFIX: Lazy<String> = Lazy::new(|| {
+    env::var("TASK_CONTAINER_PREFIX").expect("TASK_CONTAINER_PREFIX must be set").into()
+});
 
 /// Runs the configuration for the miner, everything in this function will fail fast to ensure correct setup when starting the miner
 ///

@@ -57,6 +57,9 @@ MINER_CONFIG_DIR="/etc/cyborg/miner"
 MINER_TMP_DIR="/var/lib/cyborg/miner/tmp"
 MINER_LOG_DIR="/var/log/cyborg/miner"
 
+# Prefix for containerized tasks managed by the miner
+TASK_CONTAINER_PREFIX="cy-miner-task-container-"
+
 # The tailscale network (only for testnet) on which the miner will be reachable
 TAILSCALE_NET="tail78ea2b.ts.net"
 
@@ -232,6 +235,7 @@ setup_systemd() {
     Environment=IDENTITY_FILE_PATH=$MINER_CONFIG_DIR/miner_identity.json
     Environment=TASK_OWNER_FILE_PATH=$MINER_CONFIG_DIR/task_owner.json
     Environment=CURRENT_TASK_PATH=$MINER_CONFIG_DIR/current_task.json
+    Environment=TASK_CONTAINER_PREFIX=$TASK_CONTAINER_PREFIX
     Environment=MINER_TMP_DIR=$MINER_TMP_DIR
     Environment=TAILSCALE_NET=$TAILSCALE_NET
     Environment=FLASH_INFER_PORT=$FLASH_INFER_PORT
@@ -261,6 +265,7 @@ EOL
     Environment=LOG_FILE_PATH=$MINER_LOG_DIR/miner.log
     Environment=TASK_OWNER_FILE_PATH=$MINER_CONFIG_DIR/task_owner.json
     Environment=IDENTITY_FILE_PATH=$MINER_CONFIG_DIR/miner_identity.json
+    Environment=TASK_CONTAINER_PREFIX=$TASK_CONTAINER_PREFIX
     ExecStart=$AGENT_BINARY_PATH run
     Restart=always
     RestartSec=3

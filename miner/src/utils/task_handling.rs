@@ -234,7 +234,7 @@ pub async fn nuke_all_running_task_containers() -> Result<()> {
     for container in containers {
         if let Some(names) = container.names {
             for name in names {
-                if name.trim_start_matches('/').starts_with(CONTAINER_PREFIX) {
+                if name.trim_start_matches('/').starts_with(&*CONTAINER_PREFIX) {
                     println!("Removing container: {}", name);
 
                     if let Some(id) = container.id.as_ref() {
@@ -316,7 +316,7 @@ async fn check_if_task_container_exists(task_container_name: &str) -> Result<boo
 
 /// Return the container name for the current task (utility that makes sure that the name is always absolutely the same)
 pub fn return_task_container_name(task_id: TaskId) -> String {
-    format!("{}{}", CONTAINER_PREFIX, task_id)
+    format!("{}{}", *CONTAINER_PREFIX, task_id)
 }
 
 /// Clean up the task that the miner is currently executing
