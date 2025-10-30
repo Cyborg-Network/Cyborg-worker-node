@@ -80,7 +80,6 @@ pub struct ProvisionArgs {
 pub struct ConfigureArgs {
     pub container_name: String,
     pub ssh_port: u16,
-    pub ssh_pub_key: String,
 }
 
 #[derive(Debug)]
@@ -227,7 +226,6 @@ impl ContainerManager {
                 let output = Command::new("bash")
                     .arg(&script_path)
                     .arg("--container-name").arg(&args.container_name)
-                    .arg("--ssh-public-key").arg(&args.ssh_pub_key)
                     .arg("--ssh-port").arg(args.ssh_port.to_string())
                     .output()?;
 

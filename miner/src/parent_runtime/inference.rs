@@ -206,7 +206,7 @@ pub async fn spawn_inference_server(
             }
 
             InferenceEngine::CyCloud(engine_clone) => {
-                match engine_clone.lock().await.setup("key", None, None).await {
+                match engine_clone.lock().await.setup( None, None).await {
                     Ok(()) => {
                         let _ = status_tx.send(EngineStatus::Ready);
                     }

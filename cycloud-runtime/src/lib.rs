@@ -47,7 +47,6 @@ impl CyCloudEngine {
     /// `Ok(())` if container is running, `Err` on failure
     pub async fn setup(
         &mut self,
-        ssh_pub_key: &str,
         memory_limit: Option<String>,
         cpu_limit: Option<f32>,
     ) -> Result<(), Box<dyn std::error::Error>> {
@@ -106,7 +105,6 @@ impl CyCloudEngine {
                         
                         // Provision new container
                         if let Err(e) = self.provision_new_container(
-                            ssh_pub_key,
                             memory_limit.clone(),
                             cpu_limit,
                         ).await {
@@ -119,7 +117,6 @@ impl CyCloudEngine {
                         let _ = self.manager.remove_container(&self.container_name).await;
                         
                         if let Err(e) = self.provision_new_container(
-                            ssh_pub_key,
                             memory_limit.clone(),
                             cpu_limit,
                         ).await {
@@ -131,7 +128,6 @@ impl CyCloudEngine {
             } else {
                 println!("Container {} not found, provisioning...", self.container_name);
                 if let Err(e) = self.provision_new_container(
-                    ssh_pub_key,
                     memory_limit.clone(),
                     cpu_limit,
                 ).await {
@@ -156,7 +152,6 @@ impl CyCloudEngine {
     /// Provision a new container using ContainerManager
     async fn provision_new_container(
         &self,
-        ssh_pub_key: &str,
         memory_limit: Option<String>,
         cpu_limit: Option<f32>,
     ) -> Result<(), Box<dyn std::error::Error>> {
@@ -174,7 +169,6 @@ impl CyCloudEngine {
         self.manager.configure_ssh(ConfigureArgs {
             container_name: self.container_name.clone(),
             ssh_port: SSH_PORT,
-            ssh_pub_key: ssh_pub_key.to_string(),
         }).await?;
 
         Ok(())
