@@ -23,7 +23,7 @@ use crate::substrate_interface::{self, api::runtime_types::cyborg_primitives::mi
 pub async fn register(keypair: Arc<Keypair>, miner_type: Arc<MinerType>) -> Result<MinerIdentity> {
     let client = global_config::get_parachain_client()?;
 
-    let worker_specs = specs::gather_worker_spec().await?;
+    let worker_specs = specs::gather_worker_spec(Arc::clone(&miner_type)).await?;
 
     let tx = substrate_interface::api::tx()
         .edge_connect()

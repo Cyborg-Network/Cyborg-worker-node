@@ -1,11 +1,13 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::process::{Command, Stdio};
+use std::sync::Arc;
 use std::{env, str};
 use sysinfo::{MemoryRefreshKind, RefreshKind, System};
 
 use reqwest::Client;
 
+use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::{self, MinerType};
 use crate::{
     global_config,
     error::Result,
@@ -50,34 +52,41 @@ pub struct Location {
     coordinates: Coordinates,
 }
 
-pub async fn gather_worker_spec() -> Result<MinerConfig> {
+#[derive(Deserialize, Debug)]
+struct IpResponse {
+    ip: String,
+}
+
+pub async fn gather_worker_spec(miner_type: Arc<MinerType>) -> Result<MinerConfig> {
     println!(
         "Using IP: {}",
         env::var("CYBORG_MINER_TEST_IP").unwrap_or("".to_string())
     );
 
-    let domain = match env::var("CYBORG_MINER_TEST_IP") {
-        Ok(val) => val,
-        Err(_) => {
-            let output = Command::new("hostname")
-                .output()?
-                .stdout;
+    let domain: String;
+    if let Ok(test_ip) = env::var("CYBORG_MINER_TEST_IP") {
+        domain = test_ip;
+    } else {
+        domain = match *miner_type {
+            MinerType::Edge => {
+                let output = Command::new("hostname")
+                    .output()?
+                    .stdout;
             
-            let hostname = String::from_utf8(output)?
-                .trim().to_string();
+                let hostname = String::from_utf8(output)?
+                    .trim().to_string();
 
-            format!("https://{hostname}.{}", *global_config::TAILSCALE_NET)
+                format!("https://{hostname}.{}", *global_config::TAILSCALE_NET)
+            }
+            MinerType::Cloud => {
+                reqwest::get("https://api.ipify.org?format=json")
+                    .await?
+                    .json::<IpResponse>()
+                    .await?
+                    .ip
+            }
         }
-        /* 
-        Err(_) => {
-            reqwest::get("https://api.ipify.org?format=json")
-                .await?
-                .json::<IpResponse>()
-                .await?
-                .ip
-        }
-        */
-    };
+    }
 
     //let response = worker::IpResponse { ip: String::from("127.0.0.1") };
 

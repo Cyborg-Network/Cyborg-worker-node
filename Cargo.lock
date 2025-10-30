@@ -3279,7 +3279,7 @@ dependencies = [
 
 [[package]]
 name = "cyborg-miner"
-version = "0.0.73"
+version = "0.0.77"
 dependencies = [
  "async-stream",
  "async-trait 0.1.88 (git+https://github.com/dtolnay/async-trait.git)",
