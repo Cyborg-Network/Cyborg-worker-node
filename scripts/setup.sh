@@ -228,7 +228,7 @@ setup_systemd() {
     User=root
     SupplementaryGroups=docker
     Environment=PARACHAIN_URL=$PARACHAIN_URL
-    Environment="ACCOUNT_SEED=\"$ACCOUNT_SEED\""
+    Environment=ACCOUNT_SEED="$ACCOUNT_SEED"
     Environment=LOG_FILE_PATH=$MINER_LOG_DIR/miner.log
     Environment=TASK_FILE_NAME=model.onnx
     Environment=TASK_DIR_PATH=$MINER_TASK_DIR
