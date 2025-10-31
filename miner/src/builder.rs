@@ -16,6 +16,7 @@ pub struct MinerBuilder {
 pub struct MinerBuilderStage2 {
     miner_type: MinerType,
     keypair: SR25519Keypair,
+    miner_uuid: Vec<u8>,
 }
 
 pub fn validate_miner_type(miner_type: &str) -> Result<MinerType> {
@@ -38,19 +39,19 @@ impl MinerBuilder {
         self.miner_type = Some(validate_miner_type(miner_type)?);
         Ok(self)
     }
-
     pub fn parachain_url(mut self, url: String) -> Self {
         self.parachain_url = Some(url);
         self
     }
 
-    pub fn keypair(self, seed: &str) -> Result<MinerBuilderStage2> {
+    pub fn keypair(self, seed: &str, miner_uuid: Vec<u8>) -> Result<MinerBuilderStage2> {
         let uri = SecretUri::from_str(seed).map_err(|e| Error::Custom(e.to_string()))?;
         let keypair = SR25519Keypair::from_uri(&uri).map_err(|e| Error::Custom(e.to_string()))?;
 
         Ok(MinerBuilderStage2 {
             miner_type: self.miner_type.ok_or("Miner type must be set")?,
             keypair,
+            miner_uuid,
         })
     }
 }
@@ -61,9 +62,11 @@ impl MinerBuilderStage2 {
         let keypair = Arc::new(self.keypair);
 
         let miner_identity = retrieve_identity(
-            Arc::clone(&keypair), 
-            Arc::clone(&miner_type)
-        ).await?;
+            Arc::clone(&keypair),
+            Arc::clone(&miner_type),
+            self.miner_uuid.clone(),
+        )
+        .await?;
 
         Ok(Arc::new(Miner {
             miner_type,
@@ -79,4 +82,4 @@ impl MinerBuilderStage2 {
 }
 
 #[cfg(test)]
-mod tests { }
+mod tests {}

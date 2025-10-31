@@ -3,15 +3,15 @@ use ezkl::{
     execute::run,
     Commitments,
 };
-use zstd::stream::read::Decoder;
 use futures::{stream::StreamExt, Future, Stream};
+use sha2::{Digest, Sha256};
 use std::io::{copy, BufReader};
 use std::{
-    fs::{File, self},
+    fs::{self, File},
     path::{Path, PathBuf},
 };
 use tar::Archive;
-use sha2::{Digest, Sha256};
+use zstd::stream::read::Decoder;
 
 #[derive(Debug)]
 pub struct NeuroZKEngine {
@@ -22,7 +22,7 @@ pub struct NeuroZKEngine {
 const MODEL_PATH: &str = "network.ezkl";
 const SETTINGS_PATH: &str = "settings.json";
 const PROVING_KEY_PATH: &str = "pk.key";
-const PROOF_INPUT_PATH : &str = "input.json";
+const PROOF_INPUT_PATH: &str = "input.json";
 const PROOF_WITNESS_PATH: &str = "proof-witness.json";
 const WITNESS_PATH: &str = "witness.json";
 const SRS_PATH: &str = "kzg.srs";
@@ -139,7 +139,7 @@ impl NeuroZKEngine {
         proving_key_file_name: &str,
         settings_file_name: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        /* 
+        /*
         if self.check_files_exists(
             prefix,
             [
@@ -263,7 +263,7 @@ impl NeuroZKEngine {
         proving_key_path: &str,
         srs_path: &str,
         proof_witness_path: &str,
-        proof_input_path: &str
+        proof_input_path: &str,
     ) -> Result<String, Box<dyn std::error::Error>> {
         let model_path = PathBuf::from(format!("{}/{}", prefix, model_path));
         let proving_key_path = PathBuf::from(format!("{}/{}", prefix, proving_key_path));
@@ -273,13 +273,12 @@ impl NeuroZKEngine {
 
         let input_string = fs::read_to_string(proof_input_path)?;
 
-
         let _ = run(GenWitness {
-             data: Some(ezkl::commands::DataField(input_string)), 
-             compiled_circuit: Some(model_path.clone()), 
-             output: Some(proof_witness_path.clone()), 
-             vk_path: None, 
-             srs_path: Some(srs_path.clone()) 
+            data: Some(ezkl::commands::DataField(input_string)),
+            compiled_circuit: Some(model_path.clone()),
+            output: Some(proof_witness_path.clone()),
+            vk_path: None,
+            srs_path: Some(srs_path.clone()),
         })
         .await?;
 

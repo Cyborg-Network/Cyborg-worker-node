@@ -1,7 +1,8 @@
-use std::fs;
-use std::process::Command;
-use std::os::unix::fs::PermissionsExt;
+#[allow(unused_variables)]
 use rust_embed::EmbeddedFile;
+use std::fs;
+use std::os::unix::fs::PermissionsExt;
+use std::process::Command;
 
 #[derive(rust_embed::RustEmbed)]
 #[folder = "scripts/"]
@@ -10,7 +11,7 @@ struct Assets;
 #[derive(Debug)]
 pub enum Script {
     Setup,
-    Reset 
+    Reset,
 }
 
 impl Script {
@@ -26,15 +27,14 @@ impl Script {
     }
 }
 
-pub fn run_script(script: Script) -> Result<(), Box<dyn std::error::Error>>{
+pub fn run_script(script: Script) -> Result<(), Box<dyn std::error::Error>> {
     let embedded_file = script.get().ok_or("Script not found")?;
-    
+
     let temp_path = format!("/tmp/{}", script.file_name());
     fs::write(&temp_path, embedded_file.data.as_ref())?;
     fs::set_permissions(&temp_path, fs::Permissions::from_mode(0o755))?;
 
-    let status = Command::new(&temp_path)
-        .status()?;
+    let status = Command::new(&temp_path).status()?;
 
     if status.success() {
         Ok(())
