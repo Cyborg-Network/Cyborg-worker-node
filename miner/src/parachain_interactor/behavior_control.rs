@@ -4,9 +4,9 @@ use crate::error::Result;
 use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::OperationalStatus;
 use crate::types::Miner;
-
-use crate::{global_config, substrate_interface};
+use crate::utils::substrate_queries::get_miner_operational_status;
 use crate::utils::tx_builder::pub_update_operational_status;
+use crate::{global_config, substrate_interface};
 
 pub async fn _miner_self_suspend(miner: &Miner) -> Result<()> {
     let client = global_config::get_parachain_client()?;
@@ -53,25 +53,35 @@ pub async fn _miner_self_suspend(miner: &Miner) -> Result<()> {
 
 /// Updates the operational status on the parachain (non-blocking)
 pub async fn update_operational_status(miner: Arc<Miner>, status: OperationalStatus) -> Result<()> {
-    let current_status = miner.get_operational_status().await;
+    // Query current status from chainstate
+    let client = global_config::get_parachain_client()?;
+    let current_status = get_miner_operational_status(
+        &client,
+        &miner.identity.miner_id,
+        miner.miner_type.as_ref(),
+    )
+    .await
+    .unwrap_or(None); // Default to None if query fails
 
     // Only update if status has changed
-    if matches!(
-        (&current_status, &status),
-        (OperationalStatus::Available, OperationalStatus::Available)
-            | (OperationalStatus::Busy, OperationalStatus::Busy)
-            | (OperationalStatus::Suspended, OperationalStatus::Suspended)
-    ) {
+    let should_update = match current_status {
+        Some(current) => !matches!(
+            (&current, &status),
+            (OperationalStatus::Available, OperationalStatus::Available)
+                | (OperationalStatus::Busy, OperationalStatus::Busy)
+                | (OperationalStatus::Suspended, OperationalStatus::Suspended)
+        ),
+        None => true, // If we can't get current status, update anyway
+    };
+
+    if !should_update {
         return Ok(());
     }
-
-    // Update local status cache first
-    miner.set_operational_status(status.clone()).await;
 
     // Use the tx_builder for the actual transaction (non-blocking)
     let keypair = Arc::clone(&miner.keypair);
     let miner_type = Arc::clone(&miner.miner_type);
-    let miner_id = miner.identity.miner_id.1;
+    let miner_id = miner.identity.miner_id.0.clone();
 
     tokio::spawn(async move {
         if let Err(e) = pub_update_operational_status(keypair, miner_type, miner_id, status).await {

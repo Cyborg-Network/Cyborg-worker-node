@@ -1,19 +1,22 @@
-use crate::global_config::{PATHS, self, update_config_file};
 use crate::error::Result;
+use crate::global_config::{self, update_config_file, PATHS};
 use crate::self_management::try_apply_update_if_available;
 use crate::substrate_interface;
-use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::{MinerType, OperationalStatus};
-use crate::utils::task_handling::pick_up_task;
+use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
+use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::{
+    MinerType, OperationalStatus,
+};
 use crate::traits::ParachainInteractor;
 use crate::types::{Miner, MinerIdentity};
+use crate::utils::substrate_queries::get_miner_operational_status;
+use crate::utils::task_handling::pick_up_task;
 use crate::utils::tx_builder::pub_register;
 use once_cell::sync::Lazy;
-use subxt_signer::sr25519::Keypair;
 use std::fs;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
+use subxt_signer::sr25519::Keypair;
 use tokio::sync::Mutex;
-use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 
 static LAST_UPDATE_CHECK: Lazy<Mutex<Option<Instant>>> = Lazy::new(|| Mutex::new(None));
 
@@ -37,9 +40,8 @@ async fn confirm_registration() -> Result<RegistrationStatus> {
 
     println!("identity: {:?}", miner_id);
 
-  
     let miner_id_bounded = BoundedVec(miner_id.clone());
-      // Since there seems to be a bug in subxt that should have been resolved (and we possibly won't have a separate storage map for querying workers by id)
+    // Since there seems to be a bug in subxt that should have been resolved (and we possibly won't have a separate storage map for querying workers by id)
     let miner_registration_confirmation_query = match miner_type {
         MinerType::Cloud => substrate_interface::api::storage()
             .edge_connect()
@@ -109,43 +111,49 @@ pub async fn retrieve_identity(
     Ok(identity)
 }
 
-// Add new function to update operational status
-pub async fn update_operational_status(miner: Arc<Miner>, status: OperationalStatus) -> Result<()> {
+/// Check the miner's current status from the parachain and update accordingly
+async fn check_and_update_miner_status(miner: Arc<Miner>) -> Result<()> {
     let client = global_config::get_parachain_client()?;
 
-    println!("Updating operational status to: {:?}", status);
+    // Query operational status from chain
+    let operational_status = get_miner_operational_status(
+        &client,
+        &miner.identity.miner_id,
+        &miner.miner_type.as_ref().clone(),
+    )
+    .await?;
 
-    let tx = substrate_interface::api::tx()
-        .edge_connect()
-        .update_operational_status(
-            miner.miner_type.as_ref().clone(),
-            miner.identity.miner_id.clone(),
-            status,
-        );
+    println!(
+        "Miner status from parachain - Operational: {:?}",
+        operational_status
+    );
 
-    let _ = client
-        .tx()
-        .sign_and_submit_then_watch_default(&tx, miner.keypair.as_ref())
-        .await?
-        .wait_for_finalized_success()
-        .await?;
+    // If we have a task but the operational status is Available, update to Busy
+    if miner.current_task.read().await.is_some() {
+        if let Some(OperationalStatus::Available) = operational_status {
+            println!("Miner has task but operational status is Available, updating to Busy");
+            miner
+                .update_operational_status(OperationalStatus::Busy)
+                .await?;
+        }
+    } else {
+        // If we don't have a task but operational status is Busy, update to Available
+        if let Some(OperationalStatus::Busy) = operational_status {
+            println!("Miner has no task but operational status is Busy, updating to Available");
+            miner
+                .update_operational_status(OperationalStatus::Available)
+                .await?;
+        }
+    }
 
-    println!("Operational status updated successfully");
     Ok(())
 }
 
 pub async fn start_miner(miner: Arc<Miner>) -> Result<()> {
     println!("Starting miner...");
 
-     // Initialize operational status to Available
-     miner
-     .set_operational_status(OperationalStatus::Available)
-     .await;
-
-    // Set operational status to Available on parachain when starting
-    miner
-     .update_operational_status(OperationalStatus::Available)
-     .await?;
+    // Check current status from parachain and update accordingly
+    check_and_update_miner_status(Arc::clone(&miner)).await?;
 
     println!("Waiting for tasks...");
 
@@ -169,7 +177,9 @@ pub async fn start_miner(miner: Arc<Miner>) -> Result<()> {
             let now = Instant::now();
 
             // Check if 6 hours have passed since the last update attempt
-            if last_check.map_or(true, |t| now.duration_since(t) > Duration::from_secs(24 * 3600)) {
+            if last_check.map_or(true, |t| {
+                now.duration_since(t) > Duration::from_secs(24 * 3600)
+            }) {
                 println!("Miner doesn't have an active task, trying to apply update!");
                 if let Err(e) = try_apply_update_if_available() {
                     println!("Update check failed: {:?}", e);

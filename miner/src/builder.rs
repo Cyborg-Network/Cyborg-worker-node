@@ -74,9 +74,6 @@ impl MinerBuilderStage2 {
             keypair,
             identity: Arc::new(miner_identity),
             current_task: Arc::new(RwLock::new(None)),
-            last_operational_status: Arc::new(RwLock::new(
-                OperationalStatus::Available
-            )),
         }))
     }
 }

@@ -107,11 +107,6 @@ pub async fn process_event(miner: Arc<Miner>, event: &EventDetails<PolkadotConfi
             if assigned_miner.1 .0.to_vec() == miner_data.miner_id.0.to_vec() {
                 println!("New task scheduled: {:?}", task_scheduled.task_id);
 
-                // Update operational status to Busy when task is assigned
-                miner
-                    .update_operational_status(OperationalStatus::Busy)
-                    .await?;
-
                 let current_task = CurrentTask {
                     task_owner: task_scheduled.task_owner,
                     task_type: task_scheduled.task_kind,

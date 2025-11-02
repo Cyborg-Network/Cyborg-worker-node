@@ -53,8 +53,6 @@ pub struct Miner {
     pub parent_runtime: Arc<RwLock<ParentRuntime>>,
     pub identity: Arc<MinerIdentity>,
     pub current_task: Arc<RwLock<Option<CurrentTask>>>,
-    // Track the last operational status to avoid unnecessary transactions
-    pub last_operational_status: Arc<RwLock<OperationalStatus>>,
 }
 
 impl Miner {
@@ -82,15 +80,4 @@ impl Miner {
     pub async fn deactivate_task(&self) -> Option<CurrentTask> {
         self.current_task.write().await.take()
     }
-
-    /// Gets the current operational status
-    pub async fn get_operational_status(&self) -> OperationalStatus {
-        self.last_operational_status.read().await.clone()
-    }
-
-    /// Sets the operational status (non-blocking)
-    pub async fn set_operational_status(&self, status: OperationalStatus) {
-        *self.last_operational_status.write().await = status;
-    }
-}
 }

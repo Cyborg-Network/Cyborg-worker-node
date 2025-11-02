@@ -1,6 +1,6 @@
 use crate::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
 use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
-use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType;
+use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::{MinerType, OperationalStatus};
 use crate::substrate_interface::api::runtime_types::cyborg_primitives::task::TaskInfo;
 use crate::types::MinerIdentity;
 use crate::{error::Result, substrate_interface};
@@ -178,4 +178,29 @@ let miner_info = found_miner.ok_or_else(|| "Miner not found for given ID")?;
         miner_id: miner_info.id.clone(),
         miner_type,
     })
+}
+
+/// Query the current operational status of a miner from the parachain
+pub async fn get_miner_operational_status(
+    client: &OnlineClient<subxt::PolkadotConfig>,
+    miner_id: &BoundedVec<u8>,
+    miner_type: &MinerType,
+) -> Result<Option<OperationalStatus>> {
+    let miner_query = match miner_type {
+        MinerType::Cloud => substrate_interface::api::storage()
+            .edge_connect()
+            .cloud_miners(miner_id.clone()),
+        MinerType::Edge => substrate_interface::api::storage()
+            .edge_connect()
+            .edge_miners(miner_id.clone()),
+    };
+
+    let miner_info = client
+        .storage()
+        .at_latest()
+        .await?
+        .fetch(&miner_query)
+        .await?;
+
+    Ok(miner_info.map(|miner| miner.operational_status))
 }

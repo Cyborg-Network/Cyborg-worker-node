@@ -15,11 +15,7 @@ use substrate_interface::api::edge_connect::Error as EdgeConnectError;
 use substrate_interface::api::neuro_zk::Error as NzkError;
 use substrate_interface::api::task_management::Error as TaskManagementError;
 use subxt_signer::sr25519::Keypair;
-use substrate_interface::api::neuro_zk::{Error as NzkError};
-use substrate_interface::api::edge_connect::{Error as EdgeConnectError};
-use substrate_interface::api::task_management::{Error as TaskManagementError};
-use crate::error::Result;
-use crate::substrate_interface::{self, api::runtime_types::cyborg_primitives::miner::{MinerType, OperationalStatus}};
+use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::OperationalStatus;
 
 /// Registers the miner on the blockchain.
 ///
@@ -146,18 +142,16 @@ pub async fn pub_register(
 async fn update_operational_status(
     keypair: Arc<Keypair>,
     miner_type: Arc<MinerType>,
-    miner_id: u64,
+    miner_id: Vec<u8>,
     status: OperationalStatus,
 ) -> Result<()> {
     let client = global_config::get_parachain_client()?;
 
+    let miner_id_bounded = BoundedVec(miner_id);
+
     let tx = substrate_interface::api::tx()
         .edge_connect()
-        .update_operational_status(
-            miner_type.as_ref().clone(),
-            miner_id,
-            status,
-        );
+        .update_operational_status(miner_type.as_ref().clone(), miner_id_bounded, status);
 
     println!("Transaction Details:");
     println!("Module: {:?}", tx.pallet_name());
@@ -169,7 +163,9 @@ async fn update_operational_status(
         .sign_and_submit_then_watch_default(&tx, keypair.as_ref())
         .await
         .map(|e| {
-            println!("Operational status update submitted, waiting for transaction to be finalized...");
+            println!(
+                "Operational status update submitted, waiting for transaction to be finalized..."
+            );
             e
         })?
         .wait_for_finalized_success()
@@ -189,11 +185,14 @@ async fn update_operational_status(
         }
         Err(e) => {
             // Check for acceptable errors
-            check_for_acceptable_error(&[
-                EdgeConnectError::MinerDoesNotExist,
-                EdgeConnectError::NotAuthorized,
-                EdgeConnectError::MinerSuspended,
-            ], e)?;
+            check_for_acceptable_error(
+                &[
+                    EdgeConnectError::MinerDoesNotExist,
+                    EdgeConnectError::NotAuthorized,
+                    EdgeConnectError::MinerSuspended,
+                ],
+                e,
+            )?;
             println!("Operational status update completed (acceptable error)");
         }
     }
@@ -205,21 +204,24 @@ async fn update_operational_status(
 pub async fn pub_update_operational_status(
     keypair: Arc<Keypair>,
     miner_type: Arc<MinerType>,
-    miner_id: u64,
+    miner_id: Vec<u8>,
     status: OperationalStatus,
 ) -> Result<()> {
     let tx_queue = global_config::get_tx_queue()?;
 
-    let rx = tx_queue.enqueue(move || {
-        let keypair = Arc::clone(&keypair);
-        let miner_type = Arc::clone(&miner_type);
-        let status_inner = status.clone();
-        async move {
-            let _ = update_operational_status(keypair, miner_type, miner_id, status_inner).await?;
-            Ok(TxOutput::Success)
-        }
-    })
-    .await?;
+    let rx = tx_queue
+        .enqueue(move || {
+            let keypair = Arc::clone(&keypair);
+            let miner_type = Arc::clone(&miner_type);
+            let status_inner = status.clone();
+            let  miner_id_clone = miner_id.clone();
+            async move {
+                let _ =
+                    update_operational_status(keypair, miner_type, miner_id_clone, status_inner).await?;
+                Ok(TxOutput::Success)
+            }
+        })
+        .await?;
 
     match rx.await {
         Ok(Ok(TxOutput::Success)) => {
