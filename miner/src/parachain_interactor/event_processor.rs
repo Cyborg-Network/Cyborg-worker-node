@@ -13,8 +13,6 @@ use std::fs;
 use std::sync::Arc;
 use subxt::{events::EventDetails, PolkadotConfig};
 
-use super::registration::update_operational_status;
-
 pub async fn process_event(miner: Arc<Miner>, event: &EventDetails<PolkadotConfig>) -> Result<()> {
     // Extract the task_id before matching to avoid having to clone miner
     let current_task_id = {
@@ -108,9 +106,6 @@ pub async fn process_event(miner: Arc<Miner>, event: &EventDetails<PolkadotConfi
 
             if assigned_miner.1 .0.to_vec() == miner_data.miner_id.0.to_vec() {
                 println!("New task scheduled: {:?}", task_scheduled.task_id);
-
-                // Update operational status to Busy when task is assigned
-                update_operational_status(Arc::clone(&miner), OperationalStatus::Busy).await?;
 
                 let current_task = CurrentTask {
                     task_owner: task_scheduled.task_owner,

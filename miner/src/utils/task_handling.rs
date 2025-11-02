@@ -1,3 +1,5 @@
+use crate::traits::ParachainInteractor;
+use crate::utils::substrate_queries::get_miner_operational_status;
 use crate::{
     error::{Error, Result},
     global_config::{
@@ -27,8 +29,6 @@ use serde::Serialize;
 use std::{fs, sync::Arc};
 use subxt::utils::AccountId32;
 use tokio::{sync::RwLock, task::JoinHandle};
-
-use crate::parachain_interactor::registration::update_operational_status;
 
 #[derive(Serialize)]
 struct TaskOwner {
@@ -168,6 +168,11 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
 
                 nuke_all_running_task_containers().await?;
 
+                // Set operational status to Available when no task is active
+                miner
+                    .update_operational_status(OperationalStatus::Available)
+                    .await?;
+
                 Ok(TaskPickupReturnType::Failure(()))
             }
             // Task is assinged but not yet confirmed by the miner, which is necessary so that the parachain won't suspend the miner
@@ -175,7 +180,9 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
                 println!("Assigned task found, confirming task reception...");
 
                 // Update operational status to Busy when picking up a task
-                update_operational_status(Arc::clone(&miner), OperationalStatus::Busy).await?;
+                miner
+                    .update_operational_status(OperationalStatus::Busy)
+                    .await?;
 
                 let task = CurrentTask {
                     task_type: task.task_kind,
@@ -200,7 +207,9 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
             // Task should already be running and only needs to be picked back up
             TaskStatusType::Running => {
                 // Update operational status to Busy when picking up a running task
-                update_operational_status(Arc::clone(&miner), OperationalStatus::Busy).await?;
+                miner
+                    .update_operational_status(OperationalStatus::Busy)
+                    .await?;
 
                 let task = CurrentTask {
                     task_type: task.task_kind,
@@ -323,8 +332,22 @@ pub fn return_task_container_name(task_id: TaskId) -> String {
 pub async fn clean_up_current_task_and_vacate(miner: Arc<Miner>) -> Result<()> {
     nuke_all_running_task_containers().await?;
 
-    // Update operational status back to Available after task completion
-    update_operational_status(Arc::clone(&miner), OperationalStatus::Available).await?;
+    // Query chainstate to determine if we should set status to Available
+    let client = global_config::get_parachain_client()?;
+    let current_status = get_miner_operational_status(
+        &client,
+        &miner.identity.miner_id,
+        &miner.miner_type,
+    )
+    .await
+    .unwrap_or(Some(OperationalStatus::Available));
+
+    // Only update to Available if we're not already in that state and don't have another task
+    if !matches!(current_status, Some(OperationalStatus::Available)) {
+        miner
+            .update_operational_status(OperationalStatus::Available)
+            .await?;
+    }
 
     let keypair = Arc::clone(&miner.keypair);
     let current_task_id = miner.current_task().await?.read().await.id;

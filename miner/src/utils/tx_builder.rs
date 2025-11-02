@@ -15,6 +15,7 @@ use substrate_interface::api::edge_connect::Error as EdgeConnectError;
 use substrate_interface::api::neuro_zk::Error as NzkError;
 use substrate_interface::api::task_management::Error as TaskManagementError;
 use subxt_signer::sr25519::Keypair;
+use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::OperationalStatus;
 
 /// Registers the miner on the blockchain.
 ///
@@ -126,6 +127,118 @@ pub async fn pub_register(
         Err(_) => Err("Response channel dropped.".into()),
         _ => Err("Missing identity string from registration event".into()),
     }
+}
+
+/// Updates the operational status on the parachain
+///
+/// # Arguments
+/// * `keypair` - The miner's keypair
+/// * `miner_type` - The type of miner
+/// * `miner_id` - The miner's ID
+/// * `status` - The new operational status
+///
+/// # Returns
+/// A `Result` indicating `Ok(())` if successful, or an `Error` if it fails.
+async fn update_operational_status(
+    keypair: Arc<Keypair>,
+    miner_type: Arc<MinerType>,
+    miner_id: Vec<u8>,
+    status: OperationalStatus,
+) -> Result<()> {
+    let client = global_config::get_parachain_client()?;
+
+    let miner_id_bounded = BoundedVec(miner_id);
+
+    let tx = substrate_interface::api::tx()
+        .edge_connect()
+        .update_operational_status(miner_type.as_ref().clone(), miner_id_bounded, status);
+
+    println!("Transaction Details:");
+    println!("Module: {:?}", tx.pallet_name());
+    println!("Call: {:?}", tx.call_name());
+    println!("Parameters: {:?}", tx.call_data());
+
+    let tx_submission = client
+        .tx()
+        .sign_and_submit_then_watch_default(&tx, keypair.as_ref())
+        .await
+        .map(|e| {
+            println!(
+                "Operational status update submitted, waiting for transaction to be finalized..."
+            );
+            e
+        })?
+        .wait_for_finalized_success()
+        .await;
+
+    match tx_submission {
+        Ok(e) => {
+            let tx_event = e.find_first::<
+                substrate_interface::api::edge_connect::events::OperationalStatusUpdated,
+            >()?;
+
+            if let Some(event) = tx_event {
+                println!("Operational status updated successfully: {event:?}");
+            } else {
+                println!("No operational status update event found!");
+            }
+        }
+        Err(e) => {
+            // Check for acceptable errors
+            check_for_acceptable_error(
+                &[
+                    EdgeConnectError::MinerDoesNotExist,
+                    EdgeConnectError::NotAuthorized,
+                    EdgeConnectError::MinerSuspended,
+                ],
+                e,
+            )?;
+            println!("Operational status update completed (acceptable error)");
+        }
+    }
+
+    Ok(())
+}
+
+/// Public interface for updating operational status (non-blocking with queue)
+pub async fn pub_update_operational_status(
+    keypair: Arc<Keypair>,
+    miner_type: Arc<MinerType>,
+    miner_id: Vec<u8>,
+    status: OperationalStatus,
+) -> Result<()> {
+    let tx_queue = global_config::get_tx_queue()?;
+
+    let rx = tx_queue
+        .enqueue(move || {
+            let keypair = Arc::clone(&keypair);
+            let miner_type = Arc::clone(&miner_type);
+            let status_inner = status.clone();
+            let  miner_id_clone = miner_id.clone();
+            async move {
+                let _ =
+                    update_operational_status(keypair, miner_type, miner_id_clone, status_inner).await?;
+                Ok(TxOutput::Success)
+            }
+        })
+        .await?;
+
+    match rx.await {
+        Ok(Ok(TxOutput::Success)) => {
+            println!("Operational status updated successfully");
+        }
+        Ok(Err(e)) => {
+            println!("Error updating operational status: {}", e);
+        }
+        Err(_) => {
+            println!("Response channel dropped for operational status update");
+        }
+        _ => {
+            println!("Unexpected response for operational status update");
+        }
+    }
+
+    Ok(())
 }
 
 /// Submits a zkml (Zero Knowledge Machine Learning) proof to the blockchain.

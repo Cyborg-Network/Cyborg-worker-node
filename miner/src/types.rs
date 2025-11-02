@@ -4,13 +4,9 @@ use subxt::utils::AccountId32;
 use subxt_signer::sr25519::Keypair;
 use tokio::sync::RwLock;
 
+use crate::{error::Result, substrate_interface::api::runtime_types::cyborg_primitives::{miner::{MinerType, OperationalStatus}, task::TaskKind}};
 use crate::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
-use crate::{
-    error::Result,
-    substrate_interface::api::runtime_types::cyborg_primitives::{
-        miner::MinerType, task::TaskKind,
-    },
-};
+
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct MinerIdentity {
