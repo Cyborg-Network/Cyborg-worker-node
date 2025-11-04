@@ -14,16 +14,16 @@
 /// Run the executable with appropriate arguments to start mining.
 mod builder;
 mod cli;
-mod global_config;
 mod error;
+mod global_config;
 mod log;
 mod parachain_interactor;
 mod parent_runtime;
+mod self_management;
 mod specs;
 mod substrate_interface;
 mod traits;
 mod types;
-mod self_management;
 mod utils;
 
 use builder::MinerBuilder;
@@ -77,7 +77,8 @@ async fn main() -> Result<()> {
             account_seed,
             miner_type,
         }) => {
-            self_management::install_self(parachain_url, miner_type, account_seed).expect("Failed to install");
+            self_management::install_self(parachain_url, miner_type, account_seed)
+                .expect("Failed to install");
         }
 
         Some(Commands::Version) => {

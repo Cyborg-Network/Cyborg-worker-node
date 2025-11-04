@@ -791,7 +791,7 @@ fn get_help_message() -> &'static str {
 }
 
 fn sample_from_logits(logits: &[f32], temperature: f32) -> i64 {
-    let  scaled: Vec<f32> = logits.iter().map(|&x| x / temperature).collect();
+    let scaled: Vec<f32> = logits.iter().map(|&x| x / temperature).collect();
     let max = scaled.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
     let exp: Vec<f32> = scaled.iter().map(|&x| (x - max).exp()).collect();
     let sum: f32 = exp.iter().sum();

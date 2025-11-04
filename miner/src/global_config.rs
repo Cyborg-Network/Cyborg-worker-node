@@ -31,7 +31,9 @@ struct MinerIdentity {
 // We're setting a few global variables here for easy access throughout. If editing, make sure to add appropriate Lazy::force to `run_global_config` - THIS IS NOT COMPILE-TIME ENFORCED
 // Paths required throughout
 pub static PATHS: Lazy<Paths> = Lazy::new(|| Paths {
-    log_path: env::var("LOG_FILE_PATH").expect("LOG_PATH must be set").into(),
+    log_path: env::var("LOG_FILE_PATH")
+        .expect("LOG_PATH must be set")
+        .into(),
     task_file_name: env::var("TASK_FILE_NAME").expect("TASK_FILE_NAME must be set"),
     task_dir_path: env::var("TASK_DIR_PATH").expect("TASK_DIR_PATH must be set"),
     task_owner_path: env::var("TASK_OWNER_FILE_PATH").expect("TASK_OWNER_PATH must be set"),
@@ -45,7 +47,10 @@ pub static TAILSCALE_NET: Lazy<String> =
 
 // The port reserved for the FlashInfer service
 pub static FLASH_INFER_PORT: Lazy<u16> = Lazy::new(|| {
-    env::var("FLASH_INFER_PORT").expect("FLASH_INFER_PORT must be set").parse().expect("Failed to parse FLASH_INFER_PORT")
+    env::var("FLASH_INFER_PORT")
+        .expect("FLASH_INFER_PORT must be set")
+        .parse()
+        .expect("Failed to parse FLASH_INFER_PORT")
 });
 
 /*

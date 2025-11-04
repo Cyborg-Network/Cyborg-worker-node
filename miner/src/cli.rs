@@ -56,7 +56,7 @@ pub enum Commands {
         miner_type: String,
     },
 
-    Version
+    Version,
 }
 
 /*

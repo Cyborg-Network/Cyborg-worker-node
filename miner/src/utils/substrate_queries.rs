@@ -33,12 +33,7 @@ pub async fn get_currently_assigned_task_id(
             .cloud_miners(miner_id),
     };
 
-    let mut miner_info = api
-        .storage()
-        .at_latest()
-        .await?
-        .fetch(&miner_query)
-        .await?;
+    let mut miner_info = api.storage().at_latest().await?.fetch(&miner_query).await?;
 
     // while let Some(Ok(fetched_miner)) = miner_iter_query.next().await {
     //     if fetched_miner.value.id == miner_id.clone() {
@@ -49,8 +44,8 @@ pub async fn get_currently_assigned_task_id(
     //         }
     //     }
     // }
-    if let Some(miner)=miner_info{
-        if miner.id==miner_id.clone(){
+    if let Some(miner) = miner_info {
+        if miner.id == miner_id.clone() {
             if let Some(task_id) = miner.current_task {
                 return Ok(task_id);
             } else {
@@ -137,8 +132,6 @@ pub async fn get_miner_by_domain(
     Err("Miner not found".into())
 }
 
-
-
 pub async fn get_miner_by_id(
     api: &OnlineClient<PolkadotConfig>,
     miner_id: String,
@@ -150,12 +143,16 @@ pub async fn get_miner_by_id(
     let (miner_type, miner_iter_addr) = if miner_id.starts_with("ED-") {
         (
             MinerType::Edge,
-            substrate_interface::api::storage().edge_connect().edge_miners_iter(),
+            substrate_interface::api::storage()
+                .edge_connect()
+                .edge_miners_iter(),
         )
     } else if miner_id.starts_with("CL-") {
         (
             MinerType::Cloud,
-           substrate_interface::api::storage().edge_connect().cloud_miners_iter(),
+            substrate_interface::api::storage()
+                .edge_connect()
+                .cloud_miners_iter(),
         )
     } else {
         return Err("Invalid miner ID prefix — must start with ED- or CL-".into());
@@ -171,7 +168,7 @@ pub async fn get_miner_by_id(
         }
     }
 
-let miner_info = found_miner.ok_or_else(|| "Miner not found for given ID")?;
+    let miner_info = found_miner.ok_or_else(|| "Miner not found for given ID")?;
 
     Ok(MinerIdentity {
         miner_owner: miner_info.owner,
