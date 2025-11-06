@@ -5,6 +5,7 @@ use crate::substrate_interface;
 use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::{MinerType, OperationalStatus};
 use crate::utils::task_handling::pick_up_task;
 use crate::traits::ParachainInteractor;
+use crate::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
 use crate::types::{Miner, MinerIdentity};
 use crate::utils::tx_builder::pub_register;
 use once_cell::sync::Lazy;
@@ -79,7 +80,7 @@ async fn confirm_registration() -> Result<RegistrationStatus> {
 pub async fn retrieve_identity(
     keypair: Arc<Keypair>,
     miner_type: Arc<MinerType>,
-    miner_uuid: Vec<u8>,
+    miner_uuid: MinerId,
 ) -> Result<MinerIdentity> {
     let identity: MinerIdentity;
     let value = miner_uuid.clone();
@@ -137,6 +138,28 @@ pub async fn update_operational_status(miner: Arc<Miner>, status: OperationalSta
 pub async fn start_miner(miner: Arc<Miner>) -> Result<()> {
     println!("Starting miner...");
 
+     {
+        let miner_type = miner.miner_type.as_ref();
+        let identity = miner.identity.as_ref();
+        let miner_id_bounded: MinerId = BoundedVec(identity.miner_id.0.clone());
+
+        let updated_identity = MinerIdentity {
+            miner_owner: identity.miner_owner.clone(),
+            miner_id: miner_id_bounded.clone(),
+            miner_type: identity.miner_type.clone(),
+        };
+
+        println!("Updated Miner UUID: {:?}", miner_id_bounded);
+
+        {
+            let miner_ptr = Arc::as_ptr(&miner) as *mut Miner;
+            unsafe {
+                (*miner_ptr).identity = Arc::new(updated_identity);
+            }
+        }
+    }
+
+   
     // Set operational status to Available when starting
     update_operational_status(Arc::clone(&miner), OperationalStatus::Available).await?;
 

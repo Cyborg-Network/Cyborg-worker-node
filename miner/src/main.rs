@@ -32,7 +32,10 @@ use cli::{Cli, Commands};
 use error::Result;
 use global_config::run_global_config;
 use traits::ParachainInteractor;
+use crate::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
 use crate::utils::tx_queue::{TRANSACTION_QUEUE, TransactionQueue, TxOutput};
+use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
+
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -62,16 +65,16 @@ async fn main() -> Result<()> {
             })
             });
 
-       
-
-            let miner_uuid_bytes = miner_uuid.clone().into_bytes();
+            let miner_id_bytes = miner_uuid.as_bytes().to_vec();
+            let miner_uuid_bounded: MinerId = BoundedVec(miner_id_bytes);
+                
 
             // Fails fast, an error here is unrecoverable
             let miner = MinerBuilder::new()
                 .miner_type(miner_type)
                 .expect("Failed to set miner type")
                 .parachain_url(parachain_url.to_string())
-                .keypair(account_seed, miner_uuid_bytes)
+                .keypair(account_seed, miner_uuid_bounded)
                 .expect("Failed to set keypair")
                 .build()
                 .await
