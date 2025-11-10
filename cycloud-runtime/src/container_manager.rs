@@ -8,14 +8,18 @@ use bollard::query_parameters::{
     StartContainerOptions, 
     StopContainerOptions
 };
+use bollard::secret::{ContainerStateStatusEnum, Task};
 use bollard::Docker;
 use std::os::unix::fs::PermissionsExt;
+
+use crate::TaskStatus;
 
 pub struct Resource {
     pub content: &'static str,
     pub target: &'static str,
 }
 
+const SSH_PORT: u16 = 2222;
 const DOCKER_IMAGE_NAME: &str = "cycloud-user-container:local";
 
 // We have this function with a closure to make sure that the file is fresh each time (to avoid eg. stale files after updates or removed temp files)
@@ -69,8 +73,7 @@ define_resources!(
 );
 
 #[derive(Debug)]
-pub struct ProvisionArgs {
-    pub container_name: String,
+pub struct ContainerProvisionArgs {
     pub ssh_port: u16,
     pub memory_limit: Option<String>,
     pub cpu_limit: Option<f32>,
@@ -84,21 +87,47 @@ pub struct ConfigureArgs {
 
 #[derive(Debug)]
 pub struct ContainerManager {
-    docker: Docker,
+    pub docker: Docker,
+    pub container_name: String,
 }
 
 impl ContainerManager {
-    pub async fn new() -> Result<Self, Box<dyn std::error::Error>> {
+    pub async fn new(container_name: String) -> Result<Self, Box<dyn std::error::Error>> {
         Ok(Self {
             docker: Docker::connect_with_local_defaults()?,
+            container_name
         })
+    }
+
+    /// Provision a new container using ContainerManager
+    pub async fn provision_new_container(
+        &self,
+        memory_limit: Option<String>,
+        cpu_limit: Option<f32>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        self.ensure_network().await?;
+
+        self.provision_container(ContainerProvisionArgs {
+            ssh_port: SSH_PORT,
+            memory_limit,
+            cpu_limit,
+        }).await?;
+
+        tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+
+        self.configure_ssh(ConfigureArgs {
+            container_name: self.container_name.clone(),
+            ssh_port: SSH_PORT,
+        }).await?;
+
+        Ok(())
     }
 
     pub async fn provision_container(
         &self,
-        args: ProvisionArgs,
+        args: ContainerProvisionArgs,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        println!("Provisioning container: {}", args.container_name);
+        println!("Provisioning container: {}", self.container_name);
         let network_name = "container-network";
 
         self.setup_api().await?;
@@ -118,7 +147,7 @@ impl ContainerManager {
         // TODO: replace with something like minijinja for reliable variable substitution
         let compose_content = Resources::DOCKER_COMPOSE.content
             .replace("${SSH_PORT}", &args.ssh_port.to_string())
-            .replace("${CONTAINER_NAME}", &args.container_name)
+            .replace("${CONTAINER_NAME}", &self.container_name)
             .replace("${MEM_LIMIT}", memory_limit)
             .replace("${CPU_LIMIT}", &cpu.to_string())
             .replace("${MEM_SWAP_LIMIT}", memswap_limit)
@@ -145,7 +174,7 @@ impl ContainerManager {
                     return Err(format!("Failed to run docker-compose up: {}", stderr).into());
                 }
 
-                println!("Container {} provisioned successfully", args.container_name);
+                println!("Container {} provisioned successfully", self.container_name);
                 Ok(())
             }
         )?;
@@ -338,18 +367,38 @@ impl ContainerManager {
 
     pub async fn get_container_status(
         &self,
-        container_name: &str,
-    ) -> Result<String, Box<dyn std::error::Error>> {
+    ) -> Result<TaskStatus, Box<dyn std::error::Error>> {
         let container = self.docker
-            .inspect_container(container_name, None::<InspectContainerOptions>)
+            .inspect_container(&self.container_name, None::<InspectContainerOptions>)
             .await?;
         
-        let status = container.state
-            .and_then(|s| s.status)
-            .map(|s| format!("{:?}", s))
-            .unwrap_or_else(|| "Unknown".to_string());
-        
-        Ok(status)
+        let status = match container.state.and_then(|s| s.status) {
+            Some(s) => s,
+            None => {
+                println!("Unable to retrieve status for container {}, assuming task is broken!", &self.container_name);
+                return Ok(TaskStatus::Cleaned)
+            }
+        };
+
+        println!("The container status check returned the following: {}", status);
+
+        match status {
+            ContainerStateStatusEnum::EXITED | ContainerStateStatusEnum::PAUSED | ContainerStateStatusEnum::CREATED => {
+                Ok(TaskStatus::Stopped)
+            },
+            ContainerStateStatusEnum::RUNNING => {
+                Ok(TaskStatus::Running)
+            },
+            ContainerStateStatusEnum::REMOVING => {
+                Ok(TaskStatus::Cleaning)
+            }
+            ContainerStateStatusEnum::DEAD | ContainerStateStatusEnum::EMPTY => {
+                Ok(TaskStatus::Broken)
+            },
+            ContainerStateStatusEnum::RESTARTING => {
+                Ok(TaskStatus::Starting)
+            }
+        }
     }
     
     pub async fn setup_api(
@@ -430,15 +479,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_container_manager_init() {
-        let manager = ContainerManager::new().await;
+        let manager = ContainerManager::new("something".to_string()).await;
         assert!(manager.is_ok());
     }
 
     #[tokio::test]
     async fn test_compose_generation() {
-        let manager = ContainerManager::new().await.unwrap();
-        let args = ProvisionArgs {
-            container_name: "test123".to_string(),
+        let manager = ContainerManager::new("something".to_string()).await.unwrap();
+        let args = ContainerProvisionArgs {
             ssh_port: 2222,
             memory_limit: Some("4g".to_string()),
             cpu_limit: Some(2.0),
