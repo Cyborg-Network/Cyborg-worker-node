@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 async-stream = { workspace = true }
+async-trait = { workspace = true }
 reqwest = { workspace = true }
 futures = { workspace = true }
 bollard = { workspace = true }

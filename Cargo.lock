@@ -3339,6 +3339,7 @@ name = "cycloud-runtime"
 version = "0.1.0"
 dependencies = [
  "async-stream",
+ "async-trait 0.1.88 (git+https://github.com/dtolnay/async-trait.git)",
  "bollard",
  "chrono",
  "futures",

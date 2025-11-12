@@ -17,7 +17,7 @@ neuro-zk-runtime = { workspace = true }
 open-inference-runtime = { workspace = true }
 flash-infer-runtime = { workspace = true }
 cycloud-runtime = { workspace = true }
-
+async-trait = { workspace = true }
 async-stream = { workspace = true }
 bollard = { workspace = true }
 futures = { workspace = true }
@@ -29,7 +29,6 @@ tracing-subscriber = { workspace = true }
 tracing-appender = { workspace = true }
 reqwest = { workspace = true }
 
-async-trait = { git = "https://github.com/dtolnay/async-trait.git" }
 axum = { version = "0.8.4", features = ["ws"] }
 axum-macros = { version = "0.5.0" }
 cess-rust-sdk = { git = 'https://github.com/CESSProject/cess-rust-sdk.git' , branch = 'cess-v0.7.9-venus' }

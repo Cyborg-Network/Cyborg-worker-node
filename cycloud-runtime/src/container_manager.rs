@@ -8,19 +8,48 @@ use bollard::query_parameters::{
     StartContainerOptions, 
     StopContainerOptions
 };
-use bollard::secret::{ContainerStateStatusEnum, Task};
+use bollard::secret::ContainerStateStatusEnum;
 use bollard::Docker;
 use std::os::unix::fs::PermissionsExt;
 
 use crate::TaskStatus;
+
+type MemoryLimit = Option<String>;
+type CpuLimit = Option<f32>;
+type ContainerName = String;
+type SshPort = u16;
 
 pub struct Resource {
     pub content: &'static str,
     pub target: &'static str,
 }
 
+#[derive(Debug)]
+pub struct ContainerProvisionArgs{
+    pub ssh_port: SshPort,
+    pub memory_limit: MemoryLimit,
+    pub cpu_limit: CpuLimit,
+    pub container_name: ContainerName,
+}
+
+#[derive(Debug)]
+pub struct ConfigureSshArgs<'a>{
+    pub ssh_port: SshPort,
+    pub container_name: &'a ContainerName,
+}
+
+#[derive(Debug)]
+pub struct ContainerManager {
+    pub docker: Docker,
+    pub container_name: ContainerName,
+    pub memory_limit: MemoryLimit,
+    pub cpu_limit: CpuLimit,
+    ssh_port: SshPort,
+}
+
 const SSH_PORT: u16 = 2222;
 const DOCKER_IMAGE_NAME: &str = "cycloud-user-container:local";
+const MAX_SETUP_ATTEMPTS: u8 = 100;
 
 // We have this function with a closure to make sure that the file is fresh each time (to avoid eg. stale files after updates or removed temp files)
 fn use_file<F>(
@@ -72,51 +101,119 @@ define_resources!(
     SETUP_CONTAINER => {filename: "cycloud_setup_container.sh", target: "/tmp/cycloud-resources"},
 );
 
-#[derive(Debug)]
-pub struct ContainerProvisionArgs {
-    pub ssh_port: u16,
-    pub memory_limit: Option<String>,
-    pub cpu_limit: Option<f32>,
-}
-
-#[derive(Debug)]
-pub struct ConfigureArgs {
-    pub container_name: String,
-    pub ssh_port: u16,
-}
-
-#[derive(Debug)]
-pub struct ContainerManager {
-    pub docker: Docker,
-    pub container_name: String,
-}
-
 impl ContainerManager {
-    pub async fn new(container_name: String) -> Result<Self, Box<dyn std::error::Error>> {
+    pub async fn new(setup_args: ContainerProvisionArgs) -> Result<Self, Box<dyn std::error::Error>> {
         Ok(Self {
             docker: Docker::connect_with_local_defaults()?,
-            container_name
+            container_name: setup_args.container_name,
+            ssh_port: setup_args.ssh_port,
+            memory_limit: setup_args.memory_limit,
+            cpu_limit: setup_args.cpu_limit,
         })
+    }
+
+    pub async fn setup_impl(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let mut container_running = false;
+
+        for attempt in 0..MAX_SETUP_ATTEMPTS {
+            println!("Setup attempt {} of {}", attempt + 1, MAX_SETUP_ATTEMPTS);
+
+            let container = self.docker
+                .inspect_container(&self.container_name, None::<InspectContainerOptions>)
+                .await
+                .ok();
+
+            if let Some(container_info) = container {
+                let id = container_info.id.as_deref().unwrap_or("unknown");
+                println!("Found existing container {}", id);
+
+                let state = container_info.state.as_ref();
+                
+                match state.and_then(|s| s.status.as_ref()) {
+                    Some(ContainerStateStatusEnum::RUNNING) => {
+                        println!("Container {} is running", id);
+                        container_running = true;
+                        break;
+                    }
+                    Some(ContainerStateStatusEnum::CREATED) => {
+                        println!("Container {} is created, starting...", id);
+                        if let Err(e) = self.start_container().await {
+                            println!("Failed to start container: {}", e);
+                            continue;
+                        }
+                    }
+                    Some(ContainerStateStatusEnum::PAUSED) => {
+                        println!("Container {} is paused, unpausing...", id);
+                        if let Err(e) = self.docker.unpause_container(&self.container_name).await {
+                            println!("Failed to unpause container: {}", e);
+                            continue;
+                        }
+                    }
+                    Some(ContainerStateStatusEnum::RESTARTING) => {
+                        println!("Container {} is restarting, waiting...", id);
+                        // Just wait and retry
+                    }
+                    Some(ContainerStateStatusEnum::EXITED) => {
+                        println!("Container {} exited, restarting...", id);
+                        if let Err(e) = self.start_container().await {
+                            println!("Failed to restart container: {}", e);
+                            continue;
+                        }
+                    }
+                    Some(ContainerStateStatusEnum::DEAD) => {
+                        println!("Container {} is dead, removing and reprovisioning...", id);
+                        let _ = self.remove_container().await;
+                        
+                        // Provision new container
+                        if let Err(e) = self.provision_new_container().await {
+                            println!("Failed to provision container: {}", e);
+                            continue;
+                        }
+                    }
+                    Some(ContainerStateStatusEnum::EMPTY) | None | _ => {
+                        println!("Container {} has invalid state, reprovisioning...", id);
+                        let _ = self.remove_container().await;
+                        
+                        if let Err(e) = self.provision_new_container().await {
+                            println!("Failed to provision container: {}", e);
+                            continue;
+                        }
+                    }
+                }
+            } else {
+                println!("Container {} not found, provisioning...", self.container_name);
+                if let Err(e) = self.provision_new_container().await {
+                    println!("Failed to provision container: {}", e);
+                    continue;
+                }
+            }
+
+            let delay_ms = std::cmp::min(500u64 * (attempt as u64 + 1), 20_000u64);
+            println!("Waiting {} seconds before next check...", delay_ms / 1000);
+            tokio::time::sleep(tokio::time::Duration::from_millis(delay_ms)).await;
+        }
+
+        if container_running {
+            println!("Container {} is ready", self.container_name);
+            Ok(())
+        } else {
+            Err("Failed to start container after maximum attempts".into())
+        }
+
     }
 
     /// Provision a new container using ContainerManager
     pub async fn provision_new_container(
         &self,
-        memory_limit: Option<String>,
-        cpu_limit: Option<f32>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         self.ensure_network().await?;
 
-        self.provision_container(ContainerProvisionArgs {
-            ssh_port: SSH_PORT,
-            memory_limit,
-            cpu_limit,
-        }).await?;
+        self.provision_container().await?;
 
         tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
 
-        self.configure_ssh(ConfigureArgs {
-            container_name: self.container_name.clone(),
+        self.configure_ssh(ConfigureSshArgs {
+            container_name: &self.container_name,
             ssh_port: SSH_PORT,
         }).await?;
 
@@ -125,7 +222,6 @@ impl ContainerManager {
 
     pub async fn provision_container(
         &self,
-        args: ContainerProvisionArgs,
     ) -> Result<(), Box<dyn std::error::Error>> {
         println!("Provisioning container: {}", self.container_name);
         let network_name = "container-network";
@@ -137,8 +233,8 @@ impl ContainerManager {
             self.docker.remove_network(network_name).await?;
         }
 
-        let memory_limit = args.memory_limit.as_deref().unwrap_or("4g");
-        let cpu = args.cpu_limit.unwrap_or(2.0);
+        let memory_limit = self.memory_limit.as_deref().unwrap_or("4g");
+        let cpu = self.cpu_limit.unwrap_or(2.0);
         let memswap_limit = "4g";
         let pids_limit = 1024;
         let created_date = chrono::Utc::now().to_rfc3339();
@@ -146,7 +242,7 @@ impl ContainerManager {
 
         // TODO: replace with something like minijinja for reliable variable substitution
         let compose_content = Resources::DOCKER_COMPOSE.content
-            .replace("${SSH_PORT}", &args.ssh_port.to_string())
+            .replace("${SSH_PORT}", &self.ssh_port.to_string())
             .replace("${CONTAINER_NAME}", &self.container_name)
             .replace("${MEM_LIMIT}", memory_limit)
             .replace("${CPU_LIMIT}", &cpu.to_string())
@@ -242,9 +338,9 @@ impl ContainerManager {
         Ok(())
     }
 
-    pub async fn configure_ssh(
+    pub async fn configure_ssh<'a>(
         &self,
-        args: ConfigureArgs,
+        args: ConfigureSshArgs<'a>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         println!("Configuring SSH access for: {}", args.container_name);
 
@@ -271,11 +367,10 @@ impl ContainerManager {
         Ok(())
     }
 
-    pub async fn cleanup_container(
+    pub async fn cleanup_impl(
         &self,
-        container_name: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        println!("Cleaning up container: {}", container_name);
+        println!("Cleaning up container: {}", &self.container_name);
         
         use_file(
             &Resources::CLEANUP_SCRIPT.target.into(), 
@@ -283,7 +378,7 @@ impl ContainerManager {
             |cleanup_path| {
                 let output = Command::new("bash")
                     .arg(cleanup_path)
-                    .arg("--container-name").arg(container_name)
+                    .arg("--container-name").arg(&self.container_name)
                     .arg("--cleanup")
                     .output()?;
 
@@ -295,42 +390,42 @@ impl ContainerManager {
             }
         )?;
 
-        if let Err(e) = self.stop_container(container_name).await {
+        if let Err(e) = self.stop_impl().await {
             eprintln!("Warning: Failed to stop container: {}", e);
         }
 
-        self.remove_container(container_name).await?;
+        self.remove_container().await?;
 
         let _ = Command::new("docker")
             .arg("volume")
             .arg("rm")
-            .arg(format!("{}-home", container_name))
-            .arg(format!("{}-workspace", container_name))
+            .arg(format!("{}-home", &self.container_name))
+            .arg(format!("{}-workspace", &self.container_name))
             .output();
 
-        println!("Container {} cleaned up successfully", container_name);
+        println!("Container {} cleaned up successfully", &self.container_name);
         Ok(())
     }
 
+    /// Starts the CyCloud container
     pub async fn start_container(
         &self,
-        container_name: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        println!("Starting container: {}", container_name);
+        println!("Starting container: {}", &self.container_name);
         self.docker
-            .start_container(container_name, None::<StartContainerOptions>)
+            .start_container(&self.container_name, None::<StartContainerOptions>)
             .await?;
         Ok(())
     }
 
-    pub async fn stop_container(
+    /// Stops the CyCloud container
+    pub async fn stop_impl(
         &self,
-        container_name: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        println!("Stopping container: {}", container_name);
+        println!("Stopping container: {}", self.container_name);
         self.docker
             .stop_container(
-                container_name,
+                &self.container_name,
                 Some(StopContainerOptions { t: Some(10), signal: None }),
             )
             .await?;
@@ -339,33 +434,35 @@ impl ContainerManager {
 
     pub async fn remove_container(
         &self,
-        container_name: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        println!("Removing container: {}", container_name);
+        println!("Cleaning up container: {}", self.container_name);
+
         self.docker
             .remove_container(
-                container_name,
+                &self.container_name,
                 Some(RemoveContainerOptions {
                     force: true,
                     ..Default::default()
                 }),
             )
             .await?;
+
+        println!("Container {} removed successfully", self.container_name);
+
         Ok(())
     }
 
-    pub async fn restart_container(
+    pub async fn restart_impl(
         &self,
-        container_name: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        println!("Restarting container: {}", container_name);
-        self.stop_container(container_name).await?;
+        println!("Restarting container: {}", &self.container_name);
+        self.stop_impl().await?;
         tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-        self.start_container(container_name).await?;
+        self.start_container().await?;
         Ok(())
     }
 
-    pub async fn get_container_status(
+    pub async fn status_impl(
         &self,
     ) -> Result<TaskStatus, Box<dyn std::error::Error>> {
         let container = self.docker
@@ -479,20 +576,29 @@ mod tests {
 
     #[tokio::test]
     async fn test_container_manager_init() {
-        let manager = ContainerManager::new("something".to_string()).await;
-        assert!(manager.is_ok());
-    }
-
-    #[tokio::test]
-    async fn test_compose_generation() {
-        let manager = ContainerManager::new("something".to_string()).await.unwrap();
         let args = ContainerProvisionArgs {
+            container_name: "test123".to_string(),
             ssh_port: 2222,
             memory_limit: Some("4g".to_string()),
             cpu_limit: Some(2.0),
         };
 
-        manager.provision_container(args).await.unwrap();
+        let manager = ContainerManager::new(args).await;
+        assert!(manager.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_compose_generation() {
+        let args = ContainerProvisionArgs {
+            container_name: "test123".to_string(),
+            ssh_port: 2222,
+            memory_limit: Some("4g".to_string()),
+            cpu_limit: Some(2.0),
+        };
+
+        let manager = ContainerManager::new(args).await.unwrap();
+
+        manager.provision_container().await.unwrap();
 
         assert!(Resources::DOCKER_COMPOSE.content.contains("test123"));
         assert!(Resources::DOCKER_COMPOSE.content.contains("mem_limit: 4g"));
