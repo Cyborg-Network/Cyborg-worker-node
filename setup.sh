@@ -33,13 +33,14 @@ AGENT_FILE_NAME="cyborg-agent"
 SETUP_SCRIPT_FILE_NAME="setup.sh"
 
 # Paths for the files
-BIN_DIR="/usr/local/bin"
-SCRIPT_DIR="/var/lib/cyborg/miner/scripts"
+AGENT_DIR="/home/ronnie/Cyborg/Cyborg-miner"
+MINER_DIR="/home/ronnie/Cyborg/Cyborg-miner/target/release"
+SCRIPT_DIR="/home/ronnie/Cyborg/Cyborg-miner"
 TX_QUEUE_DB_PATH="/var/lib/cyborg/tx_queue_db"
 
 # Full paths
-MINER_BINARY_PATH="$BIN_DIR/$MINER_FILE_NAME"
-AGENT_BINARY_PATH="$BIN_DIR/$AGENT_FILE_NAME"
+MINER_BINARY_PATH="$MINER_DIR/$MINER_FILE_NAME"
+AGENT_BINARY_PATH="$AGENT_DIR/$AGENT_FILE_NAME"
 SETUP_SCRIPT_PATH="$SCRIPT_DIR/$SETUP_SCRIPT_FILE_NAME"
 
 # Ports to be opened at the end of the script
@@ -47,7 +48,6 @@ MINER_INFERENCE_PORT=3000
 AGENT_HTTP_PORT=8080
 AGENT_WS_PORT=8081
 FLASH_INFER_PORT=3005
-
 
 # Service files
 MINER_SERVICE_FILE="/etc/systemd/system/$MINER_FILE_NAME.service"
@@ -78,42 +78,46 @@ verify_release() {
 
 # ======================================= UTIL ===============================================================
 download_and_extract() {
-    local tag="${1:-}"
+    # local tag="${1:-}"
 
-    if [[ -z "$tag" ]]; then
-        echo "No tag provided, fetching latest release..."
-        tag=$(curl -s https://api.github.com/repos/${REPO}/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
-    fi
+    # if [[ -z "$tag" ]]; then
+    #     echo "No tag provided, fetching latest release..."
+    #     tag=$(curl -s https://api.github.com/repos/${REPO}/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
+    # fi
 
-    local asset="${MINER_ASSET_NAME}-${PLATFORM}-${ARCH}.tar.gz"
-    local url="https://github.com/${REPO}/releases/download/${tag}/${asset}"
+    # local asset="${MINER_ASSET_NAME}-${PLATFORM}-${ARCH}.tar.gz"
+    # local url="https://github.com/${REPO}/releases/download/${tag}/${asset}"
 
     verify_release
 
     TMP_DIR=$(mktemp -d)
     trap "rm -rf \"$TMP_DIR\"" EXIT
 
-    echo "Downloading latest release: $tag..."
-    curl -L "$url" -o "$TMP_DIR/release.tar.gz"
-    tar -xf "$TMP_DIR/release.tar.gz" -C "$TMP_DIR"
+    # echo "Downloading latest release: $tag..."
+    # curl -L "$url" -o "$TMP_DIR/release.tar.gz"
+    # tar -xf "$TMP_DIR/release.tar.gz" -C "$TMP_DIR"
     
-    MINER_BIN=$(find "$TMP_DIR" -type f -executable -name '*miner*' | head -n 1)
-    AGENT_BIN=$(find "$TMP_DIR" -type f -executable -name '*agent*' | head -n 1)
-    SETUP_SCRIPT=$(find "$TMP_DIR" -type f -executable -name '*setup*' | head -n 1)
+    echo "Using local binaries from current directory..."
 
-    if [[ -z "$MINER_BIN" || -z "$AGENT_BIN" || -z "$SETUP_SCRIPT" ]]; then
+    # Files are in the current directory
+    MINER_BIN_X="/home/ronnie/Cyborg/Cyborg-miner/target/release/cyborg-miner"
+    AGENT_BIN_X="/home/ronnie/Cyborg/Cyborg-miner/cyborg-agent"
+    SETUP_SCRIPT="/home/ronnie/Cyborg/Cyborg-miner/setup.sh"
+
+    if [[ -z "$MINER_BIN_X" || -z "$AGENT_BIN_X" || -z "$SETUP_SCRIPT" ]]; then
         echo "Required files not found."
         exit 1
     fi 
 
-    chmod +x "$MINER_BIN" "$AGENT_BIN" "$SETUP_SCRIPT"
+    chmod +x "$MINER_BIN_X" "$AGENT_BIN_X" "$SETUP_SCRIPT"
 }
 
 prepare_environment() {
     echo "Preparing file system structure..."
 
     for dir in \
-        "$BIN_DIR" \
+        "$AGENT_DIR" \
+        "$MINER_DIR" \
         "$SCRIPT_DIR" \
         "$MINER_TASK_DIR" \
         "$MINER_CONFIG_DIR" \
@@ -213,6 +217,7 @@ setup_systemd() {
     local PARACHAIN_URL="$1"
     local ACCOUNT_SEED="$2"
     local MINER_TYPE="$3"
+    local MINER_UUID="$4"
 
     echo "Creating systemd service for worker node: $MINER_SERVICE_FILE"
 
@@ -239,7 +244,8 @@ setup_systemd() {
     Environment=FLASH_INFER_PORT=$FLASH_INFER_PORT
     Environment=TX_QUEUE_DB_PATH=$TX_QUEUE_DB_PATH
     Environment=MINER_TYPE=$MINER_TYPE
-    ExecStart=$MINER_BINARY_PATH start-miner --parachain-url \$PARACHAIN_URL --account-seed "\$ACCOUNT_SEED" --miner-type $MINER_TYPE
+    Environment=MINER_UUID=$MINER_UUID
+    ExecStart=$MINER_BINARY_PATH start-miner --parachain-url \$PARACHAIN_URL --account-seed "\$ACCOUNT_SEED" --miner-type $MINER_TYPE --miner-uuid \$MINER_UUID
     Restart=always
     SuccessExitStatus=75
     RestartSec=3
@@ -290,13 +296,10 @@ EOL
 }
 
 move_files() {
-    echo "Moving the miner to $BIN_DIR..."
-    echo "Moving the agent to $BIN_DIR..."
+
     echo "Moving the setup script to $SCRIPT_DIR..."
 
-    mv "$MINER_BIN" "$MINER_BINARY_PATH"
-    mv "$AGENT_BIN" "$AGENT_BINARY_PATH"
-    mv "$SETUP_SCRIPT" "$SETUP_SCRIPT_PATH"
+    
 }
 
 open_firewall() {
@@ -352,11 +355,13 @@ open_firewall() {
 }
 
 install() {
-    PARACHAIN_URL="${PARACHAIN_URL:-}"
-    ACCOUNT_SEED="${ACCOUNT_SEED:-}"
-    MINER_TYPE="${MINER_TYPE:-}"
+    PARACHAIN_URL="ws://127.0.0.1:9988"
+    ACCOUNT_SEED="//Dave"
+    MINER_TYPE="cloud"
+    MINER_UUID="9c9bfca6-9ee8-1bff-1fc0-a2952ee26f41"
 
-    if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" || -z "$MINER_TYPE" ]]; then
+
+    if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" || -z "$MINER_TYPE" || -z "$MINER_UUID" ]]; then
         echo "ERROR: PARACHAIN_URL and ACCOUNT_SEED must be set in environment."
         exit 1
     fi
@@ -365,10 +370,12 @@ install() {
     prepare_environment
     setup_docker
     move_files
-    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE"
+    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE" "$MINER_UUID"
     open_firewall
     #prepare_triton
 }
+
+
 
 update() {
     local current_version="$1"

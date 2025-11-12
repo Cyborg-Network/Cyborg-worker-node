@@ -2,6 +2,7 @@ use crate::{error::Result, types::MinerIdentity};
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use sled::{self};
+use crate::global_config::TX_QUEUE_DB_PATH;
 use std::{
     collections::VecDeque,
     future::Future,
@@ -15,7 +16,6 @@ use tokio::sync::{oneshot, Mutex};
 use tokio::time::{sleep, Duration};
 
 const MAX_RETRIES: u32 = 500;
-const DB_PATH: &str = "/var/lib/cyborg/tx_queue_db";
 
 /// Async transaction executor closure type.
 type TxExecutor =
@@ -66,11 +66,11 @@ pub static TRANSACTION_QUEUE: OnceCell<TransactionQueue> = OnceCell::new();
 
 impl TransactionQueue {
     pub async fn new() -> Self {
-        let db = tokio::task::spawn_blocking(|| sled::open(DB_PATH))
+        let db_path = TX_QUEUE_DB_PATH.as_str(); 
+        let db = tokio::task::spawn_blocking(move || sled::open(db_path))
             .await
             .expect("Failed to join blocking task")
             .expect("Failed to open sled DB");
-
         let queue = Arc::new(Mutex::new(VecDeque::new()));
         let mut restored_count = 0;
 
@@ -99,7 +99,7 @@ impl TransactionQueue {
         }
 
         println!(
-            "[TX-QUEUE] Initialized sled DB at {DB_PATH}. Restored {restored_count} txs."
+            "[TX-QUEUE] Initialized sled DB at {db_path}. Restored {restored_count} txs."
         );
 
         let tx_queue = Self {

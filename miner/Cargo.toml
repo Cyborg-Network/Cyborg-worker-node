@@ -1,7 +1,7 @@
 [package]
 name = "cyborg-miner"
 description = "An AI inference mine, designed to connect to the cyborg-network, built, among others with Polkadot SDK."
-version = "0.0.73"
+version = "0.0.79-test"
 license = "Unlicense"
 authors = ["Cyborg Network <https://github.com/Cyborg-Network>"]
 edition = "2021"
