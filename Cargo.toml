@@ -3,6 +3,8 @@ members = [
 	"miner",
 	"neuro-zk-runtime",
 	"open-inference-runtime",
+  "cycloud-runtime",
+  "cyborg-agent",
 ]
 
 [workspace.dependencies]
@@ -18,6 +20,7 @@ reqwest = { version = "0.12.9", features = ["json", "blocking"] }
 bollard = { version = "0.19.2" }
 
 miner = { path = "miner" }
+cyborg-agent = { path = "cyborg-agent" }
 neuro-zk-runtime = { path = "neuro-zk-runtime" }
 open-inference-runtime = { path = "open-inference-runtime" }
 flash-infer-runtime = { path = "flash-infer-runtime" }

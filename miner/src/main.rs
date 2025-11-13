@@ -32,6 +32,7 @@ use cli::{Cli, Commands};
 use error::Result;
 use global_config::run_global_config;
 use traits::ParachainInteractor;
+use cyborg_agent::run_agent;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -56,6 +57,10 @@ async fn main() -> Result<()> {
             log::init_logger().expect("Could not initialize logger!");
 
             let miner_uuid_bytes = miner_uuid.clone().into_bytes();
+
+            let agent_handle = tokio::spawn(
+                run_agent()
+            );
 
             // Fails fast, am error here is unrecoverable
             let miner = MinerBuilder::new()

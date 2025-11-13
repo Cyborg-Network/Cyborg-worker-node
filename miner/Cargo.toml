@@ -17,6 +17,7 @@ neuro-zk-runtime = { workspace = true }
 open-inference-runtime = { workspace = true }
 flash-infer-runtime = { workspace = true }
 cycloud-runtime = { workspace = true }
+cyborg-agent = { workspace = true }
 
 async-stream = { workspace = true }
 bollard = { workspace = true }
