@@ -29,7 +29,6 @@ echo "Detected architecture: ${ARCH}" >&2
 
 # File names as they appear after installation
 MINER_FILE_NAME="cyborg-miner"
-AGENT_FILE_NAME="cyborg-agent"
 SETUP_SCRIPT_FILE_NAME="setup.sh"
 
 # Paths for the files
@@ -38,7 +37,6 @@ SCRIPT_DIR="/var/lib/cyborg/miner/scripts"
 
 # Full paths
 MINER_BINARY_PATH="$BIN_DIR/$MINER_FILE_NAME"
-AGENT_BINARY_PATH="$BIN_DIR/$AGENT_FILE_NAME"
 SETUP_SCRIPT_PATH="$SCRIPT_DIR/$SETUP_SCRIPT_FILE_NAME"
 
 # Ports to be opened at the end of the script
@@ -49,7 +47,6 @@ FLASH_INFER_PORT=3005
 
 # Service files
 MINER_SERVICE_FILE="/etc/systemd/system/$MINER_FILE_NAME.service"
-AGENT_SERVICE_FILE="/etc/systemd/system/$AGENT_FILE_NAME.service"
 
 # ENV variables for the miner
 MINER_TASK_DIR="/var/lib/cyborg/miner/task"
@@ -96,15 +93,14 @@ download_and_extract() {
     tar -xf "$TMP_DIR/release.tar.gz" -C "$TMP_DIR"
     
     MINER_BIN=$(find "$TMP_DIR" -type f -executable -name '*miner*' | head -n 1)
-    AGENT_BIN=$(find "$TMP_DIR" -type f -executable -name '*agent*' | head -n 1)
     SETUP_SCRIPT=$(find "$TMP_DIR" -type f -executable -name '*setup*' | head -n 1)
 
-    if [[ -z "$MINER_BIN" || -z "$AGENT_BIN" || -z "$SETUP_SCRIPT" ]]; then
+    if [[ -z "$MINER_BIN" || -z "$SETUP_SCRIPT" ]]; then
         echo "Required files not found."
         exit 1
     fi 
 
-    chmod +x "$MINER_BIN" "$AGENT_BIN" "$SETUP_SCRIPT"
+    chmod +x "$MINER_BIN" "$SETUP_SCRIPT"
 }
 
 prepare_environment() {
@@ -247,52 +243,23 @@ EOL
 
     echo "systemd service for $MINER_FILE_NAME created successfully!"
 
-    echo "Creating systemd service for agent: $AGENT_SERVICE_FILE"
-
-    bash -c "cat > $AGENT_SERVICE_FILE" << EOL
-    [Unit]
-    Description=Agent that is able to check the health of the miner, provide required info to the cyborg-parachain, and stream usage metrics and logs of the cyborg node.
-    After=network.target
-
-    [Service]
-    User=root
-    Group=root
-    SupplementaryGroups=docker
-    Environment=LOG_FILE_PATH=$MINER_LOG_DIR/miner.log
-    Environment=TASK_OWNER_FILE_PATH=$MINER_CONFIG_DIR/task_owner.json
-    Environment=IDENTITY_FILE_PATH=$MINER_CONFIG_DIR/miner_identity.json
-    ExecStart=$AGENT_BINARY_PATH run
-    Restart=always
-    RestartSec=3
-
-    [Install]
-    WantedBy=multi-user.target
-EOL
-
-    echo "systemd service for $AGENT_FILE_NAME created successfully!"
-
-    echo "Reloading systemd, enabling and starting $MINER_FILE_NAME and $AGENT_FILE_NAME services..."
+    echo "Reloading systemd, enabling and starting $MINER_FILE_NAME service..."
 
     systemctl daemon-reexec
     systemctl daemon-reload
     systemctl enable "$MINER_FILE_NAME"
-    systemctl enable "$AGENT_FILE_NAME"
     systemctl restart "$MINER_FILE_NAME"
-    systemctl restart "$AGENT_FILE_NAME"
 
     systemctl status "$MINER_FILE_NAME" --no-pager
-    systemctl status "$AGENT_FILE_NAME" --no-pager
 
-    echo "Cyborg Miner and Agent are installed and running. Binaries are located at $MINER_BINARY_PATH and $AGENT_BINARY_PATH. Now attempting to open Port $AGENT_HTTP_PORT, $AGENT_WS_PORT and $MINER_INFERENCE_PORT to enable communication with Cyborg Connect and provide an inference endpoint."
+    echo "Cyborg Miner is installed and running. Binary is located at $MINER_BINARY_PATH. Now attempting to open Port $AGENT_HTTP_PORT, $AGENT_WS_PORT and $MINER_INFERENCE_PORT to enable communication with Cyborg Connect and provide an inference endpoint."
 }
 
 move_files() {
     echo "Moving the miner to $BIN_DIR..."
-    echo "Moving the agent to $BIN_DIR..."
     echo "Moving the setup script to $SCRIPT_DIR..."
 
     mv "$MINER_BIN" "$MINER_BINARY_PATH"
-    mv "$AGENT_BIN" "$AGENT_BINARY_PATH"
     mv "$SETUP_SCRIPT" "$SETUP_SCRIPT_PATH"
 }
 
@@ -403,7 +370,6 @@ update() {
 
     # Avoid race condition
     systemctl stop cyborg-miner.service
-    systemctl stop cyborg-agent.service
 
     move_files
     setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE"
