@@ -49,9 +49,8 @@ jobs:
         run: |
           mkdir -p release
           cp target/${{ matrix.target }}/release/cyborg-miner release/
-          cp cyborg-agent release/
           cp scripts/setup.sh release/
-          chmod +x release/cyborg-miner release/cyborg-agent release/setup.sh
+          chmod +x release/cyborg-miner release/setup.sh
           tar -czvf cyborg-miner-linux-${{ matrix.arch }}.tar.gz -C release .
 
       - name: Upload binary to GitHub Release
