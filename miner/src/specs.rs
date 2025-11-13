@@ -7,7 +7,7 @@ use sysinfo::{MemoryRefreshKind, RefreshKind, System};
 
 use reqwest::Client;
 
-use crate::{error::Result, global_config, types::MinerConfig};
+use crate::{error::Result, global_config, miner_types::MinerConfig};
 
 #[derive(Debug, Deserialize)]
 struct GoogleGeoResponse {

@@ -2,16 +2,19 @@ use std::sync::Arc;
 
 use tokio::sync::RwLock;
 
-use crate::substrate_interface::api::runtime_types::cyborg_primitives::task::FlashInferTask;
-use crate::types::CurrentTask;
+use types::substrate_interface::api::runtime_types::cyborg_primitives::task::FlashInferTask;
 use crate::{
     error::Result,
     parent_runtime::storage_interactor,
+};
+use types::{
     substrate_interface::api::{
         runtime_types::cyborg_primitives::task::OpenInferenceTask,
         task_management::events::task_scheduled::TaskKind,
     },
+    CurrentTask
 };
+
 
 pub async fn process_task(task: Arc<RwLock<CurrentTask>>) -> Result<()> {
     match &task.read().await.task_type {

@@ -5,12 +5,8 @@ use crate::{
     },
     log,
     parent_runtime::inference::CURRENT_SERVER,
-    substrate_interface::api::{
-        runtime_types::cyborg_primitives::{miner::OperationalStatus, task::TaskStatusType},
-        task_management::events::task_scheduled::TaskId,
-    },
     traits::InferenceServer,
-    types::{CurrentTask, Miner, ParentRuntime},
+    miner_types::{Miner, ParentRuntime},
     utils::{
         substrate_queries::{
             get_currently_assigned_task_id, get_miner_id_assigned_to_task, get_task,
@@ -27,6 +23,14 @@ use serde::Serialize;
 use std::{fs, sync::Arc};
 use subxt::utils::AccountId32;
 use tokio::{sync::RwLock, task::JoinHandle};
+use types::{
+    substrate_interface::api::{
+        runtime_types::cyborg_primitives::{miner::OperationalStatus, task::TaskStatusType},
+        task_management::events::task_scheduled::TaskId,
+    },
+    CurrentTask
+};
+
 
 use crate::parachain_interactor::registration::update_operational_status;
 

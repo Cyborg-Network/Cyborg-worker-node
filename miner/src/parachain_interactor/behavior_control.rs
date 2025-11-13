@@ -1,9 +1,10 @@
-use crate::error::Result;
-use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
-use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::OperationalStatus;
-use crate::types::Miner;
+use types::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
+use types::substrate_interface::api::runtime_types::cyborg_primitives::miner::OperationalStatus;
+use types::substrate_interface;
 
-use crate::{global_config, substrate_interface};
+use crate::miner_types::Miner;
+use crate::error::Result;
+use crate::global_config;
 
 pub async fn _miner_self_suspend(miner: &Miner) -> Result<()> {
     let client = global_config::get_parachain_client()?;

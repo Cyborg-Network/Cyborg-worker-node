@@ -53,6 +53,7 @@ impl Specs {
             .context("Failed to get kernel version")?;
         let serverhostname = sys.host_name().context("Failed to get server hostname")?;
         // potential injection. Don't run eval on returned JSON
+
         let client = Client::new();
 
         let response = client

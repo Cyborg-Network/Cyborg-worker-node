@@ -14,9 +14,9 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
-pub type LogsStorage = Arc<Mutex<Vec<String>>>;
+use crate::PATHS;
 
-const LOG_FILE_PATH: &str = "/var/lib/cyborg/worker-node/logs/worker_log.txt";
+pub type LogsStorage = Arc<Mutex<Vec<String>>>;
 
 // Read JSON map from a file and return the Value or an error
 fn read_json_map(file_path: PathBuf) -> Result<Value> {
@@ -49,8 +49,7 @@ fn get_deployment_name_from_json_map(task_id: &str, json_map: &Value) -> Option<
 }
 
 pub fn read_logs() -> Result<String> {
-    let file_path = Path::new(LOG_FILE_PATH);
-    let mut file = File::open(file_path)?;
+    let mut file = File::open(&PATHS.logs)?;
     
     file.lock_shared()?;
     

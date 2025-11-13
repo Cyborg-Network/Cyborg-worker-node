@@ -139,12 +139,13 @@ impl Usage {
             let usage_snapshot = serde_json::to_string(&usage_snapshot)
                 .map_err(|e| ClientError::UsageError(e.to_string()))?;
     
-            let encrypted_message = encrypt_message("Usage", &diffie_hellman_key_copy, usage_snapshot);
+            let encrypted_message = encrypt_message("Usage", &diffie_hellman_key_copy, usage_snapshot)
+                .map_err(|e| ClientError::UsageError(e.to_string()))?;
     
             let encrypted_message = serde_json::to_string(&encrypted_message)
                 .map_err(|e| ClientError::UsageError(e.to_string()))?;
     
-            println!("Sending usage message: {:?}", encrypted_message);
+            //println!("Sending usage message: {:?}", encrypted_message);
 
             let mut stream_guard = stream.lock().await;
     

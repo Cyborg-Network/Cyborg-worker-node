@@ -20,19 +20,19 @@ mod log;
 mod parachain_interactor;
 mod parent_runtime;
 mod specs;
-mod substrate_interface;
 mod traits;
-mod types;
+mod miner_types;
 mod self_management;
 mod utils;
 
+use std::sync::Arc;
 use builder::MinerBuilder;
 use clap::Parser;
 use cli::{Cli, Commands};
 use error::Result;
 use global_config::run_global_config;
 use traits::ParachainInteractor;
-use cyborg_agent::run_agent;
+use cyborg_agent::{run_agent, AgentConfig};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -58,10 +58,6 @@ async fn main() -> Result<()> {
 
             let miner_uuid_bytes = miner_uuid.clone().into_bytes();
 
-            let agent_handle = tokio::spawn(
-                run_agent()
-            );
-
             // Fails fast, am error here is unrecoverable
             let miner = MinerBuilder::new()
                 .miner_type(miner_type)
@@ -72,6 +68,15 @@ async fn main() -> Result<()> {
                 .build()
                 .await
                 .expect("Failed to build miner");
+
+            let agent_config = AgentConfig {
+                current_task: Arc::clone(&miner.current_task()),
+                log_file_path: &global_config::PATHS.log_path,
+            };
+
+            let agent_handle = tokio::spawn(
+                run_agent(agent_config)
+            );
 
             // Start the mining session using the built miner.
             miner.start_miner().await?;

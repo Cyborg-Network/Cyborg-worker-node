@@ -4,16 +4,16 @@ use crate::error::Error;
 use crate::error::Result;
 use crate::global_config;
 use crate::specs;
-use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
-use crate::substrate_interface::{self, api::runtime_types::cyborg_primitives::miner::MinerType};
-use crate::types::MinerIdentity;
+use types::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
+use types::substrate_interface::{self, api::runtime_types::cyborg_primitives::miner::MinerType};
+use crate::miner_types::MinerIdentity;
 use crate::utils::substrate_queries::get_miner_by_domain;
 use crate::utils::tx_queue::TxOutput;
 use std::fmt::Debug;
 use std::sync::Arc;
-use substrate_interface::api::edge_connect::Error as EdgeConnectError;
-use substrate_interface::api::neuro_zk::Error as NzkError;
-use substrate_interface::api::task_management::Error as TaskManagementError;
+use types::substrate_interface::api::edge_connect::Error as EdgeConnectError;
+use types::substrate_interface::api::neuro_zk::Error as NzkError;
+use types::substrate_interface::api::task_management::Error as TaskManagementError;
 use subxt_signer::sr25519::Keypair;
 
 /// Registers the miner on the blockchain.

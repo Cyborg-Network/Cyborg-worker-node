@@ -53,7 +53,8 @@ impl Init {
         let init_item = serde_json::to_string(&init_item)
             .map_err(|e| ClientError::InitError(e.to_string()))?;
      
-        let encrypted_message = encrypt_message("Init", &diffie_hellman_key_copy, init_item);
+        let encrypted_message = encrypt_message("Init", &diffie_hellman_key_copy, init_item)
+            .map_err(|e| ClientError::InitError(e.to_string()))?;
      
         let encrypted_message = serde_json::to_string(&encrypted_message)
             .map_err(|e| ClientError::InitError(e.to_string()))?;

@@ -1,13 +1,13 @@
 use crate::global_config::PATHS;
-use crate::substrate_interface;
-use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::OperationalStatus;
+use types::substrate_interface;
+use types::substrate_interface::api::runtime_types::cyborg_primitives::miner::OperationalStatus;
 use crate::traits::{InferenceServer, ParachainInteractor};
-use crate::types::CurrentTask;
+use types::CurrentTask;
 use crate::utils::task_handling::{self, return_task_container_name, set_current_task};
 use crate::utils::tx_builder::pub_confirm_task_reception;
 use crate::{
     error::{Error, Result},
-    types::{Miner, MinerIdentity},
+    miner_types::{Miner, MinerIdentity},
 };
 use std::fs;
 use std::sync::Arc;

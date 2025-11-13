@@ -4,6 +4,8 @@ pub enum ClientError {
     AuthError(String),
     InitError(String),
     UsageError(String),
+    CreateContainerKeyError(String),
+    DepositContainerKeyError(String),
     InvalidRequestError,
 }
 
@@ -60,5 +62,27 @@ pub fn construct_client_error_message(err: ClientError) -> String {
             serde_json::to_string(&error_message)
                 .unwrap_or("Cyborg Agent ecountered an unrecoverable error, please try again later.".to_string())
         },
+        ClientError::CreateContainerKeyError(message) => {
+            println!("Create container key error: {}", message);
+            let error_message = NonEncryptedErrorMessage {
+                response_type: "Error".to_string(),
+                error_type: "CreateContainerKey".to_string(),
+                error_message: "Something went wrong creating the container key, please try again later.".to_string()
+            };
+
+            serde_json::to_string(&error_message)
+                .unwrap_or("Cyborg Agent ecountered an unrecoverable error, please try again later.".to_string())
+        },
+        ClientError::DepositContainerKeyError(message) => {
+            println!("Deposit container key error: {}", message);
+            let error_message = NonEncryptedErrorMessage {
+                response_type: "Error".to_string(),
+                error_type: "DepositContainerKey".to_string(),
+                error_message: "Something went wrong depositing the container key, please try again later.".to_string()
+            };
+
+            serde_json::to_string(&error_message)
+                .unwrap_or("Cyborg Agent ecountered an unrecoverable error, please try again later.".to_string())
+        }
     }
 }

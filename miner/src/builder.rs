@@ -1,9 +1,11 @@
 use crate::{
     error::{Error, Result},
     parachain_interactor::registration::retrieve_identity,
-    substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType,
-    types::{Miner, ParentRuntime},
+    miner_types::{Miner, ParentRuntime},
 };
+
+use types::substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType;
+
 use std::{str::FromStr, sync::Arc};
 use subxt_signer::{sr25519::Keypair as SR25519Keypair, SecretUri};
 use tokio::sync::RwLock;

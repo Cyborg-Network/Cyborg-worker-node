@@ -1,11 +1,11 @@
 use crate::global_config::{FLASH_INFER_PORT, PATHS, TAILSCALE_NET};
-use crate::substrate_interface::api::runtime_types::cyborg_primitives::task::{
-    FlashInferTask, TaskKind,
+use types::{
+    substrate_interface::api::runtime_types::cyborg_primitives::task::{
+        FlashInferTask, TaskKind,
+    },
+    CurrentTask
 };
-use crate::{
-    error::{Error, Result},
-    types::CurrentTask,
-};
+use crate::error::{Error, Result};
 use axum::{
     extract::{
         ws::{Message, WebSocket, WebSocketUpgrade},

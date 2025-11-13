@@ -1,9 +1,10 @@
-use crate::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
-use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
-use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType;
-use crate::substrate_interface::api::runtime_types::cyborg_primitives::task::TaskInfo;
-use crate::types::MinerIdentity;
-use crate::{error::Result, substrate_interface};
+use types::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
+use types::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
+use types::substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType;
+use types::substrate_interface::api::runtime_types::cyborg_primitives::task::TaskInfo;
+use types::substrate_interface;
+use crate::miner_types::MinerIdentity;
+use crate::error::Result;
 use std::sync::Arc;
 use subxt::utils::AccountId32;
 
@@ -33,7 +34,7 @@ pub async fn get_currently_assigned_task_id(
             .cloud_miners(miner_id),
     };
 
-    let mut miner_info = api
+    let miner_info = api
         .storage()
         .at_latest()
         .await?

@@ -1,4 +1,4 @@
-use crate::{error::Result, types::MinerIdentity};
+use crate::{error::Result, miner_types::MinerIdentity};
 use once_cell::sync::OnceCell;
 use std::{
     collections::VecDeque,

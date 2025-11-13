@@ -1,10 +1,11 @@
+use types::substrate_interface::{self, api::runtime_types::bounded_collections::bounded_vec::BoundedVec};
+
 use std::sync::Arc;
 
 use crate::{
     error::Result,
     global_config,
-    substrate_interface::{self, api::runtime_types::bounded_collections::bounded_vec::BoundedVec},
-    types::Miner,
+    miner_types::Miner,
 };
 
 pub async fn confirm_task_reception(miner: Arc<Miner>) -> Result<()> {

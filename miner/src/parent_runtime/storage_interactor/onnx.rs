@@ -7,7 +7,7 @@ use std::path::Path;
 
 use crate::error::Result;
 use crate::global_config::PATHS;
-use crate::substrate_interface::api::runtime_types::cyborg_primitives::task::OnnxTask;
+use types::substrate_interface::api::runtime_types::cyborg_primitives::task::OnnxTask;
 
 const CHUNK_SIZE: u64 = 100 * 1024 * 1024;
 
