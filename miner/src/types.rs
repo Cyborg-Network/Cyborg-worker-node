@@ -12,7 +12,7 @@ use crate::{
     },
 };
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug,Clone)]
 pub struct MinerIdentity {
     pub miner_owner: AccountId32,
     pub miner_id: MinerId,

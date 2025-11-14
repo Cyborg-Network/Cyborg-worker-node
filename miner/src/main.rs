@@ -32,6 +32,9 @@ use cli::{Cli, Commands};
 use error::Result;
 use global_config::run_global_config;
 use traits::ParachainInteractor;
+use crate::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
+use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
+
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -47,22 +50,26 @@ async fn main() -> Result<()> {
             miner_uuid,
         }) => {
             // This is done separately from the miner, as these likely will remain constant, even when running multiple miners
-            // Fails fast, am error here is unrecoverable
+            // Fails fast, an error here is unrecoverable
             run_global_config(parachain_url)
                 .await
                 .expect("Error running the global config!");
 
-            // Fails fast, am error here is unrecoverable
+            // Initialize logger
             log::init_logger().expect("Could not initialize logger!");
+            
+        
 
-            let miner_uuid_bytes = miner_uuid.clone().into_bytes();
+            let miner_id_bytes = miner_uuid.as_bytes().to_vec();
+            let miner_uuid_bounded: MinerId = BoundedVec(miner_id_bytes);
+                
 
-            // Fails fast, am error here is unrecoverable
+            // Fails fast, an error here is unrecoverable
             let miner = MinerBuilder::new()
                 .miner_type(miner_type)
                 .expect("Failed to set miner type")
                 .parachain_url(parachain_url.to_string())
-                .keypair(account_seed, miner_uuid_bytes)
+                .keypair(account_seed, miner_uuid_bounded)
                 .expect("Failed to set keypair")
                 .build()
                 .await
@@ -77,7 +84,8 @@ async fn main() -> Result<()> {
             account_seed,
             miner_type,
         }) => {
-            self_management::install_self(parachain_url, miner_type, account_seed).expect("Failed to install");
+            self_management::install_self(parachain_url, miner_type, account_seed)
+                .expect("Failed to install");
         }
 
         Some(Commands::Version) => {
@@ -88,5 +96,6 @@ async fn main() -> Result<()> {
             println!("No command provided. Exiting.");
         }
     }
+
     Ok(())
 }

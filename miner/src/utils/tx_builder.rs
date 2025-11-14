@@ -6,8 +6,9 @@ use crate::global_config;
 use crate::specs;
 use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 use crate::substrate_interface::{self, api::runtime_types::cyborg_primitives::miner::MinerType};
+use crate::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
 use crate::types::MinerIdentity;
-use crate::utils::substrate_queries::get_miner_by_domain;
+use crate::utils::substrate_queries::get_miner_by_id;
 use crate::utils::tx_queue::TxOutput;
 use std::fmt::Debug;
 use std::sync::Arc;
@@ -23,7 +24,7 @@ use subxt_signer::sr25519::Keypair;
 pub async fn register(
     keypair: Arc<Keypair>,
     miner_type: Arc<MinerType>,
-    miner_uuid: Vec<u8>,
+    miner_uuid: MinerId,
 ) -> Result<MinerIdentity> {
     let client = global_config::get_parachain_client()?;
 
@@ -68,7 +69,7 @@ pub async fn register(
 
                 return Ok(MinerIdentity {
                     miner_owner: event.miner.0.clone(),
-                    miner_id: BoundedVec(miner_uuid.clone()),
+                    miner_id: miner_uuid.clone(),
                     miner_type: miner_type.as_ref().clone(),
                 });
             } else {
@@ -81,7 +82,7 @@ pub async fn register(
             if let Err(e) = check_for_acceptable_error(&[EdgeConnectError::MinerExists], e) {
                 return Err(Error::Custom(e.to_string()));
             } else {
-                match get_miner_by_domain(client, &worker_specs.domain, miner_type).await {
+                match get_miner_by_id(client, miner_uuid.clone(), miner_type).await {
                     Ok(miner_identity) => {
                         println!(
                             "Registered miner found: {:?}, {}",
@@ -104,7 +105,7 @@ pub async fn register(
 pub async fn pub_register(
     keypair: Arc<Keypair>,
     miner_type: Arc<MinerType>,
-    miner_uuid: Vec<u8>,
+    miner_uuid: MinerId,
 ) -> Result<MinerIdentity> {
     let tx_queue = global_config::get_tx_queue()?;
 

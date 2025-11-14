@@ -35,6 +35,7 @@ SETUP_SCRIPT_FILE_NAME="setup.sh"
 # Paths for the files
 BIN_DIR="/usr/local/bin"
 SCRIPT_DIR="/var/lib/cyborg/miner/scripts"
+TX_QUEUE_DB_PATH="/var/lib/cyborg/tx_queue_db"
 
 # Full paths
 MINER_BINARY_PATH="$BIN_DIR/$MINER_FILE_NAME"
@@ -46,6 +47,7 @@ MINER_INFERENCE_PORT=3000
 AGENT_HTTP_PORT=8080
 AGENT_WS_PORT=8081
 FLASH_INFER_PORT=3005
+
 
 # Service files
 MINER_SERVICE_FILE="/etc/systemd/system/$MINER_FILE_NAME.service"
@@ -235,6 +237,7 @@ setup_systemd() {
     Environment=MINER_TMP_DIR=$MINER_TMP_DIR
     Environment=TAILSCALE_NET=$TAILSCALE_NET
     Environment=FLASH_INFER_PORT=$FLASH_INFER_PORT
+    Environment=TX_QUEUE_DB_PATH=$TX_QUEUE_DB_PATH
     Environment=MINER_TYPE=$MINER_TYPE
     ExecStart=$MINER_BINARY_PATH start-miner --parachain-url \$PARACHAIN_URL --account-seed "\$ACCOUNT_SEED" --miner-type $MINER_TYPE
     Restart=always
