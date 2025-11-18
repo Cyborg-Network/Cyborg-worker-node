@@ -33,6 +33,10 @@ use error::Result;
 use global_config::run_global_config;
 use traits::ParachainInteractor;
 use cyborg_agent::{run_agent, AgentConfig};
+use types::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
+use types::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
+use tokio::time::{sleep, Duration};
+
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -48,35 +52,35 @@ async fn main() -> Result<()> {
             miner_uuid,
         }) => {
             // This is done separately from the miner, as these likely will remain constant, even when running multiple miners
-            // Fails fast, am error here is unrecoverable
+            // Fails fast, an error here is unrecoverable
             run_global_config(parachain_url)
                 .await
                 .expect("Error running the global config!");
 
-            // Fails fast, am error here is unrecoverable
+            // Initialize logger
             log::init_logger().expect("Could not initialize logger!");
 
-            let miner_uuid_bytes = miner_uuid.clone().into_bytes();
+            let miner_id_bytes = miner_uuid.as_bytes().to_vec();
+            let miner_uuid_bounded: MinerId = BoundedVec(miner_id_bytes);
 
-            // Fails fast, am error here is unrecoverable
+            // Fails fast, an error here is unrecoverable
             let miner = MinerBuilder::new()
                 .miner_type(miner_type)
                 .expect("Failed to set miner type")
                 .parachain_url(parachain_url.to_string())
-                .keypair(account_seed, miner_uuid_bytes)
+                .keypair(account_seed, miner_uuid_bounded)
                 .expect("Failed to set keypair")
                 .build()
                 .await
                 .expect("Failed to build miner");
 
-            let agent_config = AgentConfig {
-                current_task: Arc::clone(&miner.current_task()),
+            // Run the agent with config
+            let agent_config = Arc::new(AgentConfig {
+                current_task: Arc::clone(&miner.current_task),
                 log_file_path: &global_config::PATHS.log_path,
-            };
-
-            let agent_handle = tokio::spawn(
-                run_agent(agent_config)
-            );
+                container_prefix: &global_config::CONTAINER_PREFIX,
+            });
+            tokio::spawn(supervise_agent(agent_config));
 
             // Start the mining session using the built miner.
             miner.start_miner().await?;
@@ -87,7 +91,8 @@ async fn main() -> Result<()> {
             account_seed,
             miner_type,
         }) => {
-            self_management::install_self(parachain_url, miner_type, account_seed).expect("Failed to install");
+            self_management::install_self(parachain_url, miner_type, account_seed)
+                .expect("Failed to install");
         }
 
         Some(Commands::Version) => {
@@ -98,5 +103,29 @@ async fn main() -> Result<()> {
             println!("No command provided. Exiting.");
         }
     }
+
     Ok(())
+}
+
+async fn supervise_agent(agent_config: Arc<AgentConfig>) {
+    loop {
+        let handle = tokio::spawn(run_agent(Arc::clone(&agent_config)));
+
+        match handle.await {
+            Ok(Ok(())) => {
+                println!("Agent exited cleanly.");
+                break;
+            }
+            Ok(Err(e)) => {
+                eprintln!("Agent failed: {e:?}");
+            }
+            Err(join_err) => {
+                eprintln!("Agent task panicked: {join_err}");
+            }
+        }
+
+        sleep(Duration::from_millis(500)).await;
+
+        println!("Restarting agent...");
+    }
 }

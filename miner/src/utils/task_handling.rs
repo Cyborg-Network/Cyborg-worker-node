@@ -143,7 +143,7 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
         }
     };
 
-    if task_miner_id != miner.identity.miner_id {
+    if task_miner_id.0 != miner.identity.miner_id {
         nuke_all_running_task_containers().await?;
         return Err("Miner is not assigned to any task, nuking all possible remaining running task containers".into());
     } else {

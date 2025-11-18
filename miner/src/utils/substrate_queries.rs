@@ -3,7 +3,7 @@ use types::substrate_interface::api::runtime_types::bounded_collections::bounded
 use types::substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType;
 use types::substrate_interface::api::runtime_types::cyborg_primitives::task::TaskInfo;
 use types::substrate_interface;
-use crate::miner_types::MinerIdentity;
+use types::{MinerIdentity, MinerIdVec};
 use crate::error::Result;
 use std::sync::Arc;
 use subxt::utils::AccountId32;
@@ -22,16 +22,18 @@ pub struct CyborgTask {
 // No good for producion, but miners need a different ID in order to efficiently query them due to subxt bug when querying tuples
 pub async fn get_currently_assigned_task_id(
     api: &OnlineClient<PolkadotConfig>,
-    miner_id: &MinerId,
+    miner_id: &MinerIdVec,
     miner_type: Arc<MinerType>,
 ) -> Result<u64> {
+    let bounded_id = BoundedVec(miner_id.clone());
+
     let miner_query = match miner_type.as_ref() {
         MinerType::Edge => substrate_interface::api::storage()
             .edge_connect()
-            .edge_miners(miner_id),
+            .edge_miners(&bounded_id),
         MinerType::Cloud => substrate_interface::api::storage()
             .edge_connect()
-            .cloud_miners(miner_id),
+            .cloud_miners(&bounded_id),
     };
 
     let miner_info = api
@@ -41,17 +43,8 @@ pub async fn get_currently_assigned_task_id(
         .fetch(&miner_query)
         .await?;
 
-    // while let Some(Ok(fetched_miner)) = miner_iter_query.next().await {
-    //     if fetched_miner.value.id == miner_id.clone() {
-    //         if let Some(task_id) = fetched_miner.value.current_task {
-    //             return Ok(task_id);
-    //         } else {
-    //             return Err("Miner has no task assigned".into());
-    //         }
-    //     }
-    // }
     if let Some(miner)=miner_info{
-        if miner.id==miner_id.clone(){
+        if &miner.id.0==miner_id{
             if let Some(task_id) = miner.current_task {
                 return Ok(task_id);
             } else {
@@ -129,7 +122,7 @@ pub async fn get_miner_by_domain(
         if *domain == queried_domain {
             return Ok(MinerIdentity {
                 miner_owner: miner.value.owner.clone(),
-                miner_id: miner.value.id.clone(),
+                miner_id: miner.value.id.0.clone(),
                 miner_type: miner_type.as_ref().clone(),
             });
         }
@@ -138,45 +131,32 @@ pub async fn get_miner_by_domain(
     Err("Miner not found".into())
 }
 
-
-
 pub async fn get_miner_by_id(
     api: &OnlineClient<PolkadotConfig>,
-    miner_id: String,
+    miner_id: MinerId,
+    miner_type: Arc<MinerType>,
 ) -> Result<MinerIdentity> {
     // Determine miner type and convert ID
     let storage = api.storage().at_latest().await?;
-    let miner_id_bytes = miner_id.as_bytes().to_vec();
+  
 
-    let (miner_type, miner_iter_addr) = if miner_id.starts_with("ED-") {
-        (
-            MinerType::Edge,
-            substrate_interface::api::storage().edge_connect().edge_miners_iter(),
-        )
-    } else if miner_id.starts_with("CL-") {
-        (
-            MinerType::Cloud,
-           substrate_interface::api::storage().edge_connect().cloud_miners_iter(),
-        )
-    } else {
-        return Err("Invalid miner ID prefix — must start with ED- or CL-".into());
+    let miner_query = match miner_type.as_ref() {
+        MinerType::Edge => substrate_interface::api::storage()
+            .edge_connect()
+            .edge_miners(miner_id.clone()),
+        MinerType::Cloud => substrate_interface::api::storage()
+            .edge_connect()
+            .cloud_miners(miner_id.clone()),
     };
-    let mut miner_iter = storage.iter(miner_iter_addr).await?;
-    let mut found_miner = None;
 
-    while let Some(Ok(kv)) = miner_iter.next().await {
-        let value = kv.value;
-        if value.id.0 == miner_id_bytes {
-            found_miner = Some(value);
-            break;
-        }
-    }
-
-let miner_info = found_miner.ok_or_else(|| "Miner not found for given ID")?;
+    let miner_info = match storage.fetch(&miner_query).await? {
+        Some(miner) => miner,
+        None => return Err("Miner not found".into()),
+    };
 
     Ok(MinerIdentity {
         miner_owner: miner_info.owner,
-        miner_id: miner_info.id.clone(),
-        miner_type,
+        miner_id: miner_info.id.0.clone(),
+        miner_type: miner_type.as_ref().clone(),
     })
 }

@@ -3,10 +3,12 @@ use subxt::utils::AccountId32;
 
 pub mod substrate_interface;
 
+pub type MinerIdVec = Vec<u8>;
+
 #[derive(Deserialize, Serialize, Debug)]
 pub struct MinerIdentity {
     pub miner_owner: AccountId32,
-    pub miner_id: substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId,
+    pub miner_id: MinerIdVec,
     pub miner_type: substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType,
 }
 

@@ -7,8 +7,9 @@ use crate::utils::task_handling::{self, return_task_container_name, set_current_
 use crate::utils::tx_builder::pub_confirm_task_reception;
 use crate::{
     error::{Error, Result},
-    miner_types::{Miner, MinerIdentity},
+    miner_types::Miner,
 };
+use types::MinerIdentity;
 use std::fs;
 use std::sync::Arc;
 use subxt::{events::EventDetails, PolkadotConfig};
@@ -106,7 +107,7 @@ pub async fn process_event(miner: Arc<Miner>, event: &EventDetails<PolkadotConfi
             let file_content = fs::read_to_string(identity_path)?;
             let miner_data: MinerIdentity = serde_json::from_str(&file_content)?;
 
-            if assigned_miner.1 .0.to_vec() == miner_data.miner_id.0.to_vec() {
+            if assigned_miner.1.0.to_vec() == miner_data.miner_id.to_vec() {
                 println!("New task scheduled: {:?}", task_scheduled.task_id);
 
                 // Update operational status to Busy when task is assigned

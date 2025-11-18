@@ -9,7 +9,7 @@ use crate::global_config;
 pub async fn _miner_self_suspend(miner: &Miner) -> Result<()> {
     let client = global_config::get_parachain_client()?;
     let miner_id = &miner.identity.miner_id;
-    let miner_id_bounded = BoundedVec(miner_id.0.clone());
+    let miner_id_bounded = BoundedVec(miner_id.clone());
 
     // TODO This needs a special function and miners need a quarantine or other way to punish suspicious behavior
     let worker_suspension = substrate_interface::api::tx()

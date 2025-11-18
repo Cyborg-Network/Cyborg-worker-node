@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use x25519_dalek::PublicKey;
-use std::sync::{Arc, RwLock};
-use tokio::sync::Mutex;
+use std::sync::Arc;
+use tokio::sync::{Mutex, RwLock};
 
 use crate::error_handling::ClientError;
 use crate::crypto::{
@@ -64,7 +64,7 @@ pub fn process_auth_request(request: WsAuthRequest) -> Result<ProcessedAuthMessa
     Ok(ProcessedAuthMessage { signed_timestamp: request.signed_timestamp, timestamp_signature, public_key, task_id: request.task_id })
 }
 
-pub fn construct_auth_response(
+pub async fn construct_auth_response(
     request:WsAuthRequest, 
     diffie_hellman_key: &Arc<RwLock<Option<[u8; 32]>>>, 
     log_storage: &Arc<Mutex<Vec<String>>>, 
@@ -78,8 +78,7 @@ pub fn construct_auth_response(
 
         let server_public_key_bytes = server_keypair.1.to_bytes();
 
-        let mut diffie_hellman_key_guard = diffie_hellman_key.write()
-            .map_err(|e| ClientError::AuthError(e.to_string()))?;
+        let mut diffie_hellman_key_guard = diffie_hellman_key.write().await;
 
         if diffie_hellman_key_guard.is_none() {
            *diffie_hellman_key_guard = Some(compute_diffie_hellman_secret(server_keypair.0, processed_request.public_key.into())); 

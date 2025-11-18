@@ -7,6 +7,7 @@ use crate::{
 use types::substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType;
 
 use std::{str::FromStr, sync::Arc};
+use types::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
 use subxt_signer::{sr25519::Keypair as SR25519Keypair, SecretUri};
 use tokio::sync::RwLock;
 
@@ -18,7 +19,7 @@ pub struct MinerBuilder {
 pub struct MinerBuilderStage2 {
     miner_type: MinerType,
     keypair: SR25519Keypair,
-    miner_uuid: Vec<u8>,
+    miner_uuid: MinerId,
 }
 
 pub fn validate_miner_type(miner_type: &str) -> Result<MinerType> {
@@ -46,7 +47,7 @@ impl MinerBuilder {
         self
     }
 
-    pub fn keypair(self, seed: &str, miner_uuid: Vec<u8>) -> Result<MinerBuilderStage2> {
+    pub fn keypair(self, seed: &str, miner_uuid: MinerId) -> Result<MinerBuilderStage2> {
         let uri = SecretUri::from_str(seed).map_err(|e| Error::Custom(e.to_string()))?;
         let keypair = SR25519Keypair::from_uri(&uri).map_err(|e| Error::Custom(e.to_string()))?;
 

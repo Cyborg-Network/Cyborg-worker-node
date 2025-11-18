@@ -5,9 +5,13 @@ use sysinfo::{CpuExt, CpuRefreshKind, RefreshKind, System, SystemExt, DiskExt};
 use tokio::{net::TcpStream, sync::Mutex};
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::WebSocketStream;
-use std::sync::{Arc, RwLock};
+use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::Duration;
-use tokio::time::{self,sleep};
+use tokio::{
+    time::{self, sleep},
+    sync::RwLock,
+};
 use crate::api::logs;
 use crate::error_handling::ClientError;
 use crate::crypto::encrypt_message;
@@ -60,7 +64,7 @@ pub fn return_disk_usage() -> u64 {
 }
 
 impl Usage {
-    pub async fn get_usage_snapshot(log_storage: logs::LogsStorage, zk_stage: Arc<Mutex<u8>>) -> Result<Usage> {
+    pub async fn get_usage_snapshot(log_storage: logs::LogsStorage, zk_stage: Arc<Mutex<u8>>, log_path: &PathBuf) -> Result<Usage> {
         let mut system = System::new_with_specifics(
             RefreshKind::new()
                 .with_cpu(CpuRefreshKind::everything())
@@ -88,7 +92,7 @@ impl Usage {
 
         let logs: String;
 
-        if let Ok(log_result) = logs::read_logs(){
+        if let Ok(log_result) = logs::read_logs(log_path){
             logs = log_result;
         } else {
             logs = String::from("");
@@ -114,10 +118,10 @@ impl Usage {
         diffie_hellman_key: Arc<RwLock<Option<[u8; 32]>>>,
         log_storage: Arc<Mutex<Vec<String>>>,
         zk_stage: Arc<Mutex<u8>>,
+        log_path: &PathBuf,
     ) -> Result<(), ClientError> {
         let diffie_hellman_key_copy = {
-            let diffie_hellman_key_guard = diffie_hellman_key.read()
-                .map_err(|e| ClientError::UsageError(e.to_string()))?;
+            let diffie_hellman_key_guard = diffie_hellman_key.read().await;
          
             if let Some(key) = *diffie_hellman_key_guard {
                 key
@@ -133,7 +137,7 @@ impl Usage {
 
             let log_storage_clone = Arc::clone(&log_storage);
     
-            let usage_snapshot = Usage::get_usage_snapshot(log_storage_clone, Arc::clone(&zk_stage)).await
+            let usage_snapshot = Usage::get_usage_snapshot(log_storage_clone, Arc::clone(&zk_stage), log_path).await
                 .map_err(|e| ClientError::UsageError(e.to_string()))?;
     
             let usage_snapshot = serde_json::to_string(&usage_snapshot)

@@ -7,14 +7,9 @@ use std::{
     io::{BufRead, BufReader}
 };
 use tokio::sync::Mutex;
-//use home::home_dir;
-use anyhow::{Context, Result}; // Importing anyhow for better error handling
-use fs2::FileExt;
+use anyhow::{Context, Result};
 use std::fs::File;
 use std::io::Read;
-use std::path::Path;
-
-use crate::PATHS;
 
 pub type LogsStorage = Arc<Mutex<Vec<String>>>;
 
@@ -48,8 +43,8 @@ fn get_deployment_name_from_json_map(task_id: &str, json_map: &Value) -> Option<
     None
 }
 
-pub fn read_logs() -> Result<String> {
-    let mut file = File::open(&PATHS.logs)?;
+pub fn read_logs(log_path: &PathBuf) -> Result<String> {
+    let mut file = File::open(&log_path)?;
     
     file.lock_shared()?;
     

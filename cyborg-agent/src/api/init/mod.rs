@@ -1,4 +1,5 @@
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
 use serde::Serialize;
 use async_recursion::async_recursion;
@@ -37,8 +38,7 @@ impl Init {
         diffie_hellman_key: &Arc<RwLock<Option<[u8; 32]>>>
     ) -> Result<String, ClientError> {
         let diffie_hellman_key_copy = {
-            let diffie_hellman_key_guard = diffie_hellman_key.read()
-                .map_err(|e| ClientError::InitError(e.to_string()))?;
+            let diffie_hellman_key_guard = diffie_hellman_key.read().await;
      
             if let Some(key) = *diffie_hellman_key_guard {
                 key

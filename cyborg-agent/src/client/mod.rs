@@ -1,8 +1,33 @@
-use std::{process::Stdio, sync::{Arc, RwLock}};
+use std::{process::Stdio, sync::Arc};
 use tempfile::TempDir;
-use tokio::{fs, process::Command};
+use tokio::{fs, process::Command, sync::RwLock};
+use types::{substrate_interface::api::runtime_types::cyborg_primitives::task::{CyCloudTask, TaskKind}, CurrentTask};
 use crate::{
-    api::{dbus::watch_for_zk_stage_update, logs, HealthStatus, Init, Usage}, auth::{self, WsAuthRequest}, crypto::{decode_polkadot_address, encrypt_message}, error_handling::{construct_client_error_message, ClientError}, formats::{self, OptionalStatusCode, OptionalUuid}, AgentConfig, CurrentTask, TaskOwner, TASK_CONTAINER_PREFIX
+    api::{
+        dbus::watch_for_zk_stage_update, 
+        logs, 
+        HealthStatus, 
+        Init, 
+        Usage
+    }, 
+    auth::{
+        self, 
+        WsAuthRequest
+    }, 
+    crypto::{
+        decode_polkadot_address, 
+        encrypt_message
+    }, 
+    error_handling::{
+        construct_client_error_message, 
+        ClientError
+    }, 
+    formats::{
+        self, 
+        OptionalStatusCode, 
+        OptionalUuid
+    }, 
+    AgentConfig
 };
 use anyhow::{anyhow, Result};
 use futures::stream::SplitSink;
@@ -188,11 +213,11 @@ async fn handle_http_request(mut stream: TcpStream) -> Result<()> {
     Ok(())
 }
 
-async fn handle_ws_connections(stream: TcpStream, current_task: CurrentTask) -> Result<()> {
+async fn handle_ws_connections(stream: TcpStream, config: Arc<AgentConfig>) -> Result<()> {
     if let Ok(ws_stream) = accept_async(stream).await {
         println!("WebSocket handshake has been successfully completed");
 
-        let guard = current_task.read().await;
+        let guard = config.current_task.read().await;
         let task_ref = guard.as_ref().ok_or_else(|| anyhow!("No current task!"))?;
 
         let public_key_bytes = decode_polkadot_address(&task_ref.task_owner);
@@ -231,6 +256,7 @@ async fn handle_ws_connections(stream: TcpStream, current_task: CurrentTask) -> 
                                             let stream_usage_log_storage = Arc::clone(&log_storage);
                                             let stream_usage_ws_sender = Arc::clone(&ws_sender);
                                             let stream_usage_zk_stage = Arc::clone(&zk_stage);
+                                            let stream_usage_config = Arc::clone(&config);
 
                                             streaming_task = Some(tokio::spawn(async move {
                                                let sender = stream_usage_ws_sender; 
@@ -240,6 +266,7 @@ async fn handle_ws_connections(stream: TcpStream, current_task: CurrentTask) -> 
                                                     stream_usage_diffie_hellman_key, 
                                                     stream_usage_log_storage,
                                                     stream_usage_zk_stage,
+                                                    &stream_usage_config.log_file_path,
                                                 ).await {
                                                     let mut sender_guard = sender.lock().await;
                                                     let _ =sender_guard.send(
@@ -269,7 +296,7 @@ async fn handle_ws_connections(stream: TcpStream, current_task: CurrentTask) -> 
                                     }
 
                                     WsApiRequestType::CreateContainerKey(request) => {
-                                        if let Err(e) = handle_create_container_ssh_key(request.task_id, &diffie_hellman_key, &ws_sender).await {
+                                            if let Err(e) = handle_create_user_ssh_key(request.task_id, Arc::clone(&config.current_task), config.container_prefix, &diffie_hellman_key, &ws_sender).await {
                                             println!("Failed to send request key response message, sending client error.");
                                             let mut sender_guard = ws_sender.lock().await;
                                             sender_guard.send(Message::Text(construct_client_error_message(e))).await?;
@@ -277,7 +304,7 @@ async fn handle_ws_connections(stream: TcpStream, current_task: CurrentTask) -> 
                                     }
 
                                     WsApiRequestType::DepositContainerKey(request) => {
-                                        if let Err(e) = handle_deposit_container_ssh_key(request.task_id, &diffie_hellman_key, request.key, &ws_sender).await {
+                                        if let Err(e) = handle_deposit_user_ssh_key(request.task_id, Arc::clone(&config.current_task), config.container_prefix, &diffie_hellman_key, request.key, &ws_sender).await {
                                             println!("Failed to send request key response message, sending client error.");
                                             let mut sender_guard = ws_sender.lock().await;
                                             sender_guard.send(Message::Text(construct_client_error_message(e))).await?;
@@ -287,7 +314,7 @@ async fn handle_ws_connections(stream: TcpStream, current_task: CurrentTask) -> 
                             }
 
                             WsMessageFormat::Auth(request) => {
-                              let auth_res = auth::construct_auth_response(request, &diffie_hellman_key, &log_storage, public_key_bytes);
+                              let auth_res = auth::construct_auth_response(request, &diffie_hellman_key, &log_storage, public_key_bytes).await;
 
                               match auth_res {
                                 Ok(response) => {
@@ -328,7 +355,7 @@ async fn handle_ws_connections(stream: TcpStream, current_task: CurrentTask) -> 
     Ok(())
 }
 
-pub async fn run_client<'a>(config: AgentConfig<'a>) -> Result<()> {
+pub async fn run_client(config: Arc<AgentConfig>) -> Result<()> {
     let http_listener = TcpListener::bind(HTTP_ADDR).await?;
     let ws_listener = TcpListener::bind(WS_ADDR).await?;
 
@@ -350,13 +377,14 @@ pub async fn run_client<'a>(config: AgentConfig<'a>) -> Result<()> {
         }
     });
 
+    let config = Arc::clone(&config);
     let ws_task = tokio::spawn(async move {
         loop {
             match ws_listener.accept().await {
                 Ok((stream, _)) => {
-                    let current_task = Arc::clone(&config.current_task);
+                    let config = Arc::clone(&config);
                     tokio::spawn(async move {
-                        if let Err(e) = handle_ws_connections(stream, current_task).await {
+                        if let Err(e) = handle_ws_connections(stream, config).await {
                             eprintln!("WebSocket handler error: {:?}", e);
                         }
                     });
@@ -385,8 +413,8 @@ pub async fn run_client<'a>(config: AgentConfig<'a>) -> Result<()> {
     Ok(())
 }
 
-fn construct_container_name(task_id: String) -> String {
-    format!("{}{}", *TASK_CONTAINER_PREFIX, task_id)
+fn construct_container_name(prefix: &str, task_id: String) -> String {
+    format!("{}{}", prefix, task_id)
 }
 
 async fn generate_ssh_keypair() -> Result<CreateContainerKeyResponse, ClientError> {
@@ -435,22 +463,44 @@ async fn generate_ssh_keypair() -> Result<CreateContainerKeyResponse, ClientErro
 }
 
 async fn deposit_public_key<'a>(
-    task_identifier: TaskIdentifier<'a>,
+    current_task: Arc<RwLock<Option<CurrentTask>>>,
+    container_name: &str,
     public_key: &str,
 ) -> Result<(), ClientError> {
-    let args = match task_identifier {
-        TaskIdentifier::Container(container_name) => { 
+    let task_guard = current_task.read().await;
+
+    let task = task_guard
+        .as_ref()
+        .ok_or_else(|| {
+            ClientError::DepositContainerKeyError("Cannot deposit key - there is no active task!".to_string())
+        })?;
+
+    let task = match &task.task_type {
+        TaskKind::CyCloud(task_type) => task_type,
+        _ => {
+            return Err(ClientError::DepositContainerKeyError("Cannot deposit key - the task has the wrong type!".to_string()));
+        }
+    };
+
+    let args = match task {
+        CyCloudTask::Container(_) => { 
             DepositPublicKeyArgs {
                 identifier: container_name,
                 script: &DEPOSIT_CONTAINER_KEYS_SCRIPT
             }
         },
-        TaskIdentifier::Native(active_user) => {
+        CyCloudTask::Native(native_task) => {
             DepositPublicKeyArgs {
-                identifier: active_user,
+                identifier: &String::from_utf8_lossy(&native_task.user_name.0),
                 script: &DEPOSIT_NATIVE_KEYS_SCRIPT
             }
-        }
+        },
+        CyCloudTask::Vm(vm_task) => {
+            DepositPublicKeyArgs {
+                identifier: &String::from_utf8_lossy(&vm_task.user_name.0),
+                script: &DEPOSIT_NATIVE_KEYS_SCRIPT
+            }
+        },
     };
 
     let mut child = Command::new("bash")
@@ -482,14 +532,15 @@ async fn deposit_public_key<'a>(
     Ok(())
 }
 
-async fn handle_create_container_ssh_key(
+async fn handle_create_user_ssh_key(
     task_id: String, 
+    current_task: Arc<RwLock<Option<CurrentTask>>>,
+    container_prefix: &str,
     diffie_hellman_key: &Arc<RwLock<Option<[u8; 32]>>>,
     sender: &Arc<Mutex<SplitSink<WebSocketStream<TcpStream>, Message>>>
 ) -> Result<(), ClientError> {
     let diffie_hellman_key_copy = {
-        let diffie_hellman_key_guard = diffie_hellman_key.read()
-            .map_err(|e| ClientError::UsageError(e.to_string()))?;
+        let diffie_hellman_key_guard = diffie_hellman_key.read().await;
         
         if let Some(key) = *diffie_hellman_key_guard {
             key
@@ -498,11 +549,32 @@ async fn handle_create_container_ssh_key(
         }
     };
 
-    let container_name = construct_container_name(task_id);
-    
+
     let keypair = generate_ssh_keypair().await?;
+
+    if let Some(task) = &*current_task.read().await {
+        match task.task_type {
+            types::substrate_interface::api::runtime_types::cyborg_primitives::task::TaskKind::CyCloud(cycloud_task) => {
+                match cycloud_task {
+                    CyCloudTask::Container => {
+                        let container_name = construct_container_name(container_prefix, task_id);
     
-    deposit_public_key(TaskIdentifier::Container(&container_name), &keypair.pub_key).await?;
+                        deposit_public_key(TaskIdentifier::Container(&container_name), &keypair.pub_key).await?;
+                    },
+                    CyCloudTask::Native(username) => {
+
+                    },
+                    CyCloudTask::Vm(username) => {
+                        return Err(ClientError::CreateContainerKeyError("CyCloud doesn't support VM deployment yet!".to_string()));
+                    },
+                }
+            },
+            _ => {
+                return Err(ClientError::CreateContainerKeyError("Wrong task type, cannot create ssh key!".to_string()));
+            }
+        }
+    }
+
     
     let data_string = serde_json::to_string(&keypair)
         .map_err(|e| ClientError::CreateContainerKeyError(e.to_string()))?;
@@ -520,16 +592,17 @@ async fn handle_create_container_ssh_key(
     Ok(())
 }
 
-async fn handle_deposit_container_ssh_key(
+async fn handle_deposit_user_ssh_key(
     task_id: String, 
+    current_task: Arc<RwLock<Option<CurrentTask>>>,
+    container_prefix: &str,
     diffie_hellman_key: &Arc<RwLock<Option<[u8; 32]>>>,
     key: String, 
     sender: &Arc<Mutex<SplitSink<WebSocketStream<TcpStream>, 
     Message>>>
 ) -> Result<(), ClientError> {
     let diffie_hellman_key_copy = {
-        let diffie_hellman_key_guard = diffie_hellman_key.read()
-            .map_err(|e| ClientError::UsageError(e.to_string()))?;
+        let diffie_hellman_key_guard = diffie_hellman_key.read().await;
         
         if let Some(key) = *diffie_hellman_key_guard {
             key
@@ -538,7 +611,7 @@ async fn handle_deposit_container_ssh_key(
         }
     };
 
-    let container_name = construct_container_name(task_id);
+    let container_name = construct_container_name(container_prefix, task_id);
 
     let mut child = Command::new("bash")
         .arg("-s")

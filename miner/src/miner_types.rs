@@ -1,27 +1,19 @@
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use subxt::utils::AccountId32;
 use subxt_signer::sr25519::Keypair;
 use tokio::sync::RwLock;
 
 use types::{
     substrate_interface::api::{
-        edge_connect::calls::types::remove_miner::MinerId,
         runtime_types::cyborg_primitives::{
             miner::MinerType
         }
     },
-    CurrentTask
+    CurrentTask,
+    MinerIdentity
 };
 
 use crate::error::Result;
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct MinerIdentity {
-    pub miner_owner: AccountId32,
-    pub miner_id: MinerId,
-    pub miner_type: MinerType,
-}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TaskOwner {

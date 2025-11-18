@@ -48,6 +48,8 @@ pub static FLASH_INFER_PORT: Lazy<u16> = Lazy::new(|| {
     env::var("FLASH_INFER_PORT").expect("FLASH_INFER_PORT must be set").parse().expect("Failed to parse FLASH_INFER_PORT")
 });
 
+
+
 /*
 // The gateway for CESS network
 pub static CESS_GATEWAY: Lazy<Arc<RwLock<String>>> = Lazy::new(||
@@ -91,6 +93,7 @@ pub async fn run_global_config(parachain_url: &str) -> Result<()> {
     if let Err(_) = TRANSACTION_QUEUE.set(TransactionQueue::new()) {
         panic!("Failed to set transaction queue.");
     }
+
 
     // Create a parachain client
     let client = OnlineClient::<PolkadotConfig>::from_url(parachain_url)
