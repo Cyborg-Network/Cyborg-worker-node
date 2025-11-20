@@ -45,7 +45,8 @@ pub enum Commands {
     #[clap(group(
         ArgGroup::new("install_target")
             .args(&["domain_name", "tailscale_network"])
-            .required(true)
+            .required(false)
+            .multiple(false)
     ))]
     Install {
         /// API URL for starting the miner
@@ -60,6 +61,10 @@ pub enum Commands {
         #[clap(long, value_name = "MINER_TYPE")]
         miner_type: String,
 
+        /// Omit if the miner is an edge miner as it will leverage the miner-attestor to get uuid
+        #[clap(long, value_name = "MINER_UUID")]
+        miner_uuid: Option<String>,
+
         /// Omit if communicating over the proxy or cynapse; Domain name that the miner is
         /// reachable under
         #[clap(long, value_name = "DOMAIN_NAME")]
@@ -69,10 +74,6 @@ pub enum Commands {
         /// `DOMAIN_NAME`
         #[clap(long, value_name = "TAILSCALE_NETWORK")]
         tailscale_network: Option<String>,
-
-        /// Omit if the miner is an edge miner as it will leverage the miner-attestor to get uuid
-        #[clap(long, value_name = "MINER_UUID")]
-        miner_uuid: Option<String>,
     },
 
     Version
