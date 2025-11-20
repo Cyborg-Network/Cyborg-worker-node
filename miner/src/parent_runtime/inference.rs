@@ -179,7 +179,7 @@ pub async fn spawn_inference_server(
                 InferenceEngine::FlashInference(Arc::new(Mutex::new(fi_engine)))
             }
         },
-        TaskKind::CyCloud => {
+        TaskKind::CyCloud(_) => {
             let cl_engine = CyCloudEngine::new(&task.read().await.container_name).map_err(|e| {
                 Error::Custom(format!("Failed to create engine: {}", e.to_string()))
             })?;
@@ -408,7 +408,7 @@ async fn handle_socket(socket: WebSocket, state: AppState) -> Result<()> {
                         tracing::error!("Error running FlashInfer engine: {}", e);
                     }
                 }
-                InferenceEngine::CyCloud(ref engine) => {
+                InferenceEngine::CyCloud(ref _engine) => {
                     return;
                 }
             }

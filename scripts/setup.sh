@@ -209,6 +209,8 @@ setup_systemd() {
     local PARACHAIN_URL="$1"
     local ACCOUNT_SEED="$2"
     local MINER_TYPE="$3"
+    local CYBORG_MINER_DOMAIN_NAME="$4"
+    local MINER_UUID="$5"
 
     echo "Creating systemd service for worker node: $MINER_SERVICE_FILE"
 
@@ -235,7 +237,9 @@ setup_systemd() {
     Environment=FLASH_INFER_PORT=$FLASH_INFER_PORT
     Environment=TX_QUEUE_DB_PATH=$TX_QUEUE_DB_PATH
     Environment=MINER_TYPE=$MINER_TYPE
-    ExecStart=$MINER_BINARY_PATH start-miner --parachain-url \$PARACHAIN_URL --account-seed "\$ACCOUNT_SEED" --miner-type $MINER_TYPE
+    Environment=CYBORG_MINER_DOMAIN_NAME=$CYBORG_MINER_DOMAIN_NAME
+    Environment=CYBORG_MINER_UUID=$MINER_UUID
+    ExecStart=$MINER_BINARY_PATH start-miner --parachain-url \$PARACHAIN_URL --account-seed "\$ACCOUNT_SEED" --miner-type $MINER_TYPE --miner-uuid $MINER_UUID
     Restart=always
     SuccessExitStatus=75
     RestartSec=3
@@ -322,8 +326,11 @@ install() {
     PARACHAIN_URL="${PARACHAIN_URL:-}"
     ACCOUNT_SEED="${ACCOUNT_SEED:-}"
     MINER_TYPE="${MINER_TYPE:-}"
+    CYBORG_MINER_DOMAIN_NAME="${CYBORG_MINER_DOMAIN_NAME:-}"
+    MINER_UUID="${MINER_UUID}"
 
-    if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" || -z "$MINER_TYPE" ]]; then
+
+    if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" || -z "$MINER_TYPE" || -z "$CYBORG_MINER_DOMAIN_NAME" || -z "$MINER_UUID" ]]; then
         echo "ERROR: PARACHAIN_URL and ACCOUNT_SEED must be set in environment."
         exit 1
     fi
@@ -332,7 +339,7 @@ install() {
     prepare_environment
     setup_docker
     move_files
-    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE"
+    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE" "$CYBORG_MINER_DOMAIN_NAME" "$MINER_UUID"
     open_firewall
     #prepare_triton
 }
@@ -354,8 +361,10 @@ update() {
     PARACHAIN_URL=$(systemctl show cyborg-miner.service -p Environment | grep -o 'PARACHAIN_URL=[^ ]*' | cut -d= -f2)
     ACCOUNT_SEED=$(systemctl show cyborg-miner.service -p Environment | grep -o 'ACCOUNT_SEED=[^ ]*' | cut -d= -f2)
     MINER_TYPE=$(systemctl show cyborg-miner.service -p Environment | grep -o 'MINER_TYPE=[^ ]*' | cut -d= -f2)
+    CYBORG_MINER_DOMAIN_NAME=$(systemctl show cyborg-miner.service -p Environment | grep -o 'CYBORG_MINER_DOMAIN_NAME=[^ ]*' | cut -d= -f2)
+    MINER_UUID=$(systemctl show cyborg-miner.service -p Environment | grep -o 'MINER_UUID=[^ ]*' | cut -d= -f2)
 
-    if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" || -z "$MINER_TYPE" ]]; then
+    if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" || -z "$MINER_TYPE" || -z "$CYBORG_MINER_DOMAIN_NAME" || -z "$MINER_UUID" ]]; then
         echo "Failed to extract required variables from $SERVICE_FILE"
         exit 1
     fi
@@ -363,6 +372,8 @@ update() {
     echo "PARACHAIN_URL: $PARACHAIN_URL"
     echo "ACCOUNT_SEED: $ACCOUNT_SEED"
     echo "MINER_TYPE: $MINER_TYPE"
+    echo "CYBORG_MINER_DOMAIN_NAME: $CYBORG_MINER_DOMAIN_NAME"
+    echo "MINER_UUID: $MINER_UUID"
 
     ###############################################################################################################
 
@@ -375,7 +386,7 @@ update() {
     systemctl stop cyborg-miner.service
 
     move_files
-    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE"
+    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE" "$CYBORG_MINER_DOMAIN_NAME"
     open_firewall
 
     echo "Update complete: $CURRENT_VERSION to $latest_tag"

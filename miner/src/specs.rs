@@ -4,6 +4,7 @@ use serde_json::Value;
 use std::process::{Command, Stdio};
 use std::{env, str};
 use sysinfo::{MemoryRefreshKind, RefreshKind, System};
+use global_config::CYBORG_MINER_DOMAIN_NAME;
 
 use reqwest::Client;
 
@@ -46,32 +47,6 @@ pub struct Location {
 }
 
 pub async fn gather_worker_spec() -> Result<MinerConfig> {
-    println!(
-        "Using IP: {}",
-        env::var("CYBORG_MINER_TEST_IP").unwrap_or("".to_string())
-    );
-
-    let domain = match env::var("CYBORG_MINER_TEST_IP") {
-        Ok(val) => val,
-        Err(_) => {
-            let output = Command::new("hostname").output()?.stdout;
-
-            let hostname = String::from_utf8(output)?.trim().to_string();
-
-            format!("https://{hostname}.{}", *global_config::TAILSCALE_NET)
-        } /*
-          Err(_) => {
-              reqwest::get("https://api.ipify.org?format=json")
-                  .await?
-                  .json::<IpResponse>()
-                  .await?
-                  .ip
-          }
-          */
-    };
-
-    //let response = worker::IpResponse { ip: String::from("127.0.0.1") };
-
     let location = Location::get_location().await;
 
     let ram = return_total_memory();
@@ -81,7 +56,7 @@ pub async fn gather_worker_spec() -> Result<MinerConfig> {
     let storage = return_total_storage();
 
     Ok(MinerConfig {
-        domain,
+        domain: CYBORG_MINER_DOMAIN_NAME.to_string(),
         latitude: location.coordinates.0,
         longitude: location.coordinates.1,
         ram,

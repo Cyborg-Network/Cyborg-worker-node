@@ -495,11 +495,14 @@ async fn deposit_public_key<'a>(
                 script: &DEPOSIT_NATIVE_KEYS_SCRIPT
             }
         },
-        CyCloudTask::Vm(vm_task) => {
+        CyCloudTask::Vm(_vm_task) => {
+            return Err(ClientError::DepositContainerKeyError("Cannot deposit key - VM is not supported yet!".to_string()));
+            /*
             DepositPublicKeyArgs {
                 identifier: &String::from_utf8_lossy(&vm_task.user_name.0),
-                script: &DEPOSIT_NATIVE_KEYS_SCRIPT
+                script: &DEPOSIT_VM_KEYS_SCRIPT
             }
+            */
         },
     };
 
@@ -549,32 +552,10 @@ async fn handle_create_user_ssh_key(
         }
     };
 
-
     let keypair = generate_ssh_keypair().await?;
 
-    if let Some(task) = &*current_task.read().await {
-        match task.task_type {
-            types::substrate_interface::api::runtime_types::cyborg_primitives::task::TaskKind::CyCloud(cycloud_task) => {
-                match cycloud_task {
-                    CyCloudTask::Container => {
-                        let container_name = construct_container_name(container_prefix, task_id);
-    
-                        deposit_public_key(TaskIdentifier::Container(&container_name), &keypair.pub_key).await?;
-                    },
-                    CyCloudTask::Native(username) => {
-
-                    },
-                    CyCloudTask::Vm(username) => {
-                        return Err(ClientError::CreateContainerKeyError("CyCloud doesn't support VM deployment yet!".to_string()));
-                    },
-                }
-            },
-            _ => {
-                return Err(ClientError::CreateContainerKeyError("Wrong task type, cannot create ssh key!".to_string()));
-            }
-        }
-    }
-
+    let container_name = construct_container_name(container_prefix, task_id);
+    deposit_public_key(current_task, &container_name, &keypair.pub_key).await?;
     
     let data_string = serde_json::to_string(&keypair)
         .map_err(|e| ClientError::CreateContainerKeyError(e.to_string()))?;
@@ -612,42 +593,9 @@ async fn handle_deposit_user_ssh_key(
     };
 
     let container_name = construct_container_name(container_prefix, task_id);
+    deposit_public_key(current_task, &container_name, &key).await?;
 
-    let mut child = Command::new("bash")
-        .arg("-s")
-        .arg("--")
-        .arg(container_name)
-        .arg(key)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()
-        .map_err(|e| ClientError::DepositContainerKeyError(e.to_string()))?;
-
-    if let Some(mut stdin) = child.stdin.take() {
-        stdin.write_all(DEPOSIT_CONTAINER_KEYS_SCRIPT.as_bytes()).await
-            .map_err(|e| ClientError::DepositContainerKeyError(e.to_string()))?;
-    }
-
-    let output = child.wait_with_output().await
-        .map_err(|e| ClientError::DepositContainerKeyError(e.to_string()))?;
-
-    let response = if output.status.success() {
-        println!("Script succeeded");
-        DepositContainerKeyResponse {
-            success: true,
-        }
-    } else {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        println!("Script failed: {}", stderr);
-        DepositContainerKeyResponse {
-            success: false,
-        }
-    };
-
-    let response_string = serde_json::to_string::<DepositContainerKeyResponse>(&response)
-        .map_err(|e| ClientError::DepositContainerKeyError(e.to_string()))?;
-
-    let encrypted_message = encrypt_message("PubKeyDeposited", &diffie_hellman_key_copy, response_string)
+    let encrypted_message = encrypt_message("PubKeyDeposited", &diffie_hellman_key_copy, "Keypair successfully deposited".to_string())
         .map_err(|e| ClientError::DepositContainerKeyError(e.to_string()))?;
     
     let encrypted_message_str = serde_json::to_string(&encrypted_message)

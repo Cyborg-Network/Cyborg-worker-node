@@ -25,7 +25,7 @@ mod miner_types;
 mod self_management;
 mod utils;
 
-use std::sync::Arc;
+use std::{process::Command, sync::Arc};
 use builder::MinerBuilder;
 use clap::Parser;
 use cli::{Cli, Commands};
@@ -37,6 +37,10 @@ use types::substrate_interface::api::edge_connect::calls::types::remove_miner::M
 use types::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 use tokio::time::{sleep, Duration};
 
+#[derive(serde::Deserialize)]
+pub struct IpResponse {
+    pub ip: String,
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -90,9 +94,46 @@ async fn main() -> Result<()> {
             parachain_url,
             account_seed,
             miner_type,
+            domain_name,
+            tailscale_network,
+            miner_uuid,
         }) => {
-            self_management::install_self(parachain_url, miner_type, account_seed)
+            if let Some(domain_name) = domain_name {
+                self_management::install_self(parachain_url, miner_type, account_seed, domain_name, miner_uuid)
+                    .expect("Failed to install");
+
+                return Ok(());
+            }
+
+            if let Some(tailscale_network) = tailscale_network {
+                let hostname_output = Command::new("hostname")
+                    .output()
+                    .expect("Failed to get hostname")
+                    .stdout;
+
+                let hostname = String::from_utf8(hostname_output)
+                    .expect("Failed to get hostname")
+                    .trim()
+                    .to_string();
+
+                let domain_name = format!("https://{hostname}.{}", tailscale_network);
+
+                 self_management::install_self(parachain_url, miner_type, account_seed, &domain_name, miner_uuid)
+                    .expect("Failed to install");
+
+                return Ok(());
+            }
+
+            let domain_name = reqwest::get("https://api.ipify.org?format=json")
+                .await.expect("Failed to get IP address")
+                .json::<IpResponse>()
+                .await.expect("Failed to get IP adress")
+                .ip;
+
+            self_management::install_self(parachain_url, miner_type, account_seed, &domain_name, miner_uuid)
                 .expect("Failed to install");
+
+            return Ok(());
         }
 
         Some(Commands::Version) => {

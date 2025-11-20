@@ -48,14 +48,8 @@ pub static FLASH_INFER_PORT: Lazy<u16> = Lazy::new(|| {
     env::var("FLASH_INFER_PORT").expect("FLASH_INFER_PORT must be set").parse().expect("Failed to parse FLASH_INFER_PORT")
 });
 
-
-
-/*
-// The gateway for CESS network
-pub static CESS_GATEWAY: Lazy<Arc<RwLock<String>>> = Lazy::new(||
-    Arc::new(RwLock::new(String::from("https://deoss-sgp.cess.network")))
-);
-*/
+pub static CYBORG_MINER_DOMAIN_NAME: Lazy<String> = 
+    Lazy::new(|| env::var("CYBORG_MINER_DOMAIN_NAME").expect("CYBORG_MINER_DOMAIN_NAME must be set"));
 
 /// The metadata for the current task in case the miner shuts down unexpectedly and has to restart a running task
 pub static CURRENT_TASK_PATH: Lazy<PathBuf> = Lazy::new(|| {
