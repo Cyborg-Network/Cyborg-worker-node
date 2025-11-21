@@ -31,6 +31,8 @@ use clap::Parser;
 use cli::{Cli, Commands};
 use error::Result;
 use global_config::run_global_config;
+use std::sync::Arc;
+
 use traits::ParachainInteractor;
 use crate::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
 use crate::utils::tx_queue::{TRANSACTION_QUEUE, TransactionQueue, TxOutput};
@@ -59,11 +61,14 @@ async fn main() -> Result<()> {
             // Initialize logger
             log::init_logger().expect("Could not initialize logger!");
             
-             let _queue = TRANSACTION_QUEUE.get_or_init(|| {
-            tokio::runtime::Handle::current().block_on(async {
-                TransactionQueue::new().await
-            })
+            let _queue = TRANSACTION_QUEUE.get_or_init(|| {
+                tokio::runtime::Handle::current().block_on(async {
+                    Arc::new(TransactionQueue::new().await)
+                })
             });
+
+            // Start background processor
+            _queue.start_processing();
 
             let miner_id_bytes = miner_uuid.as_bytes().to_vec();
             let miner_uuid_bounded: MinerId = BoundedVec(miner_id_bytes);

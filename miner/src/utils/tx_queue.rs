@@ -1,8 +1,10 @@
-use crate::{error::Result, types::MinerIdentity};
+use crate::error::Result;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
-use sled::{self};
+use sled;
+
 use crate::global_config::TX_QUEUE_DB_PATH;
+use crate::types::MinerIdentity; 
 use std::{
     collections::VecDeque,
     future::Future,
@@ -16,10 +18,7 @@ use tokio::sync::{oneshot, Mutex};
 use tokio::time::{sleep, Duration};
 
 const MAX_RETRIES: u32 = 500;
-
-/// Async transaction executor closure type.
-type TxExecutor =
-    Box<dyn Fn() -> Pin<Box<dyn Future<Output = Result<TxOutput>> + Send>> + Send + Sync>;
+const EMPTY_SLEEP_MS: u64 = 250; // when queue empty, sleep briefly and continue
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum TxOutput {
@@ -27,12 +26,16 @@ pub enum TxOutput {
     Success,
 }
 
+
+pub type TxExecutor =
+    Box<dyn Fn() -> Pin<Box<dyn Future<Output = Result<TxOutput>> + Send>> + Send + Sync>;
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct PersistentTx {
     pub id: u64,
     pub retry_count: u32,
     pub timestamp: u64,
-    pub data: Option<Vec<u8>>,
+    // pub kind: TxKind,
 }
 
 pub struct Transaction {
@@ -62,61 +65,56 @@ pub struct TransactionQueue {
     db: sled::Db,
 }
 
-pub static TRANSACTION_QUEUE: OnceCell<TransactionQueue> = OnceCell::new();
+pub static TRANSACTION_QUEUE: OnceCell<Arc<TransactionQueue>> = OnceCell::new();
 
 impl TransactionQueue {
+    /// Create/open sled DB and initialize queue.
     pub async fn new() -> Self {
-        let db_path = TX_QUEUE_DB_PATH.as_str(); 
+        let db_path = TX_QUEUE_DB_PATH.as_str().to_string();
         let db = tokio::task::spawn_blocking(move || sled::open(db_path))
             .await
             .expect("Failed to join blocking task")
             .expect("Failed to open sled DB");
-        let queue = Arc::new(Mutex::new(VecDeque::new()));
-        let mut restored_count = 0;
 
-        // Restore persisted transactions
+        let queue = Arc::new(Mutex::new(VecDeque::new()));
+        let mut persisted_count = 0usize;
+
         {
-            let mut queue_lock = queue.lock().await;
-            for item in db.iter() {
-                if let Ok((_, value)) = item {
-                    if let Ok(persistent_tx) = bincode::deserialize::<PersistentTx>(&value) {
-                        let tx_obj = Transaction {
-                            id: persistent_tx.id,
-                            executor: Box::new(|| {
-                                Box::pin(async {
-                                    println!("[TX-QUEUE] Restored tx executed.");
-                                    Ok(TxOutput::Success)
-                                })
-                            }),
-                            responder: None,
-                            retry_count: persistent_tx.retry_count,
-                        };
-                        queue_lock.push_back(tx_obj);
-                        restored_count += 1;
+            let db_clone = db.clone();
+            let entries: Vec<_> = tokio::task::spawn_blocking(move || {
+                let mut out = Vec::new();
+                for item in db_clone.iter() {
+                    if let Ok((_k, v)) = item {
+                        if bincode::deserialize::<PersistentTx>(&v).is_ok() {
+                            out.push(());
+                        }
                     }
                 }
-            }
+                out
+            })
+            .await
+            .unwrap();
+            persisted_count = entries.len();
         }
 
         println!(
-            "[TX-QUEUE] Initialized sled DB at {db_path}. Restored {restored_count} txs."
+            "[TX-QUEUE] Initialized sled DB at {}. Found {} persisted tx records.",
+            TX_QUEUE_DB_PATH.as_str(),
+            persisted_count
         );
 
-        let tx_queue = Self {
+        Self {
             inner: queue,
             processing: Arc::new(AtomicBool::new(false)),
             db,
-        };
-
-        if restored_count > 0 {
-            println!("[TX-QUEUE] Resuming restored transactions...");
-            tx_queue.start_processing();
         }
-
-        tx_queue
     }
 
-    pub async fn enqueue<F, Fut>(&self, executor: F) -> Result<oneshot::Receiver<Result<TxOutput>>>
+   
+    pub async fn enqueue<F, Fut>(
+        self: &Arc<Self>,
+        executor_fn: F,
+    ) -> Result<oneshot::Receiver<Result<TxOutput>>>
     where
         F: Fn() -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<TxOutput>> + Send + 'static,
@@ -124,9 +122,11 @@ impl TransactionQueue {
         let (tx, rx) = oneshot::channel();
         let tx_id = self.next_id().await;
 
+        let boxed_executor: TxExecutor = Box::new(move || Box::pin(executor_fn()));
+
         let tx_obj = Transaction {
             id: tx_id,
-            executor: Box::new(move || Box::pin(executor())),
+            executor: boxed_executor,
             responder: Some(tx),
             retry_count: 0,
         };
@@ -135,24 +135,30 @@ impl TransactionQueue {
             id: tx_id,
             retry_count: 0,
             timestamp: chrono::Utc::now().timestamp_millis() as u64,
-            data: None,
+            
         };
 
+        // persist then push to queue
         self.persist_tx(&persistent_tx).await;
-        self.inner.lock().await.push_back(tx_obj);
 
-        println!(
-            "[TX-QUEUE] Enqueued tx #{}. Queue size: {}",
-            tx_id,
-            self.inner.lock().await.len()
-        );
+        {
+            let mut q = self.inner.lock().await;
+            q.push_back(tx_obj);
 
-        self.start_processing();
+            println!(
+                "[TX-QUEUE] Enqueued tx #{}. Queue size: {}",
+                tx_id,
+                q.len()
+            );
+        }
 
         Ok(rx)
     }
 
-    fn start_processing(&self) {
+    /// Start background processing. This method is idempotent.
+    /// Processor stays alive (loops forever) and polls the queue, sleeping when empty.
+    pub fn start_processing(&self) {
+        // If already running, do nothing
         if self.processing.swap(true, Ordering::SeqCst) {
             return;
         }
@@ -162,6 +168,7 @@ impl TransactionQueue {
         let db = self.db.clone();
 
         tokio::spawn(async move {
+            // keep processor alive until process exits
             loop {
                 let tx_opt = {
                     let mut queue = inner.lock().await;
@@ -179,30 +186,70 @@ impl TransactionQueue {
                         match tx.execute().await {
                             Ok(result) => {
                                 println!("[TX-QUEUE] Tx #{} succeeded: {:?}", tx.id, result);
-                                TransactionQueue::delete_persisted(&db, tx.id).await;
+
+                                // delete persisted entry (run in blocking task)
+                                let _ = tokio::task::spawn_blocking({
+                                    let db = db.clone();
+                                    let id = tx.id;
+                                    move || {
+                                        let key = id.to_be_bytes();
+                                        let _ = db.remove(key);
+                                    }
+                                })
+                                .await;
+
                                 if let Some(responder) = tx.responder.take() {
                                     let _ = responder.send(Ok(result));
                                 }
                             }
                             Err(e) if tx.retry_count < MAX_RETRIES => {
                                 println!("[TX-QUEUE] Tx #{} failed: {}", tx.id, e);
-                                tx.increment_retry();
 
-                                let delay_ms = 1000 * 2u64.pow(tx.retry_count().min(10));
+                                // increment retry count and persist the updated retry count
+                                let mut new_retry = tx.retry_count + 1;
+                                // Save updated retry_count to DB
+                                let _ = tokio::task::spawn_blocking({
+                                    let db = db.clone();
+                                    let id = tx.id;
+                                    let retry = new_retry;
+                                    move || {
+                                        if let Ok(Some(v)) = db.get(id.to_be_bytes()) {
+                                            if let Ok(mut ptx) = bincode::deserialize::<PersistentTx>(&v) {
+                                                ptx.retry_count = retry;
+                                                let _ = db.insert(id.to_be_bytes(), bincode::serialize(&ptx).unwrap());
+                                            }
+                                        }
+                                    }
+                                })
+                                .await;
+
+                                let delay_ms = 1000u64.saturating_mul(2u64.pow(std::cmp::min(tx.retry_count(), 10)));
                                 println!(
                                     "[TX-QUEUE] Retrying tx #{} after {} ms (attempt #{})",
                                     tx.id,
                                     delay_ms,
-                                    tx.retry_count()
+                                    new_retry
                                 );
                                 sleep(Duration::from_millis(delay_ms)).await;
 
                                 let mut queue = inner.lock().await;
+                                tx.retry_count = new_retry;
                                 queue.push_front(tx);
                             }
                             Err(e) => {
                                 println!("[TX-QUEUE] Tx #{} permanently failed: {}", tx.id, e);
-                                TransactionQueue::delete_persisted(&db, tx.id).await;
+
+                                // delete persisted entry
+                                let _ = tokio::task::spawn_blocking({
+                                    let db = db.clone();
+                                    let id = tx.id;
+                                    move || {
+                                        let key = id.to_be_bytes();
+                                        let _ = db.remove(key);
+                                    }
+                                })
+                                .await;
+
                                 if let Some(responder) = tx.responder.take() {
                                     let _ = responder.send(Err(e));
                                 }
@@ -210,26 +257,61 @@ impl TransactionQueue {
                         }
                     }
                     None => {
-                        println!("[TX-QUEUE] Queue empty. Halting processor.");
-                        processing_flag.store(false, Ordering::SeqCst);
-                        break;
+                        // queue empty -> pause briefly then continue (processor stays running)
+                        // set processing flag true (already true)
+                        sleep(Duration::from_millis(EMPTY_SLEEP_MS)).await;
+                        continue;
                     }
                 }
             }
+
+         
         });
     }
 
+    /// Restore persisted transactions by using a build function that converts PersistentTx -> Transaction.
+    /// This function returns the number of restored txs. After restore, call `start_processing()` (it will be no-op if already running).
+    pub async fn restore_from_db<F>(&self, mut build_fn: F) -> usize
+    where
+        F: FnMut(PersistentTx) -> Transaction,
+    {
+        let mut restored_count = 0usize;
+        let entries: Vec<PersistentTx> = {
+            let db = self.db.clone();
+            tokio::task::spawn_blocking(move || {
+                let mut out = Vec::new();
+                for item in db.iter() {
+                    if let Ok((_k, v)) = item {
+                        if let Ok(p) = bincode::deserialize::<PersistentTx>(&v) {
+                            out.push(p);
+                        }
+                    }
+                }
+                out
+            })
+            .await
+            .unwrap()
+        };
+
+        {
+            let mut q = self.inner.lock().await;
+            for p in entries {
+                let tx_obj = build_fn(p.clone());
+                q.push_back(tx_obj);
+                restored_count += 1;
+            }
+        }
+
+        restored_count
+    }
+
+    /// write PersistentTx to sled
     async fn persist_tx(&self, tx: &PersistentTx) {
         let db = self.db.clone();
         let key = tx.id.to_be_bytes();
         let value = bincode::serialize(tx).unwrap();
-        let _ = tokio::task::spawn_blocking(move || db.insert(key, value)).await;
-    }
 
-    async fn delete_persisted(db: &sled::Db, id: u64) {
-        let key = id.to_be_bytes();
-        let db = db.clone();
-        let _ = tokio::task::spawn_blocking(move || db.remove(key)).await;
+        let _ = tokio::task::spawn_blocking(move || db.insert(key, value)).await;
     }
 
     async fn next_id(&self) -> u64 {
