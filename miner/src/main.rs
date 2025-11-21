@@ -35,7 +35,6 @@ use std::sync::Arc;
 
 use traits::ParachainInteractor;
 use crate::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
-use crate::utils::tx_queue::{TRANSACTION_QUEUE, TransactionQueue, TxOutput};
 use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 
 
