@@ -20,7 +20,7 @@ use tokio::time::{sleep, Duration};
 const MAX_RETRIES: u32 = 500;
 const EMPTY_SLEEP_MS: u64 = 250; // when queue empty, sleep briefly and continue
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum TxOutput {
     RegistrationInfo(MinerIdentity),
     Success,
@@ -35,13 +35,14 @@ pub struct PersistentTx {
     pub id: u64,
     pub retry_count: u32,
     pub timestamp: u64,
-    
+    // pub kind: TxKind,
 }
 
 pub struct Transaction {
-    executor: TxExecutor,
-    responder: Option<oneshot::Sender<Result<TxOutput>>>,
-    retry_count: u32,
+    pub id: u64,
+    pub executor: TxExecutor,
+    pub responder: Option<oneshot::Sender<Result<TxOutput>>>,
+    pub retry_count: u32,
 }
 
 impl Transaction {
@@ -61,6 +62,7 @@ impl Transaction {
 pub struct TransactionQueue {
     inner: Arc<Mutex<VecDeque<Transaction>>>,
     processing: Arc<AtomicBool>,
+    db: sled::Db,
 }
 
 pub static TRANSACTION_QUEUE: OnceCell<Arc<TransactionQueue>> = OnceCell::new();
@@ -75,7 +77,7 @@ impl TransactionQueue {
             .expect("Failed to open sled DB");
 
         let queue = Arc::new(Mutex::new(VecDeque::new()));
-        let mut persisted_count = 0usize;
+        let mut _persisted_count = 0usize;
 
         {
             let db_clone = db.clone();
@@ -118,6 +120,7 @@ impl TransactionQueue {
         Fut: Future<Output = Result<TxOutput>> + Send + 'static,
     {
         let (tx, rx) = oneshot::channel();
+        let tx_id = self.next_id().await;
 
         let boxed_executor: TxExecutor = Box::new(move || Box::pin(executor_fn()));
 
@@ -157,19 +160,18 @@ impl TransactionQueue {
     pub fn start_processing(&self) {
         // If already running, do nothing
         if self.processing.swap(true, Ordering::SeqCst) {
-            // Already processing
             return;
         }
 
         let inner = Arc::clone(&self.inner);
         let processing_flag = Arc::clone(&self.processing);
+        let db = self.db.clone();
 
         tokio::spawn(async move {
             // keep processor alive until process exits
             loop {
                 let tx_opt = {
                     let mut queue = inner.lock().await;
-                    println!("Queue size: {}", queue.len());
                     queue.pop_front()
                 };
 
@@ -253,7 +255,7 @@ impl TransactionQueue {
                                 }
                             }
                         }
-                    },
+                    }
                     None => {
                         // queue empty -> pause briefly then continue (processor stays running)
                         // set processing flag true (already true)
