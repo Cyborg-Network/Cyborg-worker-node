@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{ArgGroup, Parser, Subcommand};
 
 #[derive(Debug, Parser, PartialEq)]
 #[command(
@@ -36,8 +36,18 @@ pub enum Commands {
         /// The type of miner (eg. cloud / edge)
         #[clap(long, value_name = "MINER_TYPE")]
         miner_type: String,
+
+        /// Unique miner UUID (e.g. CL-1234abcd or ED-5678efgh).
+        #[clap(long, value_name = "MINER_UUID")]
+        miner_uuid: String,
     },
 
+    #[clap(group(
+        ArgGroup::new("install_target")
+            .args(&["domain_name", "tailscale_network"])
+            .required(false)
+            .multiple(false)
+    ))]
     Install {
         /// API URL for starting the miner
         #[clap(long, value_name = "API_URL")]
@@ -50,6 +60,20 @@ pub enum Commands {
         /// The type of miner (eg. cloud / edge)
         #[clap(long, value_name = "MINER_TYPE")]
         miner_type: String,
+
+        /// Omit if the miner is an edge miner as it will leverage the miner-attestor to get uuid
+        #[clap(long, value_name = "MINER_UUID")]
+        miner_uuid: Option<String>,
+
+        /// Omit if communicating over the proxy or cynapse; Domain name that the miner is
+        /// reachable under
+        #[clap(long, value_name = "DOMAIN_NAME")]
+        domain_name: Option<String>,
+
+        /// Provide if miner is part of a tailscale network, doesn't work in combination with
+        /// `DOMAIN_NAME`
+        #[clap(long, value_name = "TAILSCALE_NETWORK")]
+        tailscale_network: Option<String>,
     },
 
     Version

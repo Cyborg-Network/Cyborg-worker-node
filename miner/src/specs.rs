@@ -1,12 +1,15 @@
+#[allow(unused_variables)]
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::process::{Command, Stdio};
 use std::sync::Arc;
 use std::{env, str};
 use sysinfo::{MemoryRefreshKind, RefreshKind, System};
+use global_config::CYBORG_MINER_DOMAIN_NAME;
 
 use reqwest::Client;
 
+<<<<<<< HEAD
 use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::{self, MinerType};
 use crate::{
     global_config,
@@ -14,6 +17,9 @@ use crate::{
     types::MinerConfig,
 };
 
+=======
+use crate::{error::Result, global_config, miner_types::MinerConfig};
+>>>>>>> feature/agent-lib
 
 #[derive(Debug, Deserialize)]
 struct GoogleGeoResponse {
@@ -39,7 +45,6 @@ struct GeoRequest {
     wifiAccessPoints: Vec<WifiAccessPoint>,
 }
 
-
 #[derive(Deserialize, Debug)]
 struct IpLocation {
     loc: Option<String>,
@@ -52,6 +57,7 @@ pub struct Location {
     coordinates: Coordinates,
 }
 
+<<<<<<< HEAD
 #[derive(Deserialize, Debug)]
 struct IpResponse {
     ip: String,
@@ -90,6 +96,9 @@ pub async fn gather_worker_spec(miner_type: Arc<MinerType>) -> Result<MinerConfi
 
     //let response = worker::IpResponse { ip: String::from("127.0.0.1") };
 
+=======
+pub async fn gather_worker_spec() -> Result<MinerConfig> {
+>>>>>>> feature/agent-lib
     let location = Location::get_location().await;
 
     let ram = return_total_memory();
@@ -99,7 +108,7 @@ pub async fn gather_worker_spec(miner_type: Arc<MinerType>) -> Result<MinerConfi
     let storage = return_total_storage();
 
     Ok(MinerConfig {
-        domain, 
+        domain: CYBORG_MINER_DOMAIN_NAME.to_string(),
         latitude: location.coordinates.0,
         longitude: location.coordinates.1,
         ram,
@@ -135,7 +144,7 @@ impl Location {
         match get_geo_location().await {
             Ok((lat, lon)) => {
                 println!("Failed to get GPS location. Falling back to Wifi based geolocation.");
-                println!("Longitude and Latitude are {} {}",lat,lon);
+                println!("Longitude and Latitude are {} {}", lat, lon);
                 return Location {
                     coordinates: f64_to_i32_coordinates(lat, lon),
                 };
@@ -145,7 +154,7 @@ impl Location {
                 if let Ok((lat, lon)) = get_ip_location().await {
                     return Location {
                         coordinates: f64_to_i32_coordinates(lat, lon),
-                    }
+                    };
                 } else {
                     panic!("Failed to get the location: {}", e);
                 }
@@ -190,7 +199,6 @@ fn get_gps_location() -> Result<(f64, f64)> {
 }
 use crate::error::Error;
 async fn get_geo_location() -> Result<(f64, f64)> {
- 
     let output = Command::new("nmcli")
         .args(&["-t", "-f", "SSID,BSSID,SIGNAL", "dev", "wifi"])
         .output()?;
@@ -237,7 +245,7 @@ async fn get_geo_location() -> Result<(f64, f64)> {
     //     .json()
     //     .await?;
 
-    let url = "https://gpsproxy.taila87663.ts.net/geo"; 
+    let url = "https://gpsproxy.taila87663.ts.net/geo";
     let client = Client::new();
 
     #[derive(serde::Deserialize)]
@@ -248,12 +256,11 @@ async fn get_geo_location() -> Result<(f64, f64)> {
 
     let resp: LocationResponse = client
         .post(url)
-        .json(&geo_request)  
+        .json(&geo_request)
         .send()
         .await?
         .json()
         .await?;
-
 
     Ok((resp.lat, resp.lon))
 }

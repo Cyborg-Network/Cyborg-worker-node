@@ -38,10 +38,10 @@ pub enum Error {
 
     #[from]
     ReqwestToStr(reqwest::header::ToStrError),
-    
+
     #[from]
     #[allow(dead_code)]
-    ReqwestParseInt(std::num::ParseIntError), 
+    ReqwestParseInt(std::num::ParseIntError),
 
     #[from]
     #[allow(dead_code)]

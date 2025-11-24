@@ -1,7 +1,11 @@
 [package]
 name = "cyborg-miner"
 description = "An AI inference mine, designed to connect to the cyborg-network, built, among others with Polkadot SDK."
+<<<<<<< HEAD
 version = "0.0.78"
+=======
+version = "0.0.83"
+>>>>>>> feature/agent-lib
 license = "Unlicense"
 authors = ["Cyborg Network <https://github.com/Cyborg-Network>"]
 edition = "2021"
@@ -17,7 +21,13 @@ neuro-zk-runtime = { workspace = true }
 open-inference-runtime = { workspace = true }
 flash-infer-runtime = { workspace = true }
 cycloud-runtime = { workspace = true }
+<<<<<<< HEAD
 async-trait = { workspace = true }
+=======
+cyborg-agent = { workspace = true }
+types = { workspace = true }
+
+>>>>>>> feature/agent-lib
 async-stream = { workspace = true }
 bollard = { workspace = true }
 futures = { workspace = true }
@@ -28,6 +38,8 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 tracing-appender = { workspace = true }
 reqwest = { workspace = true }
+subxt = { workspace = true }
+subxt-signer = { workspace = true }
 
 axum = { version = "0.8.4", features = ["ws"] }
 axum-macros = { version = "0.5.0" }
@@ -41,6 +53,8 @@ dirs = "5.0.1"
 docify = { version = "0.2.8" }
 dotenv = "0.15.0"
 lazy_static = "1.5.0"
+bincode = "1.3"
+sled = "0.34"
 libc = "0.2.177"
 once_cell = "1.21.3"
 fs2 = "0.4.3"
@@ -52,8 +66,6 @@ sp-api = { version = "33.0.0", default-features = false }
 sp-blockchain = { version = "35.0.0" }
 sp-core = { version = "34.0.0", default-features = false }
 sp-runtime = { version = "38.0.0", default-features = false }
-subxt = { version = "0.38" }
-subxt-signer = "0.38.0"
 sys-info = { version = "0.9.1" }
 sysinfo = "0.32.0"
 tar = { version = "0.4.44" }

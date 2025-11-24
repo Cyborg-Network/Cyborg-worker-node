@@ -1,17 +1,17 @@
 use std::sync::Arc;
 
 use crate::{
-    error::Result, parachain_interactor::{
-        behavior_control, event_processor, registration, task_management
-    }, 
-    parent_runtime::{inference, proof, setup}, 
-    types::{CurrentTask, Miner, ParentRuntime},
+    error::Result,
     global_config,
+    parachain_interactor::{behavior_control, event_processor, registration, task_management},
+    parent_runtime::{inference, proof, setup},
+    miner_types::{Miner, ParentRuntime},
 };
 use async_trait::async_trait;
 use subxt::events::EventDetails;
 use subxt::PolkadotConfig;
 use tokio::sync::RwLock;
+use types::CurrentTask;
 
 #[async_trait]
 pub trait InferenceServer {
@@ -31,7 +31,10 @@ pub trait InferenceServer {
     ///
     /// # Returns
     /// An `impl Stream<Item = Result<Message, tungstenite::Error>>` representing the output stream of messages.
-    async fn spawn_inference_server(&self, current_task: Arc<RwLock<CurrentTask>>) -> Result</*JoinHandle<()>*/()>;
+    async fn spawn_inference_server(
+        &self,
+        current_task: Arc<RwLock<CurrentTask>>,
+    ) -> Result</*JoinHandle<()>*/ ()>;
 
     /// Generates a zkml proof for the model currently in execution.
     ///
@@ -46,7 +49,10 @@ impl InferenceServer for ParentRuntime {
         setup::process_task(task).await
     }
 
-    async fn spawn_inference_server(&self, current_task: Arc<RwLock<CurrentTask>>) -> Result</*JoinHandle<()>*/()> {
+    async fn spawn_inference_server(
+        &self,
+        current_task: Arc<RwLock<CurrentTask>>,
+    ) -> Result</*JoinHandle<()>*/ ()> {
         inference::spawn_inference_server(current_task, self.port).await
     }
 

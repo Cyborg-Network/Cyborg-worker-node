@@ -1,11 +1,12 @@
+use bollard::models::{ContainerCreateBody, HostConfig, PortBinding};
+use bollard::query_parameters::{
+    CreateContainerOptionsBuilder, InspectContainerOptions, RemoveContainerOptions,
+    StartContainerOptions,
+};
 use bollard::Docker;
+use futures::{stream::StreamExt, Future, Stream};
 use serde_json::json;
 use std::collections::HashMap;
-use bollard::query_parameters::{
-    CreateContainerOptionsBuilder, InspectContainerOptions, RemoveContainerOptions, StartContainerOptions
-};
-use bollard::models::{HostConfig, PortBinding, ContainerCreateBody};
-use futures::{stream::StreamExt, Future, Stream};
 
 const PORT: u16 = 3005;
 
@@ -28,7 +29,11 @@ impl FlashInferEngine {
     ///
     /// # Returns
     /// A new `FlashInferEngine` instance
-    pub fn new(hf_id: &str, port: u16, containe_name: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(
+        hf_id: &str,
+        port: u16,
+        containe_name: &str,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         let client = reqwest::Client::new();
 
         Ok(Self {
@@ -46,7 +51,7 @@ impl FlashInferEngine {
         let docker = Docker::connect_with_local_defaults()?;
 
         //This would be for if an image is hosted
-        /* 
+        /*
         let mut stream = docker.create_image(
             Some(bollard::query_parameters::CreateImageOptions {
                 from_image: Some(image.to_string()),
@@ -63,14 +68,16 @@ impl FlashInferEngine {
         */
 
         let container = docker
-            .inspect_container(&self.container_name, None::<InspectContainerOptions>) 
-            .await.ok();
+            .inspect_container(&self.container_name, None::<InspectContainerOptions>)
+            .await
+            .ok();
 
         let container_id: String;
         // Extract ID option without further nesting
-        if let Some((_c, id)) = container.as_ref()
-            .and_then(|c| c.id.as_ref().map(|id| (c, id))) 
-        { 
+        if let Some((_c, id)) = container
+            .as_ref()
+            .and_then(|c| c.id.as_ref().map(|id| (c, id)))
+        {
             container_id = id.to_string();
             println!("Found existing container {}", id);
         } else {
@@ -90,9 +97,7 @@ impl FlashInferEngine {
                     runtime: Some("nvidia".to_string()),
                     ..Default::default()
                 }),
-                env: Some(vec![
-                    format!("HF_ID={}", self.hf_id),
-                ]),
+                env: Some(vec![format!("HF_ID={}", self.hf_id)]),
                 ..Default::default()
             };
 
@@ -101,10 +106,7 @@ impl FlashInferEngine {
                 .build();
 
             let container = docker
-                .create_container(
-                    Some(create_contaienr_options),
-                    config
-                )
+                .create_container(Some(create_contaienr_options), config)
                 .await?;
 
             println!("Created new container {}", container.id);
@@ -183,7 +185,9 @@ impl FlashInferEngine {
 
         println!("Sending inference request to {}", url);
         println!("Input data: {}", input_data);
-        let res = self.client.post(url)
+        let res = self
+            .client
+            .post(url)
             .json(&json!({
                 "session_id": "test1",
                 "message": input_data,
@@ -205,8 +209,9 @@ impl FlashInferEngine {
         let docker = Docker::connect_with_local_defaults()?;
 
         let container = docker
-            .inspect_container(&self.container_name, None::<InspectContainerOptions>) 
-            .await.ok();
+            .inspect_container(&self.container_name, None::<InspectContainerOptions>)
+            .await
+            .ok();
 
         if let Some(_container) = container {
             docker
@@ -220,12 +225,14 @@ impl FlashInferEngine {
                 .await?;
             println!("Force-removed container {}", container_id);
 
-            return Ok(())
+            return Ok(());
         } else {
-            println!("Could not find container {}, likely already removed.", container_id);
+            println!(
+                "Could not find container {}, likely already removed.",
+                container_id
+            );
 
-            return Ok(())
+            return Ok(());
         }
     }
 }
-

@@ -1,13 +1,13 @@
-use std::fs::{OpenOptions, File, create_dir_all};
-use std::io::{Seek, SeekFrom, copy, Read};
-use reqwest::blocking::Client;
-use reqwest::header::{RANGE, CONTENT_LENGTH};
-use std::path::Path;
 use regex::Regex;
+use reqwest::blocking::Client;
+use reqwest::header::{CONTENT_LENGTH, RANGE};
+use std::fs::{create_dir_all, File, OpenOptions};
+use std::io::{copy, Read, Seek, SeekFrom};
+use std::path::Path;
 
-use crate::global_config::PATHS;
 use crate::error::Result;
-use crate::substrate_interface::api::runtime_types::cyborg_primitives::task::OnnxTask;
+use crate::global_config::PATHS;
+use types::substrate_interface::api::runtime_types::cyborg_primitives::task::OnnxTask;
 
 const CHUNK_SIZE: u64 = 100 * 1024 * 1024;
 
@@ -21,9 +21,7 @@ pub async fn download_onnx_model(onnx_task: &OnnxTask) -> Result<()> {
     // Required to make model repository structure as nvidia triton server expects
     let save_path = format!("{}/{}", task_dir, task_file_name);
 
-    let client = Client::builder()
-        .user_agent("cyborg-miner")
-        .build()?;
+    let client = Client::builder().user_agent("cyborg-miner").build()?;
 
     let head_resp = client.head(&model_url).send()?;
     if !head_resp.status().is_success() {
@@ -74,10 +72,7 @@ pub async fn download_onnx_model(onnx_task: &OnnxTask) -> Result<()> {
 
         println!("Requesting range: {}", range_header);
 
-        let mut resp = client
-            .get(&model_url)
-            .header(RANGE, range_header)
-            .send()?;
+        let mut resp = client.get(&model_url).header(RANGE, range_header).send()?;
 
         if !resp.status().is_success() && resp.status() != reqwest::StatusCode::PARTIAL_CONTENT {
             return Err(format!("Failed to download chunk: HTTP {}", resp.status()).into());
@@ -94,8 +89,8 @@ pub async fn download_onnx_model(onnx_task: &OnnxTask) -> Result<()> {
     }
 
     extract_triton_model(
-        &path, 
-        path.parent().ok_or("Failed to get parent directory")?
+        &path,
+        path.parent().ok_or("Failed to get parent directory")?,
     )?;
 
     tracing::info!("Download complete! Total size: {} bytes.", total_size);

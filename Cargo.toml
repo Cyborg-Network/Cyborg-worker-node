@@ -3,6 +3,9 @@ members = [
 	"miner",
 	"neuro-zk-runtime",
 	"open-inference-runtime",
+  "cycloud-runtime",
+  "cyborg-agent", 
+  "types",
 ]
 
 [workspace.dependencies]
@@ -11,6 +14,8 @@ async-trait = { git = "https://github.com/dtolnay/async-trait.git" }
 futures = { version = "0.3.28" }
 serde = { version = "1.0.197", default-features = false }
 serde_json = { version = "1.0.114", default-features = false }
+subxt = { version = "0.38" }
+subxt-signer = "0.38.0"
 tokio = { version = "1.41.0" }
 tracing = { version = "0.1.41" }
 tracing-subscriber = { version = "0.3.19" }
@@ -19,6 +24,8 @@ reqwest = { version = "0.12.9", features = ["json", "blocking"] }
 bollard = { version = "0.19.2" }
 
 miner = { path = "miner" }
+cyborg-agent = { path = "cyborg-agent" }
+types = { path = "types" }
 neuro-zk-runtime = { path = "neuro-zk-runtime" }
 open-inference-runtime = { path = "open-inference-runtime" }
 flash-infer-runtime = { path = "flash-infer-runtime" }
