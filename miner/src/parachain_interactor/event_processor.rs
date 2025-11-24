@@ -101,12 +101,8 @@ pub async fn process_event(miner: Arc<Miner>, event: &EventDetails<PolkadotConfi
     match event.as_event::<substrate_interface::api::task_management::events::TaskScheduled>() {
         Ok(Some(task_scheduled)) => {
             let assigned_miner = &task_scheduled.assigned_miner;
-            let identity_path = &PATHS.identity_path;
 
-            let file_content = fs::read_to_string(identity_path)?;
-            let miner_data: MinerIdentity = serde_json::from_str(&file_content)?;
-
-            if assigned_miner == &miner_data.miner_id {
+            if assigned_miner.0.to_vec() == miner.identity.miner_id.to_vec() {
                 println!("New task scheduled: {:?}", task_scheduled.task_id);
 
                 // Update operational status to Busy when task is assigned

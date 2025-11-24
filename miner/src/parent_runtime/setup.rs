@@ -35,9 +35,9 @@ pub async fn process_task(task: Arc<RwLock<CurrentTask>>) -> Result<()> {
                     Ok(())
                 }
             }
-        }
-        TaskKind::CyCloud => {
-            println!("Received CyCloud task, passing responsibility to docker container.");
+        },
+        TaskKind::CyCloud(_) => {
+            println!("Received CyCloud task, passing responsibility to CyCloud engine");
             Ok(())
         }
     }

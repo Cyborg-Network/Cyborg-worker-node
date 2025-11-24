@@ -83,7 +83,7 @@ pub async fn get_miner_id_assigned_to_task(api: &OnlineClient<PolkadotConfig>, t
         .await?;
 
     if let Some(task) = task_query {
-        Ok(task)
+        Ok(task.0)
     } else {
         Err("Task not found".into())
     }
