@@ -69,6 +69,8 @@ async fn main() -> Result<()> {
 
             // Start background processor
             _queue.start_processing();
+     
+       
 
             let miner_id_bytes = miner_uuid.as_bytes().to_vec();
             let miner_uuid_bounded: MinerId = BoundedVec(miner_id_bytes);

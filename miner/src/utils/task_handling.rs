@@ -335,14 +335,13 @@ pub async fn clean_up_current_task_and_vacate(miner: Arc<Miner>) -> Result<()> {
             let tx_queue = global_config::get_tx_queue()?;
 
             let rx = tx_queue
-                .enqueue(move || {
+                .enqueue("vacate_miner", move || {
                     let keypair = Arc::clone(&keypair);
                     let miner_type = Arc::clone(&miner_type);
-                    async move {
-                        let _ =
-                            confirm_miner_vacation(keypair, current_task_id, miner_type).await?;
+                    Box::pin(async move {
+                        let _ = confirm_miner_vacation(keypair, current_task_id, miner_type).await?;
                         Ok(TxOutput::Success)
-                    }
+                    })
                 })
                 .await?;
 
