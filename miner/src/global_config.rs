@@ -10,6 +10,8 @@ use subxt::PolkadotConfig;
 use crate::error::{Error, Result};
 use crate::utils::tx_queue::TransactionQueue;
 use crate::utils::tx_queue::TRANSACTION_QUEUE;
+use std::sync::Arc;
+
 
 #[derive(Debug)]
 pub struct Paths {
@@ -49,7 +51,9 @@ pub static FLASH_INFER_PORT: Lazy<u16> = Lazy::new(|| {
 });
 
 
-
+// Require TX_QUEUE_DB_PATH to be set by the setup script
+pub static TX_QUEUE_DB_PATH: Lazy<String> =
+    Lazy::new(|| env::var("TX_QUEUE_DB_PATH").expect("TX_QUEUE_DB_PATH must be set"));
 /*
 // The gateway for CESS network
 pub static CESS_GATEWAY: Lazy<Arc<RwLock<String>>> = Lazy::new(||
@@ -88,9 +92,13 @@ pub async fn run_global_config(parachain_url: &str) -> Result<()> {
     Lazy::force(&FLASH_INFER_PORT);
     //Lazy::force(&CESS_GATEWAY);
     Lazy::force(&CURRENT_TASK_PATH);
+    Lazy::force(&TX_QUEUE_DB_PATH);
 
     // Set the transaction queue
-    if let Err(_) = TRANSACTION_QUEUE.set(TransactionQueue::new()) {
+    if TRANSACTION_QUEUE
+        .set(Arc::new(TransactionQueue::new().await))
+        .is_err()
+    {
         panic!("Failed to set transaction queue.");
     }
 
@@ -114,12 +122,11 @@ pub fn get_parachain_client() -> Result<&'static OnlineClient<PolkadotConfig>> {
         .ok_or(Error::parachain_client_not_intitialized())
 }
 
-pub fn get_tx_queue() -> Result<&'static TransactionQueue> {
+pub fn get_tx_queue() -> Result<&'static Arc<TransactionQueue>> {
     TRANSACTION_QUEUE.get().ok_or(Error::Custom(
         "Transaction queue not initialized".to_string(),
     ))
 }
-
 /*
 pub async fn get_cess_gateway() -> String {
     CESS_GATEWAY.read().await.clone()

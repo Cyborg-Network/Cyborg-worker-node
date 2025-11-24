@@ -110,7 +110,7 @@ pub async fn pub_register(
     let tx_queue = global_config::get_tx_queue()?;
 
     let rx = tx_queue
-        .enqueue(move || {
+        .enqueue("register_miner", move || {
             let keypair = Arc::clone(&keypair);
             let miner_type = miner_type.clone();
             let value = miner_uuid.clone();
@@ -238,13 +238,13 @@ pub async fn pub_confirm_task_reception(
     let tx_queue = global_config::get_tx_queue()?;
     let current_task_id_copy = *current_task_id;
 
-    let rx = tx_queue
-        .enqueue(move || {
+     let rx = tx_queue
+        .enqueue("confirm_task_reception", move || {
             let keypair = Arc::clone(&keypair);
-            async move {
+            Box::pin(async move {
                 let _ = confirm_task_reception(keypair, &current_task_id_copy).await?;
                 Ok(TxOutput::Success)
-            }
+            })
         })
         .await?;
 
