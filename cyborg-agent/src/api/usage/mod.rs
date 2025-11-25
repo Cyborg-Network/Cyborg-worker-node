@@ -27,12 +27,6 @@ pub struct Usage {
     zk_stage: u8,
 }
 
-#[derive(Serialize, Debug)]
-pub struct MemoryAndDiskInfo {
-    pub total_memory: u64,
-    pub total_disk: u64,
-}
-
 use std::process::Command;
 use std::str;
 
@@ -108,7 +102,7 @@ impl Usage {
             zk_stage
         };
         
-        println!("{:#?}", metric_item);
+        //println!("{:#?}", metric_item);
 
         Ok(metric_item)
     }
@@ -149,8 +143,6 @@ impl Usage {
             let encrypted_message = serde_json::to_string(&encrypted_message)
                 .map_err(|e| ClientError::UsageError(e.to_string()))?;
     
-            //println!("Sending usage message: {:?}", encrypted_message);
-
             let mut stream_guard = stream.lock().await;
     
             if let Err(e) = stream_guard.send(Message::Text(encrypted_message)).await {

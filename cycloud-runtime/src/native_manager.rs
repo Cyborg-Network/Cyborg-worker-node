@@ -30,9 +30,9 @@ impl NativeManager {
     fn create_user(&self) -> Result<(), Box<dyn std::error::Error>> {
         let check_user = Command::new("id")
             .arg(&self.active_user)
-            .output();
+            .output()?;
 
-        if check_user.is_ok() {
+        if check_user.status.success() {
             println!("User {} already exists!", self.active_user);
             return Ok(())
         }
@@ -59,9 +59,20 @@ impl NativeManager {
     pub fn cleanup_impl(&self) -> Result<(), Box<dyn std::error::Error>> {
         let user_home = self.get_user_home()?;
 
+        let kill_status = Command::new("pkill")
+            .args(["-u", &self.active_user])
+            .status()?;
+
+        if let Some(code) = kill_status.code() {
+            if code > 1 {
+                return Err(
+                    format!("pkill failed for user {} with exit code {}", &self.active_user, code).into()
+                );
+            }
+        }
+
         let remove = Command::new("userdel")
-            .arg("-r")
-            .arg(&self.active_user)
+            .args(["--force", "--remove", &self.active_user])
             .output()?;
 
         if !remove.status.success() {
@@ -70,7 +81,6 @@ impl NativeManager {
         }
 
         //TODO remove potential cronjobs / processes that are not removed by this
-
 
         if PathBuf::from(&user_home).exists() {
             return Err("Removing the user from the miner failed: User home directory still exists!".into());
@@ -114,7 +124,7 @@ impl NativeManager {
         }
 
         let status = Command::new("systemctl")
-            .args(["is-active", "sshd"])
+            .args(["is-active", "ssh"])
             .output();
 
         match status {

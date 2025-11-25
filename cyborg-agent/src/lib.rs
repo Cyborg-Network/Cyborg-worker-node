@@ -29,7 +29,7 @@ pub async fn run_agent(config: Arc<AgentConfig>) ->Result<()> {
 
     //log4rs::init_raw_config(old_config)?;
 
-    println!("Running");
+    println!("Starting Cyborg Agent...");
 
     client::run_client(config).await?;
 

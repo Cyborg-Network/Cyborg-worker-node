@@ -397,6 +397,8 @@ pub async fn run_client(config: Arc<AgentConfig>) -> Result<()> {
         }
     });
 
+    println!("Cyborg Agent is ready to receive requests!");
+
     select! {
         res = http_task => {
             if let Err(e) = res {
