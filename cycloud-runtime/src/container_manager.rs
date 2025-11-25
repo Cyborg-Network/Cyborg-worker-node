@@ -16,7 +16,7 @@ use crate::TaskStatus;
 
 type MemoryLimit = Option<String>;
 type CpuLimit = Option<f32>;
-type ContainerName = String;
+type ContainerName<'a> = &'a str;
 type SshPort = u16;
 
 pub struct Resource {
@@ -25,23 +25,23 @@ pub struct Resource {
 }
 
 #[derive(Debug)]
-pub struct ContainerProvisionArgs{
-    pub ssh_port: SshPort,
+pub struct ContainerProvisionArgs<'a>{
+    pub ssh_port: Option<SshPort>,
     pub memory_limit: MemoryLimit,
     pub cpu_limit: CpuLimit,
-    pub container_name: ContainerName,
+    pub container_name: Option<ContainerName<'a>>,
 }
 
 #[derive(Debug)]
 pub struct ConfigureSshArgs<'a>{
     pub ssh_port: SshPort,
-    pub container_name: &'a ContainerName,
+    pub container_name: ContainerName<'a>,
 }
 
 #[derive(Debug)]
-pub struct ContainerManager {
+pub struct ContainerManager<'a> {
     pub docker: Docker,
-    pub container_name: ContainerName,
+    pub container_name: ContainerName<'a>,
     pub memory_limit: MemoryLimit,
     pub cpu_limit: CpuLimit,
     ssh_port: SshPort,
@@ -50,6 +50,7 @@ pub struct ContainerManager {
 const SSH_PORT: u16 = 2222;
 const DOCKER_IMAGE_NAME: &str = "cycloud-user-container:local";
 const MAX_SETUP_ATTEMPTS: u8 = 100;
+const DEFAULT_CONTAINER_NAME: &str = "cycloud-user-container";
 
 // We have this function with a closure to make sure that the file is fresh each time (to avoid eg. stale files after updates or removed temp files)
 fn use_file<F>(
@@ -101,12 +102,12 @@ define_resources!(
     SETUP_CONTAINER => {filename: "cycloud_setup_container.sh", target: "/tmp/cycloud-resources"},
 );
 
-impl ContainerManager {
-    pub async fn new(setup_args: ContainerProvisionArgs) -> Result<Self, Box<dyn std::error::Error>> {
+impl<'a> ContainerManager<'a> {
+    pub async fn new(setup_args: ContainerProvisionArgs<'a>) -> Result<Self, Box<dyn std::error::Error>> {
         Ok(Self {
             docker: Docker::connect_with_local_defaults()?,
-            container_name: setup_args.container_name,
-            ssh_port: setup_args.ssh_port,
+            container_name: setup_args.container_name.unwrap_or(DEFAULT_CONTAINER_NAME),
+            ssh_port: setup_args.ssh_port.unwrap_or(SSH_PORT),
             memory_limit: setup_args.memory_limit,
             cpu_limit: setup_args.cpu_limit,
         })
@@ -214,7 +215,7 @@ impl ContainerManager {
 
         self.configure_ssh(ConfigureSshArgs {
             container_name: &self.container_name,
-            ssh_port: SSH_PORT,
+            ssh_port: self.ssh_port,
         }).await?;
 
         Ok(())
@@ -338,7 +339,7 @@ impl ContainerManager {
         Ok(())
     }
 
-    pub async fn configure_ssh<'a>(
+    pub async fn configure_ssh<'b>(
         &self,
         args: ConfigureSshArgs<'a>,
     ) -> Result<(), Box<dyn std::error::Error>> {
@@ -577,8 +578,8 @@ mod tests {
     #[tokio::test]
     async fn test_container_manager_init() {
         let args = ContainerProvisionArgs {
-            container_name: "test123".to_string(),
-            ssh_port: 2222,
+            container_name: Some(&"test123".to_string()),
+            ssh_port: Some(2222),
             memory_limit: Some("4g".to_string()),
             cpu_limit: Some(2.0),
         };
@@ -590,8 +591,8 @@ mod tests {
     #[tokio::test]
     async fn test_compose_generation() {
         let args = ContainerProvisionArgs {
-            container_name: "test123".to_string(),
-            ssh_port: 2222,
+            container_name: None,
+            ssh_port: Some(2222),
             memory_limit: Some("4g".to_string()),
             cpu_limit: Some(2.0),
         };

@@ -9,6 +9,7 @@ async-trait = { workspace = true }
 reqwest = { workspace = true }
 futures = { workspace = true }
 bollard = { workspace = true }
+types = { workspace = true }
 tokio = "1.41.0"
 serde = { version = "1.0.197", default-features = false }
 serde_json = { version = "1.0.114", default-features = false }

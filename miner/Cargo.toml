@@ -1,11 +1,7 @@
 [package]
 name = "cyborg-miner"
 description = "An AI inference mine, designed to connect to the cyborg-network, built, among others with Polkadot SDK."
-<<<<<<< HEAD
-version = "0.0.78"
-=======
 version = "0.0.83"
->>>>>>> feature/agent-lib
 license = "Unlicense"
 authors = ["Cyborg Network <https://github.com/Cyborg-Network>"]
 edition = "2021"
@@ -21,13 +17,10 @@ neuro-zk-runtime = { workspace = true }
 open-inference-runtime = { workspace = true }
 flash-infer-runtime = { workspace = true }
 cycloud-runtime = { workspace = true }
-<<<<<<< HEAD
 async-trait = { workspace = true }
-=======
 cyborg-agent = { workspace = true }
 types = { workspace = true }
 
->>>>>>> feature/agent-lib
 async-stream = { workspace = true }
 bollard = { workspace = true }
 futures = { workspace = true }

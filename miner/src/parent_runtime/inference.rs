@@ -1,4 +1,5 @@
 use crate::global_config::{FLASH_INFER_PORT, PATHS, TAILSCALE_NET};
+use futures::TryFutureExt;
 use types::{
     substrate_interface::api::runtime_types::cyborg_primitives::task::{
         FlashInferTask, TaskKind,
@@ -178,19 +179,11 @@ pub async fn spawn_inference_server(
                 })?;
                 InferenceEngine::FlashInference(Arc::new(Mutex::new(fi_engine)))
             }
-<<<<<<< HEAD
         }
-        TaskKind::CyCloud => {
-            let cl_engine = CyCloudEngine::new(&task.read().await.container_name)
-                .await
-                .map_err(|e| Error::Custom(format!("Failed to create engine: {}", e.to_string())))?;
-=======
-        },
         TaskKind::CyCloud(_) => {
-            let cl_engine = CyCloudEngine::new(&task.read().await.container_name).map_err(|e| {
+            let cl_engine = CyCloudEngine::new(&task.read().await.task_type).await.map_err(|e| {
                 Error::Custom(format!("Failed to create engine: {}", e.to_string()))
             })?;
->>>>>>> feature/agent-lib
             InferenceEngine::CyCloud(Arc::new(Mutex::new(cl_engine)))
         }
     };
@@ -232,7 +225,7 @@ pub async fn spawn_inference_server(
             }
 
             InferenceEngine::CyCloud(engine_clone) => {
-                match engine_clone.lock().await.setup( None, None).await {
+                match engine_clone.lock().await.setup().await {
                     Ok(()) => {
                         let _ = status_tx.send(EngineStatus::Ready);
                     }

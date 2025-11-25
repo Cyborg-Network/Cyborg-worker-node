@@ -1,9 +1,7 @@
 use once_cell::sync::Lazy;
 use once_cell::sync::OnceCell;
-use serde::Deserialize;
 use std::fs;
 use std::{env, path::PathBuf};
-use subxt::utils::AccountId32;
 use subxt::OnlineClient;
 use subxt::PolkadotConfig;
 
@@ -20,12 +18,6 @@ pub struct Paths {
     pub identity_path: String,
     // We use this instead of tempdir so that we can have multiple processes access it
     pub safe_tmp_dir_path: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct MinerIdentity {
-    owner: AccountId32,
-    id: u32,
 }
 
 // We're setting a few global variables here for easy access throughout. If editing, make sure to add appropriate Lazy::force to `run_global_config` - THIS IS NOT COMPILE-TIME ENFORCED
@@ -48,6 +40,7 @@ pub static FLASH_INFER_PORT: Lazy<u16> = Lazy::new(|| {
     env::var("FLASH_INFER_PORT").expect("FLASH_INFER_PORT must be set").parse().expect("Failed to parse FLASH_INFER_PORT")
 });
 
+// The where the miner is reachable after installation
 pub static CYBORG_MINER_DOMAIN_NAME: Lazy<String> = 
     Lazy::new(|| env::var("CYBORG_MINER_DOMAIN_NAME").expect("CYBORG_MINER_DOMAIN_NAME must be set"));
 
@@ -82,8 +75,9 @@ pub async fn run_global_config(parachain_url: &str) -> Result<()> {
     Lazy::force(&PATHS);
     Lazy::force(&TAILSCALE_NET);
     Lazy::force(&FLASH_INFER_PORT);
-    //Lazy::force(&CESS_GATEWAY);
     Lazy::force(&CURRENT_TASK_PATH);
+    Lazy::force(&CONTAINER_PREFIX);
+    Lazy::force(&CYBORG_MINER_DOMAIN_NAME);
 
     // Set the transaction queue
     if let Err(_) = TRANSACTION_QUEUE.set(TransactionQueue::new()) {

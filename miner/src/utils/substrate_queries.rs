@@ -94,7 +94,7 @@ pub async fn get_miner_id_assigned_to_task(
         .await?;
 
     if let Some(task) = task_query {
-        Ok(task.0)
+        Ok(task)
     } else {
         Err("Task not found".into())
     }

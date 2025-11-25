@@ -5,6 +5,8 @@ pub mod substrate_interface;
 
 pub type MinerIdVec = Vec<u8>;
 
+pub type TaskType = substrate_interface::api::runtime_types::cyborg_primitives::task::TaskKind<u32>;
+
 #[derive(Deserialize, Serialize, Debug)]
 pub struct MinerIdentity {
     pub miner_owner: AccountId32,
@@ -15,7 +17,7 @@ pub struct MinerIdentity {
 #[derive(Debug, Clone)]
 pub struct CurrentTask {
     pub id: u64,
-    pub task_type: substrate_interface::api::runtime_types::cyborg_primitives::task::TaskKind<u32>,
+    pub task_type: TaskType,
     pub container_name: String,
     pub task_owner: AccountId32,
 }

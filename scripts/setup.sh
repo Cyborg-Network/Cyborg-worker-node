@@ -254,36 +254,7 @@ EOL
 
     echo "systemd service for $MINER_FILE_NAME created successfully!"
 
-<<<<<<< HEAD
-    echo "Creating systemd service for agent: $AGENT_SERVICE_FILE"
-
-    bash -c "cat > $AGENT_SERVICE_FILE" << EOL
-    [Unit]
-    Description=Agent that is able to check the health of the miner, provide required info to the cyborg-parachain, and stream usage metrics and logs of the cyborg node.
-    After=network.target
-
-    [Service]
-    User=root
-    Group=root
-    SupplementaryGroups=docker
-    Environment=LOG_FILE_PATH=$MINER_LOG_DIR/miner.log
-    Environment=TASK_OWNER_FILE_PATH=$MINER_CONFIG_DIR/task_owner.json
-    Environment=IDENTITY_FILE_PATH=$MINER_CONFIG_DIR/miner_identity.json
-    Environment=TASK_CONTAINER_PREFIX=$TASK_CONTAINER_PREFIX
-    ExecStart=$AGENT_BINARY_PATH run
-    Restart=always
-    RestartSec=3
-
-    [Install]
-    WantedBy=multi-user.target
-EOL
-
-    echo "systemd service for $AGENT_FILE_NAME created successfully!"
-
-    echo "Reloading systemd, enabling and starting $MINER_FILE_NAME and $AGENT_FILE_NAME services..."
-=======
     echo "Reloading systemd, enabling and starting $MINER_FILE_NAME service..."
->>>>>>> feature/agent-lib
 
     systemctl daemon-reexec
     systemctl daemon-reload
