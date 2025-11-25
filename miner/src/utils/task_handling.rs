@@ -5,12 +5,8 @@ use crate::{
     },
     log,
     parent_runtime::inference::CURRENT_SERVER,
-    substrate_interface::api::{
-        runtime_types::cyborg_primitives::{miner::OperationalStatus, task::TaskStatusType},
-        task_management::events::task_scheduled::TaskId,
-    },
     traits::InferenceServer,
-    types::{CurrentTask, Miner, ParentRuntime},
+    miner_types::{Miner, ParentRuntime},
     utils::{
         substrate_queries::{
             get_currently_assigned_task_id, get_miner_id_assigned_to_task, get_task,
@@ -27,6 +23,14 @@ use serde::Serialize;
 use std::{fs, sync::Arc};
 use subxt::utils::AccountId32;
 use tokio::{sync::RwLock, task::JoinHandle};
+use types::{
+    substrate_interface::api::{
+        runtime_types::cyborg_primitives::{miner::OperationalStatus, task::TaskStatusType},
+        task_management::events::task_scheduled::TaskId,
+    },
+    CurrentTask
+};
+
 
 use crate::parachain_interactor::registration::update_operational_status;
 
@@ -139,7 +143,7 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
         }
     };
 
-    if task_miner_id != miner.identity.miner_id {
+    if task_miner_id.0 != miner.identity.miner_id {
         nuke_all_running_task_containers().await?;
         return Err("Miner is not assigned to any task, nuking all possible remaining running task containers".into());
     } else {
@@ -234,7 +238,7 @@ pub async fn nuke_all_running_task_containers() -> Result<()> {
     for container in containers {
         if let Some(names) = container.names {
             for name in names {
-                if name.trim_start_matches('/').starts_with(CONTAINER_PREFIX) {
+                if name.trim_start_matches('/').starts_with(&*CONTAINER_PREFIX) {
                     println!("Removing container: {}", name);
 
                     if let Some(id) = container.id.as_ref() {
@@ -316,7 +320,7 @@ async fn check_if_task_container_exists(task_container_name: &str) -> Result<boo
 
 /// Return the container name for the current task (utility that makes sure that the name is always absolutely the same)
 pub fn return_task_container_name(task_id: TaskId) -> String {
-    format!("{}{}", CONTAINER_PREFIX, task_id)
+    format!("{}{}", *CONTAINER_PREFIX, task_id)
 }
 
 /// Clean up the task that the miner is currently executing

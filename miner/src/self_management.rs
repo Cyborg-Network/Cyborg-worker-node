@@ -11,8 +11,17 @@ pub fn install_self(
     parachain_url: &str,
     miner_type: &str,
     account_seed: &str,
+    domain_name: &str,
+    miner_uuid: &Option<String>,
 ) -> Result<()> {
     validate_miner_type(miner_type)?;
+
+    let miner_uuid = match miner_uuid {
+        Some(miner_uuid) => miner_uuid,
+        None => {
+            panic!("CRITICAL: If no uuid is provided, the miner is an edge miner, and will retrieve its id from the miner-attestor. Since this is not implemented yet, we panic here.")
+        }
+    };
 
     let mut child = Command::new("bash")
         .arg("-s")
@@ -23,6 +32,8 @@ pub fn install_self(
         .env("PARACHAIN_URL", parachain_url)
         .env("MINER_TYPE", miner_type)
         .env("ACCOUNT_SEED", account_seed)
+        .env("CYBORG_MINER_DOMAIN_NAME", domain_name)
+        .env("MINER_UUID", miner_uuid)
         .spawn()?;
 
     child.stdin.take()

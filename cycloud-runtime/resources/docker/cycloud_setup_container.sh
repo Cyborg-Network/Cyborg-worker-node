@@ -2,7 +2,6 @@
 
 set -euo pipefail
 
-# Config
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_FILE="${LOG_FILE:-/var/log/container-ssh-setup.log}"
 LOCK_FILE="/var/run/container-ssh-setup.lock"
@@ -21,7 +20,6 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-# Parse arguments
 usage() {
     cat <<EOF
 Usage: $0 [OPTIONS]
@@ -37,6 +35,7 @@ Optional:
     --nsg-name NAME             Network Security Group name (auto-detected if not provided)
     --cleanup                   Remove existing setup for this container
     --priority NUM              NSG rule priority (default: auto-assigned)
+    --platform PLATFORM         Platform (default: generic; options: azure, generic)
 
 Examples:
     $0 --container-name user123 --ssh-public-key "ssh-rsa AAA..." --ssh-port 2222
@@ -45,7 +44,6 @@ EOF
     exit 1
 }
 
-# Initialize variables
 CONTAINER_NAME=""
 SSH_PUBLIC_KEY=""
 SSH_PORT=""
@@ -54,10 +52,14 @@ VM_NAME=""
 NSG_NAME=""
 CLEANUP=false
 PRIORITY=""
+PLATFORM="generic"
 
-# Parse command line arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
+        --platform)
+            PLATFORM="$2"
+            shift 2
+            ;;
         --container-name)
             CONTAINER_NAME="$2"
             shift 2
@@ -117,7 +119,6 @@ if ! flock -n 200; then
     exit 1
 fi
 
-# Cleanup function
 cleanup_handler() {
     local exit_code=$?
     flock -u 200
@@ -128,7 +129,6 @@ cleanup_handler() {
 }
 trap cleanup_handler EXIT
 
-# Auto-detect Azure metadata if not provided
 detect_azure_metadata() {
     log "Detecting Azure metadata..."
     
@@ -157,7 +157,6 @@ detect_azure_metadata() {
     return 0
 }
 
-# Get nsg
 detect_nsg() {
     log "Detecting Network Security Group..."
     
@@ -193,7 +192,6 @@ detect_nsg() {
     return 0
 }
 
-# Get nsg rule prio
 find_available_priority() {
     log "Finding available NSG rule priority..."
     
@@ -216,7 +214,6 @@ find_available_priority() {
     return 0
 }
 
-# Create nsg rule for ssh
 create_nsg_rule() {
     local port=$1
     local priority=$2
@@ -262,7 +259,6 @@ create_nsg_rule() {
     return 0
 }
 
-# Delete nsg rule
 delete_nsg_rule() {
     local port=$1
     local rule_name="SSH-Container-${CONTAINER_NAME}-${port}"
@@ -286,7 +282,6 @@ delete_nsg_rule() {
     return 0
 }
 
-# Setup iptables port forwarding
 setup_iptables() {
     local external_port=$1
     local container_ip=$2
@@ -319,7 +314,6 @@ setup_iptables() {
     return 0
 }
 
-# Remove iptables port forwarding
 remove_iptables() {
     local external_port=$1
     local container_ip=$2
@@ -340,7 +334,6 @@ remove_iptables() {
     return 0
 }
 
-# Get container IP address
 get_container_ip() {
     local container_name=$1
     local container_ip
@@ -356,14 +349,31 @@ get_container_ip() {
     return 0
 }
 
-# Setup SSH in container
+launch_container() {
+    log "Launching container using Docker Compose..."
+    
+    export USER_ID=${USER_ID:-1000}
+    export MEM_LIMIT=${MEM_LIMIT:-512m}
+    export MEM_SWAP_LIMIT=${MEM_SWAP_LIMIT:-1g}
+    export CPU_LIMIT=${CPU_LIMIT:-1}
+    export PIDS_LIMIT=${PIDS_LIMIT:-1024}
+    export CREATED_DATE=$(date -Iseconds)
+
+    if ! docker compose -f "$SCRIPT_DIR/docker-compose.yml" up -d; then
+        error "Failed to launch container"
+        return 1
+    fi
+
+    log "Container launched successfully"
+    return 0
+}
+
 setup_container_ssh() {
     local container_name=$1
     local ssh_key=$2
     
     log "Setting up SSH in container $container_name"
     
-    # Wait for container to be running
     local retries=0
     while ! docker inspect -f '{{.State.Running}}' "$container_name" 2>/dev/null | grep -q true; do
         if [[ $retries -ge 30 ]]; then
@@ -375,25 +385,7 @@ setup_container_ssh() {
         ((retries++))
     done
     
-    # Install and configure SSH in container
     docker exec "$container_name" bash -c "
-        set -e
-        
-        # Install SSH server if not present
-        if ! command -v sshd &>/dev/null; then
-            if command -v apt-get &>/dev/null; then
-                apt-get update -qq
-                DEBIAN_FRONTEND=noninteractive apt-get install -y -qq openssh-server
-            elif command -v yum &>/dev/null; then
-                yum install -y -q openssh-server
-            elif command -v apk &>/dev/null; then
-                apk add --no-cache openssh-server
-            else
-                echo 'ERROR: No package manager found' >&2
-                exit 1
-            fi
-        fi
-        
         # Create SSH directory
         mkdir -p /root/.ssh
         chmod 700 /root/.ssh
@@ -401,28 +393,6 @@ setup_container_ssh() {
         # Add authorized key
         echo '$ssh_key' > /root/.ssh/authorized_keys
         chmod 600 /root/.ssh/authorized_keys
-        
-        # Configure SSHD
-        mkdir -p /var/run/sshd
-        sed -i 's/#*PermitRootLogin .*/PermitRootLogin yes/' /etc/ssh/sshd_config
-        sed -i 's/#*PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config
-        sed -i 's/#*PubkeyAuthentication .*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
-        sed -i 's/#*ChallengeResponseAuthentication .*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
-        
-        # Generate host keys if needed
-        if [ ! -f /etc/ssh/ssh_host_rsa_key ]; then
-            ssh-keygen -A
-        fi
-        
-        # Start SSH service
-        if command -v systemctl &>/dev/null; then
-            systemctl enable ssh || systemctl enable sshd || true
-            systemctl restart ssh || systemctl restart sshd
-        else
-            /usr/sbin/sshd
-        fi
-        
-        echo 'SSH setup complete'
     " 2>&1 | tee -a "$LOG_FILE"
     
     if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -434,7 +404,6 @@ setup_container_ssh() {
     return 0
 }
 
-# Store mapping information
 store_mapping() {
     local container=$1
     local port=$2
@@ -457,7 +426,6 @@ EOF
     log "Mapping information stored at $mapping_file"
 }
 
-# Load mapping information
 load_mapping() {
     local container=$1
     local mapping_file="/var/lib/container-ssh-mappings/${container}.json"
@@ -471,7 +439,6 @@ load_mapping() {
     return 0
 }
 
-# Cleanup existing setup
 cleanup_setup() {
     log "Cleaning up setup for container: $CONTAINER_NAME"
     
@@ -493,7 +460,7 @@ cleanup_setup() {
     # Remove iptables rules
     remove_iptables "$ssh_port" "$container_ip"
     
-    # Remove NSG rule
+    # Remove nsg rule
     delete_nsg_rule "$ssh_port"
     
     # Remove mapping file
@@ -503,46 +470,41 @@ cleanup_setup() {
     return 0
 }
 
-# Main setup function
 main_setup() {
     log "Starting container SSH setup for: $CONTAINER_NAME"
     
-    # Detect Azure metadata
-    if ! detect_azure_metadata; then
-        error "Failed to detect Azure metadata"
-        return 1
-    fi
+    if [ "$PLATFORM" == "azure" ]; then
+        if ! detect_azure_metadata; then
+            error "Failed to detect Azure metadata"
+            return 1
+        fi
     
-    # Detect NSG
-    if [[ -z "$NSG_NAME" ]]; then
-        if ! detect_nsg; then
-            error "Failed to detect NSG"
+        if [[ -z "$NSG_NAME" ]]; then
+            if ! detect_nsg; then
+                error "Failed to detect NSG"
+                return 1
+            fi
+        fi
+        
+        if [[ -z "$PRIORITY" ]]; then
+            if ! PRIORITY=$(find_available_priority); then
+                error "Failed to find available priority"
+                return 1
+            fi
+        fi
+        
+        if ! create_nsg_rule "$SSH_PORT" "$PRIORITY"; then
+            error "Failed to create NSG rule"
             return 1
         fi
     fi
     
-    # Get or assign priority
-    if [[ -z "$PRIORITY" ]]; then
-        if ! PRIORITY=$(find_available_priority); then
-            error "Failed to find available priority"
-            return 1
-        fi
-    fi
-    
-    # Create NSG rule
-    if ! create_nsg_rule "$SSH_PORT" "$PRIORITY"; then
-        error "Failed to create NSG rule"
-        return 1
-    fi
-    
-    # Setup SSH in container
     if ! setup_container_ssh "$CONTAINER_NAME" "$SSH_PUBLIC_KEY"; then
         error "Failed to setup SSH in container"
         delete_nsg_rule "$SSH_PORT"
         return 1
     fi
     
-    # Get container IP
     local container_ip
     if ! container_ip=$(get_container_ip "$CONTAINER_NAME"); then
         error "Failed to get container IP"
@@ -550,14 +512,12 @@ main_setup() {
         return 1
     fi
     
-    # Setup iptables forwarding
     if ! setup_iptables "$SSH_PORT" "$container_ip"; then
         error "Failed to setup iptables"
         delete_nsg_rule "$SSH_PORT"
         return 1
     fi
     
-    # Store mapping
     store_mapping "$CONTAINER_NAME" "$SSH_PORT" "$container_ip"
     
     log "Container SSH setup completed successfully"
@@ -566,21 +526,25 @@ main_setup() {
     return 0
 }
 
-# Main execution
 main() {
     log "=== Container SSH Setup Script Starting ==="
+    log "Running for platform: $PLATFORM"
     log "Container: $CONTAINER_NAME"
     
-    # Check dependencies
-    for cmd in az docker jq iptables curl; do
+    for cmd in docker jq ufw curl; do
         if ! command -v "$cmd" &>/dev/null; then
             error "Required command not found: $cmd"
             exit 1
         fi
     done
+
+    if ! docker compose version &>/dev/null; then
+        error "Docker Compose plugin not found"
+        exit 1
+    fi
     
-    # Check Azure CLI login
-    if ! az account show &>/dev/null; then
+    # Check azure cli login if platform is azure
+    if [ "$PLATFORM" == "azure" ] && ! az account show &>/dev/null; then
         error "Not logged in to Azure CLI. Use managed identity or 'az login'"
         exit 1
     fi
@@ -595,5 +559,4 @@ main() {
     return 0
 }
 
-# Run main function
 main

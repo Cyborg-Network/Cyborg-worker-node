@@ -1,12 +1,13 @@
 use crate::global_config::{PATHS, self, update_config_file};
 use crate::error::Result;
 use crate::self_management::try_apply_update_if_available;
-use crate::substrate_interface;
-use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::{MinerType, OperationalStatus};
+use types::substrate_interface;
+use types::substrate_interface::api::runtime_types::cyborg_primitives::miner::{MinerType, OperationalStatus};
 use crate::utils::task_handling::pick_up_task;
 use crate::traits::ParachainInteractor;
-use crate::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
-use crate::types::{Miner, MinerIdentity};
+use types::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
+use types::MinerIdentity;
+use crate::miner_types::Miner;
 use crate::utils::tx_builder::pub_register;
 use once_cell::sync::Lazy;
 use subxt_signer::sr25519::Keypair;
@@ -14,7 +15,7 @@ use std::fs;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
-use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
+use types::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 
 static LAST_UPDATE_CHECK: Lazy<Mutex<Option<Instant>>> = Lazy::new(|| Mutex::new(None));
 
@@ -32,7 +33,7 @@ async fn confirm_registration() -> Result<RegistrationStatus> {
     let identity: MinerIdentity = serde_json::from_str(&identity_file_content)?;
     let miner_type = identity.miner_type;
     // let identity = identity.miner_id;
-    let miner_id = identity.miner_id.0.clone();
+    let miner_id = identity.miner_id.clone();
 
     println!("Confirming miner registration...");
 
@@ -61,7 +62,7 @@ async fn confirm_registration() -> Result<RegistrationStatus> {
             println!("Miner successfully registered on-chain!");
             return Ok(RegistrationStatus::Registered(MinerIdentity {
                 miner_owner: miner.owner.clone(),
-                miner_id: BoundedVec(miner.id.0.clone()),
+                miner_id: miner.id.0.clone(),
                 miner_type: miner_type,
             }));
         } else {
@@ -120,7 +121,7 @@ pub async fn update_operational_status(miner: Arc<Miner>, status: OperationalSta
         .edge_connect()
         .update_operational_status(
             miner.miner_type.as_ref().clone(),
-            miner.identity.miner_id.clone(),
+            BoundedVec(miner.identity.miner_id.clone()),
             status,
         );
 
@@ -139,17 +140,15 @@ pub async fn start_miner(miner: Arc<Miner>) -> Result<()> {
     println!("Starting miner...");
 
      {
-        let miner_type = miner.miner_type.as_ref();
         let identity = miner.identity.as_ref();
-        let miner_id_bounded: MinerId = BoundedVec(identity.miner_id.0.clone());
 
         let updated_identity = MinerIdentity {
             miner_owner: identity.miner_owner.clone(),
-            miner_id: miner_id_bounded.clone(),
+            miner_id: identity.miner_id.clone(),
             miner_type: identity.miner_type.clone(),
         };
 
-        println!("Updated Miner UUID: {:?}", miner_id_bounded);
+        println!("Updated Miner UUID: {:?}", identity.miner_id);
 
         {
             let miner_ptr = Arc::as_ptr(&miner) as *mut Miner;
@@ -158,7 +157,6 @@ pub async fn start_miner(miner: Arc<Miner>) -> Result<()> {
             }
         }
     }
-
    
     // Set operational status to Available when starting
     update_operational_status(Arc::clone(&miner), OperationalStatus::Available).await?;

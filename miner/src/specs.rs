@@ -1,13 +1,19 @@
-#[allow(unused_variables)]
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::process::{Command, Stdio};
-use std::{env, str};
+use std::sync::Arc;
+use std::str;
 use sysinfo::{MemoryRefreshKind, RefreshKind, System};
 
 use reqwest::Client;
 
-use crate::{error::Result, global_config, types::MinerConfig};
+use types::substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType;
+use types::MinerConfig;
+
+use crate::global_config::CYBORG_MINER_DOMAIN_NAME;
+use crate::{
+    error::Result,
+};
 
 #[derive(Debug, Deserialize)]
 struct GoogleGeoResponse {
@@ -22,12 +28,14 @@ struct GoogleLocation {
 }
 
 #[derive(Debug, Serialize)]
+#[allow(non_snake_case)]
 struct WifiAccessPoint {
     macAddress: String,
     signalStrength: i32,
 }
 
 #[derive(Debug, Serialize)]
+#[allow(non_snake_case)]
 struct GeoRequest {
     considerIp: bool,
     wifiAccessPoints: Vec<WifiAccessPoint>,
@@ -45,32 +53,15 @@ pub struct Location {
     coordinates: Coordinates,
 }
 
-pub async fn gather_worker_spec() -> Result<MinerConfig> {
-    println!(
-        "Using IP: {}",
-        env::var("CYBORG_MINER_TEST_IP").unwrap_or("".to_string())
-    );
+pub async fn gather_worker_spec(_miner_type: Arc<MinerType>) -> Result<MinerConfig> {
+    let domain = &*CYBORG_MINER_DOMAIN_NAME;
 
-    let domain = match env::var("CYBORG_MINER_TEST_IP") {
-        Ok(val) => val,
-        Err(_) => {
-            let output = Command::new("hostname").output()?.stdout;
-
-            let hostname = String::from_utf8(output)?.trim().to_string();
-
-            format!("https://{hostname}.{}", *global_config::TAILSCALE_NET)
-        } /*
-          Err(_) => {
-              reqwest::get("https://api.ipify.org?format=json")
-                  .await?
-                  .json::<IpResponse>()
-                  .await?
-                  .ip
-          }
-          */
-    };
-
-    //let response = worker::IpResponse { ip: String::from("127.0.0.1") };
+    /*
+    if current_id_has_changed {
+        domain = new_domain_name;
+        set_new_domain_name_in_systemd_environment(domain);
+    }
+    */
 
     let location = Location::get_location().await;
 
@@ -81,7 +72,7 @@ pub async fn gather_worker_spec() -> Result<MinerConfig> {
     let storage = return_total_storage();
 
     Ok(MinerConfig {
-        domain,
+        domain: domain.to_string(), 
         latitude: location.coordinates.0,
         longitude: location.coordinates.1,
         ram,
@@ -170,7 +161,7 @@ fn get_gps_location() -> Result<(f64, f64)> {
 
     Err("Failed to extract latitude and longitude from GPS data".into())
 }
-use crate::error::Error;
+
 async fn get_geo_location() -> Result<(f64, f64)> {
     let output = Command::new("nmcli")
         .args(&["-t", "-f", "SSID,BSSID,SIGNAL", "dev", "wifi"])

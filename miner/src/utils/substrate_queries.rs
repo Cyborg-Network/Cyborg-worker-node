@@ -1,9 +1,10 @@
-use crate::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
-use crate::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
-use crate::substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType;
-use crate::substrate_interface::api::runtime_types::cyborg_primitives::task::TaskInfo;
-use crate::types::MinerIdentity;
-use crate::{error::Result, substrate_interface};
+use types::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
+use types::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
+use types::substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType;
+use types::substrate_interface::api::runtime_types::cyborg_primitives::task::TaskInfo;
+use types::substrate_interface;
+use types::{MinerIdentity, MinerIdVec};
+use crate::error::Result;
 use std::sync::Arc;
 use subxt::utils::AccountId32;
 
@@ -21,36 +22,29 @@ pub struct CyborgTask {
 // No good for producion, but miners need a different ID in order to efficiently query them due to subxt bug when querying tuples
 pub async fn get_currently_assigned_task_id(
     api: &OnlineClient<PolkadotConfig>,
-    miner_id: &MinerId,
+    miner_id: &MinerIdVec,
     miner_type: Arc<MinerType>,
 ) -> Result<u64> {
+    let bounded_id = BoundedVec(miner_id.clone());
+
     let miner_query = match miner_type.as_ref() {
         MinerType::Edge => substrate_interface::api::storage()
             .edge_connect()
-            .edge_miners(miner_id),
+            .edge_miners(&bounded_id),
         MinerType::Cloud => substrate_interface::api::storage()
             .edge_connect()
-            .cloud_miners(miner_id),
+            .cloud_miners(&bounded_id),
     };
 
-    let mut miner_info = api
+    let miner_info = api
         .storage()
         .at_latest()
         .await?
         .fetch(&miner_query)
         .await?;
 
-    // while let Some(Ok(fetched_miner)) = miner_iter_query.next().await {
-    //     if fetched_miner.value.id == miner_id.clone() {
-    //         if let Some(task_id) = fetched_miner.value.current_task {
-    //             return Ok(task_id);
-    //         } else {
-    //             return Err("Miner has no task assigned".into());
-    //         }
-    //     }
-    // }
     if let Some(miner)=miner_info{
-        if miner.id==miner_id.clone(){
+        if &miner.id.0==miner_id{
             if let Some(task_id) = miner.current_task {
                 return Ok(task_id);
             } else {
@@ -100,7 +94,7 @@ pub async fn get_miner_id_assigned_to_task(
         .await?;
 
     if let Some(task) = task_query {
-        Ok(task)
+        Ok(task.0)
     } else {
         Err("Task not found".into())
     }
@@ -128,7 +122,7 @@ pub async fn get_miner_by_domain(
         if *domain == queried_domain {
             return Ok(MinerIdentity {
                 miner_owner: miner.value.owner.clone(),
-                miner_id: miner.value.id.clone(),
+                miner_id: miner.value.id.0.clone(),
                 miner_type: miner_type.as_ref().clone(),
             });
         }
@@ -136,8 +130,6 @@ pub async fn get_miner_by_domain(
 
     Err("Miner not found".into())
 }
-
-
 
 pub async fn get_miner_by_id(
     api: &OnlineClient<PolkadotConfig>,
@@ -164,7 +156,7 @@ pub async fn get_miner_by_id(
 
     Ok(MinerIdentity {
         miner_owner: miner_info.owner,
-        miner_id: miner_info.id.clone(),
+        miner_id: miner_info.id.0.clone(),
         miner_type: miner_type.as_ref().clone(),
     })
 }

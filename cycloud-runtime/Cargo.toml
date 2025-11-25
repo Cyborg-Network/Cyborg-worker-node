@@ -5,12 +5,16 @@ edition = "2021"
 
 [dependencies]
 async-stream = { workspace = true }
+async-trait = { workspace = true }
 reqwest = { workspace = true }
 futures = { workspace = true }
 bollard = { workspace = true }
+types = { workspace = true }
 tokio = "1.41.0"
 serde = { version = "1.0.197", default-features = false }
 serde_json = { version = "1.0.114", default-features = false }
 zstd = "0.13.3"
 sha2 = "0.10.9"
-rust-embed = "8.7.2"
+include_dir = "0.7.4"
+chrono = "0.4.42"
+uuid = "1.18.1"

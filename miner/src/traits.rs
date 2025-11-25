@@ -5,12 +5,13 @@ use crate::{
     global_config,
     parachain_interactor::{behavior_control, event_processor, registration, task_management},
     parent_runtime::{inference, proof, setup},
-    types::{CurrentTask, Miner, ParentRuntime},
+    miner_types::{Miner, ParentRuntime},
 };
 use async_trait::async_trait;
 use subxt::events::EventDetails;
 use subxt::PolkadotConfig;
 use tokio::sync::RwLock;
+use types::CurrentTask;
 
 #[async_trait]
 pub trait InferenceServer {

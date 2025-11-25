@@ -29,7 +29,6 @@ echo "Detected architecture: ${ARCH}" >&2
 
 # File names as they appear after installation
 MINER_FILE_NAME="cyborg-miner"
-AGENT_FILE_NAME="cyborg-agent"
 SETUP_SCRIPT_FILE_NAME="setup.sh"
 
 # Paths for the files
@@ -39,7 +38,6 @@ TX_QUEUE_DB_PATH="/var/lib/cyborg/tx_queue_db"
 
 # Full paths
 MINER_BINARY_PATH="$BIN_DIR/$MINER_FILE_NAME"
-AGENT_BINARY_PATH="$BIN_DIR/$AGENT_FILE_NAME"
 SETUP_SCRIPT_PATH="$SCRIPT_DIR/$SETUP_SCRIPT_FILE_NAME"
 
 # Ports to be opened at the end of the script
@@ -51,13 +49,15 @@ FLASH_INFER_PORT=3005
 
 # Service files
 MINER_SERVICE_FILE="/etc/systemd/system/$MINER_FILE_NAME.service"
-AGENT_SERVICE_FILE="/etc/systemd/system/$AGENT_FILE_NAME.service"
 
 # ENV variables for the miner
 MINER_TASK_DIR="/var/lib/cyborg/miner/task"
 MINER_CONFIG_DIR="/etc/cyborg/miner"
 MINER_TMP_DIR="/var/lib/cyborg/miner/tmp"
 MINER_LOG_DIR="/var/log/cyborg/miner"
+
+# Prefix for containerized tasks managed by the miner
+TASK_CONTAINER_PREFIX="cy-miner-task-container-"
 
 # The tailscale network (only for testnet) on which the miner will be reachable
 TAILSCALE_NET="tail78ea2b.ts.net"
@@ -98,15 +98,14 @@ download_and_extract() {
     tar -xf "$TMP_DIR/release.tar.gz" -C "$TMP_DIR"
     
     MINER_BIN=$(find "$TMP_DIR" -type f -executable -name '*miner*' | head -n 1)
-    AGENT_BIN=$(find "$TMP_DIR" -type f -executable -name '*agent*' | head -n 1)
     SETUP_SCRIPT=$(find "$TMP_DIR" -type f -executable -name '*setup*' | head -n 1)
 
-    if [[ -z "$MINER_BIN" || -z "$AGENT_BIN" || -z "$SETUP_SCRIPT" ]]; then
+    if [[ -z "$MINER_BIN" || -z "$SETUP_SCRIPT" ]]; then
         echo "Required files not found."
         exit 1
     fi 
 
-    chmod +x "$MINER_BIN" "$AGENT_BIN" "$SETUP_SCRIPT"
+    chmod +x "$MINER_BIN" "$SETUP_SCRIPT"
 }
 
 prepare_environment() {
@@ -149,7 +148,7 @@ setup_docker() {
         tee /etc/apt/sources.list.d/docker.list > /dev/null
 
         apt-get update
-        apt-get install -y docker-ce docker-ce-cli containerd.io
+        apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
         echo "Docker installed successfully."
     else
         echo "Docker is already installed."
@@ -213,6 +212,8 @@ setup_systemd() {
     local PARACHAIN_URL="$1"
     local ACCOUNT_SEED="$2"
     local MINER_TYPE="$3"
+    local CYBORG_MINER_DOMAIN_NAME="$4"
+    local MINER_UUID="$5"
 
     echo "Creating systemd service for worker node: $MINER_SERVICE_FILE"
 
@@ -227,19 +228,22 @@ setup_systemd() {
     User=root
     SupplementaryGroups=docker
     Environment=PARACHAIN_URL=$PARACHAIN_URL
-    Environment="ACCOUNT_SEED=\"$ACCOUNT_SEED\""
+    Environment=ACCOUNT_SEED="$ACCOUNT_SEED"
     Environment=LOG_FILE_PATH=$MINER_LOG_DIR/miner.log
     Environment=TASK_FILE_NAME=model.onnx
     Environment=TASK_DIR_PATH=$MINER_TASK_DIR
     Environment=IDENTITY_FILE_PATH=$MINER_CONFIG_DIR/miner_identity.json
     Environment=TASK_OWNER_FILE_PATH=$MINER_CONFIG_DIR/task_owner.json
     Environment=CURRENT_TASK_PATH=$MINER_CONFIG_DIR/current_task.json
+    Environment=TASK_CONTAINER_PREFIX=$TASK_CONTAINER_PREFIX
     Environment=MINER_TMP_DIR=$MINER_TMP_DIR
     Environment=TAILSCALE_NET=$TAILSCALE_NET
     Environment=FLASH_INFER_PORT=$FLASH_INFER_PORT
     Environment=TX_QUEUE_DB_PATH=$TX_QUEUE_DB_PATH
     Environment=MINER_TYPE=$MINER_TYPE
-    ExecStart=$MINER_BINARY_PATH start-miner --parachain-url \$PARACHAIN_URL --account-seed "\$ACCOUNT_SEED" --miner-type $MINER_TYPE
+    Environment=CYBORG_MINER_DOMAIN_NAME=$CYBORG_MINER_DOMAIN_NAME
+    Environment=CYBORG_MINER_UUID=$MINER_UUID
+    ExecStart=$MINER_BINARY_PATH start-miner --parachain-url \$PARACHAIN_URL --account-seed "\$ACCOUNT_SEED" --miner-type $MINER_TYPE --miner-uuid $MINER_UUID
     Restart=always
     SuccessExitStatus=75
     RestartSec=3
@@ -250,52 +254,23 @@ EOL
 
     echo "systemd service for $MINER_FILE_NAME created successfully!"
 
-    echo "Creating systemd service for agent: $AGENT_SERVICE_FILE"
-
-    bash -c "cat > $AGENT_SERVICE_FILE" << EOL
-    [Unit]
-    Description=Agent that is able to check the health of the miner, provide required info to the cyborg-parachain, and stream usage metrics and logs of the cyborg node.
-    After=network.target
-
-    [Service]
-    User=root
-    Group=root
-    SupplementaryGroups=docker
-    Environment=LOG_FILE_PATH=$MINER_LOG_DIR/miner.log
-    Environment=TASK_OWNER_FILE_PATH=$MINER_CONFIG_DIR/task_owner.json
-    Environment=IDENTITY_FILE_PATH=$MINER_CONFIG_DIR/miner_identity.json
-    ExecStart=$AGENT_BINARY_PATH run
-    Restart=always
-    RestartSec=3
-
-    [Install]
-    WantedBy=multi-user.target
-EOL
-
-    echo "systemd service for $AGENT_FILE_NAME created successfully!"
-
-    echo "Reloading systemd, enabling and starting $MINER_FILE_NAME and $AGENT_FILE_NAME services..."
+    echo "Reloading systemd, enabling and starting $MINER_FILE_NAME service..."
 
     systemctl daemon-reexec
     systemctl daemon-reload
     systemctl enable "$MINER_FILE_NAME"
-    systemctl enable "$AGENT_FILE_NAME"
     systemctl restart "$MINER_FILE_NAME"
-    systemctl restart "$AGENT_FILE_NAME"
 
     systemctl status "$MINER_FILE_NAME" --no-pager
-    systemctl status "$AGENT_FILE_NAME" --no-pager
 
-    echo "Cyborg Miner and Agent are installed and running. Binaries are located at $MINER_BINARY_PATH and $AGENT_BINARY_PATH. Now attempting to open Port $AGENT_HTTP_PORT, $AGENT_WS_PORT and $MINER_INFERENCE_PORT to enable communication with Cyborg Connect and provide an inference endpoint."
+    echo "Cyborg Miner is installed and running. Binary is located at $MINER_BINARY_PATH. Now attempting to open Port $AGENT_HTTP_PORT, $AGENT_WS_PORT and $MINER_INFERENCE_PORT to enable communication with Cyborg Connect and provide an inference endpoint."
 }
 
 move_files() {
     echo "Moving the miner to $BIN_DIR..."
-    echo "Moving the agent to $BIN_DIR..."
     echo "Moving the setup script to $SCRIPT_DIR..."
 
     mv "$MINER_BIN" "$MINER_BINARY_PATH"
-    mv "$AGENT_BIN" "$AGENT_BINARY_PATH"
     mv "$SETUP_SCRIPT" "$SETUP_SCRIPT_PATH"
 }
 
@@ -355,8 +330,11 @@ install() {
     PARACHAIN_URL="${PARACHAIN_URL:-}"
     ACCOUNT_SEED="${ACCOUNT_SEED:-}"
     MINER_TYPE="${MINER_TYPE:-}"
+    CYBORG_MINER_DOMAIN_NAME="${CYBORG_MINER_DOMAIN_NAME:-}"
+    MINER_UUID="${MINER_UUID}"
 
-    if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" || -z "$MINER_TYPE" ]]; then
+
+    if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" || -z "$MINER_TYPE" || -z "$CYBORG_MINER_DOMAIN_NAME" || -z "$MINER_UUID" ]]; then
         echo "ERROR: PARACHAIN_URL and ACCOUNT_SEED must be set in environment."
         exit 1
     fi
@@ -365,7 +343,7 @@ install() {
     prepare_environment
     setup_docker
     move_files
-    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE"
+    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE" "$CYBORG_MINER_DOMAIN_NAME" "$MINER_UUID"
     open_firewall
     #prepare_triton
 }
@@ -387,8 +365,10 @@ update() {
     PARACHAIN_URL=$(systemctl show cyborg-miner.service -p Environment | grep -o 'PARACHAIN_URL=[^ ]*' | cut -d= -f2)
     ACCOUNT_SEED=$(systemctl show cyborg-miner.service -p Environment | grep -o 'ACCOUNT_SEED=[^ ]*' | cut -d= -f2)
     MINER_TYPE=$(systemctl show cyborg-miner.service -p Environment | grep -o 'MINER_TYPE=[^ ]*' | cut -d= -f2)
+    CYBORG_MINER_DOMAIN_NAME=$(systemctl show cyborg-miner.service -p Environment | grep -o 'CYBORG_MINER_DOMAIN_NAME=[^ ]*' | cut -d= -f2)
+    MINER_UUID=$(systemctl show cyborg-miner.service -p Environment | grep -o 'MINER_UUID=[^ ]*' | cut -d= -f2)
 
-    if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" || -z "$MINER_TYPE" ]]; then
+    if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" || -z "$MINER_TYPE" || -z "$CYBORG_MINER_DOMAIN_NAME" || -z "$MINER_UUID" ]]; then
         echo "Failed to extract required variables from $SERVICE_FILE"
         exit 1
     fi
@@ -396,6 +376,8 @@ update() {
     echo "PARACHAIN_URL: $PARACHAIN_URL"
     echo "ACCOUNT_SEED: $ACCOUNT_SEED"
     echo "MINER_TYPE: $MINER_TYPE"
+    echo "CYBORG_MINER_DOMAIN_NAME: $CYBORG_MINER_DOMAIN_NAME"
+    echo "MINER_UUID: $MINER_UUID"
 
     ###############################################################################################################
 
@@ -406,10 +388,9 @@ update() {
 
     # Avoid race condition
     systemctl stop cyborg-miner.service
-    systemctl stop cyborg-agent.service
 
     move_files
-    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE"
+    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE" "$CYBORG_MINER_DOMAIN_NAME"
     open_firewall
 
     echo "Update complete: $CURRENT_VERSION to $latest_tag"

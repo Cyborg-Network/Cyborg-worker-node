@@ -1,11 +1,12 @@
 use crate::global_config::{FLASH_INFER_PORT, PATHS, TAILSCALE_NET};
-use crate::substrate_interface::api::runtime_types::cyborg_primitives::task::{
-    FlashInferTask, TaskKind,
+use futures::TryFutureExt;
+use types::{
+    substrate_interface::api::runtime_types::cyborg_primitives::task::{
+        FlashInferTask, TaskKind,
+    },
+    CurrentTask
 };
-use crate::{
-    error::{Error, Result},
-    types::CurrentTask,
-};
+use crate::error::{Error, Result};
 use axum::{
     extract::{
         ws::{Message, WebSocket, WebSocketUpgrade},
@@ -178,9 +179,9 @@ pub async fn spawn_inference_server(
                 })?;
                 InferenceEngine::FlashInference(Arc::new(Mutex::new(fi_engine)))
             }
-        },
-        TaskKind::CyCloud => {
-            let cl_engine = CyCloudEngine::new(&task.read().await.container_name).map_err(|e| {
+        }
+        TaskKind::CyCloud(_) => {
+            let cl_engine = CyCloudEngine::new(&task.read().await.task_type).await.map_err(|e| {
                 Error::Custom(format!("Failed to create engine: {}", e.to_string()))
             })?;
             InferenceEngine::CyCloud(Arc::new(Mutex::new(cl_engine)))
@@ -194,9 +195,11 @@ pub async fn spawn_inference_server(
         let _ = status_tx.send(EngineStatus::Initializing);
 
         match &engine_clone {
+
             InferenceEngine::OpenInference(_) => {
                 let _ = status_tx.send(EngineStatus::Ready);
             }
+
             InferenceEngine::NeuroZk(engine_clone) => {
                 match engine_clone.lock().await.setup().await {
                     Ok(()) => {
@@ -208,6 +211,7 @@ pub async fn spawn_inference_server(
                     }
                 }
             }
+
             InferenceEngine::FlashInference(engine_clone) => {
                 match engine_clone.lock().await.setup().await {
                     Ok(()) => {
@@ -219,6 +223,7 @@ pub async fn spawn_inference_server(
                     }
                 }
             }
+
             InferenceEngine::CyCloud(engine_clone) => {
                 match engine_clone.lock().await.setup().await {
                     Ok(()) => {
@@ -230,6 +235,7 @@ pub async fn spawn_inference_server(
                     }
                 }
             }
+
         }
     });
 
@@ -408,7 +414,7 @@ async fn handle_socket(socket: WebSocket, state: AppState) -> Result<()> {
                         tracing::error!("Error running FlashInfer engine: {}", e);
                     }
                 }
-                InferenceEngine::CyCloud(ref engine) => {
+                InferenceEngine::CyCloud(ref _engine) => {
                     return;
                 }
             }
