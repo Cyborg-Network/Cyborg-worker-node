@@ -63,20 +63,34 @@ TASK_CONTAINER_PREFIX="cy-miner-task-container-"
 TAILSCALE_NET="tail78ea2b.ts.net"
 
 verify_release() {
-    #local file="$1"
-    #local sig_file="${file}.sig"
+    local file="$1"
+    local checksum_file="${file}.sha256"
     
-    #curl -L "${URL}.sig" -o "$sig_file"
+    echo "Verifying checksum for $file..."
     
-    #if ! minisign -Vm "$file" -P "<YOUR_PUBLIC_KEY>"; then
-        #echo "SIGNATURE VERIFICATION FAILED!"
-        #exit 1
-    #fi
+    if [[ ! -f "$checksum_file" ]]; then
+        echo "ERROR: Checksum file not found: $checksum_file"
+        exit 1
+    fi
     
-    echo "CRITICAL WARNING: Signature verification is not implemented yet!"
+    local expected_checksum=$(cat "$checksum_file" | awk '{print $1}')
+    
+    local actual_checksum=$(sha256sum "$file" | awk '{print $1}')
+    
+    echo "Expected: $expected_checksum"
+    echo "Actual:   $actual_checksum"
+    
+    if [[ "$expected_checksum" != "$actual_checksum" ]]; then
+        echo "ERROR: Checksum verification FAILED!"
+        echo "The downloaded file may be corrupted or tampered with."
+        exit 1
+    fi
+    
+    echo "✓ Checksum verification passed"
 }
 
 # ======================================= UTIL ===============================================================
+
 download_and_extract() {
     local tag="${1:-}"
 
@@ -86,15 +100,25 @@ download_and_extract() {
     fi
 
     local asset="${MINER_ASSET_NAME}-${PLATFORM}-${ARCH}.tar.gz"
+    local checksum_asset="${asset}.sha256"
     local url="https://github.com/${REPO}/releases/download/${tag}/${asset}"
-
-    verify_release
+    local checksum_url="https://github.com/${REPO}/releases/download/${tag}/${checksum_asset}"
 
     TMP_DIR=$(mktemp -d)
     trap "rm -rf \"$TMP_DIR\"" EXIT
 
     echo "Downloading latest release: $tag..."
     curl -L "$url" -o "$TMP_DIR/release.tar.gz"
+
+    echo "Downloading checksum file..."
+    if ! curl -L "$checksum_url" -o "$TMP_DIR/release.tar.gz.sha256"; then
+        echo "ERROR: Failed to download checksum file"
+        exit 1
+    fi
+
+    verify_release "$TMP_DIR/release.tar.gz"
+
+    echo "Extracting archive..."
     tar -xf "$TMP_DIR/release.tar.gz" -C "$TMP_DIR"
     
     MINER_BIN=$(find "$TMP_DIR" -type f -executable -name '*miner*' | head -n 1)

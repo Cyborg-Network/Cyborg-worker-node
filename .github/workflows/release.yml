@@ -53,9 +53,16 @@ jobs:
           chmod +x release/cyborg-miner release/setup.sh
           tar -czvf cyborg-miner-linux-${{ matrix.arch }}.tar.gz -C release .
 
+      - name: Generate SHA256
+        run: |
+          sha256sum cyborg-miner-linux-${{ matrix.arch }}.tar.gz > cyborg-miner-linux-${{ matrix.arch }}.tar.gz.sha256
+          cat cyborg-miner-linux-${{ matrix.arch }}.tar.gz.sha256
+
       - name: Upload binary to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: cyborg-miner-linux-${{ matrix.arch }}.tar.gz
+          files: | 
+            cyborg-miner-linux-${{ matrix.arch }}.tar.gz
+            cyborg-miner-linux-${{ matrix.arch }}.tar.gz.sha256
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
