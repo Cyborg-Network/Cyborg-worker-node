@@ -414,7 +414,7 @@ update() {
     systemctl stop cyborg-miner.service
 
     move_files
-    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE" "$CYBORG_MINER_DOMAIN_NAME"
+    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE" "$CYBORG_MINER_DOMAIN_NAME" "$MINER_UUID"
     open_firewall
 
     echo "Update complete: $CURRENT_VERSION to $latest_tag"
