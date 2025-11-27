@@ -3,7 +3,15 @@
 use crate::error::Error;
 use crate::error::Result;
 use crate::global_config;
+use crate::global_config::CYBORG_NETWORK_URLS;
 use crate::specs;
+use subxt::config::DefaultExtrinsicParamsBuilder;
+use subxt::ext::scale_encode::EncodeAsFields;
+use subxt::tx::DefaultPayload;
+use subxt::tx::Payload;
+use subxt::tx::SubmittableExtrinsic;
+use subxt::OnlineClient;
+use subxt::PolkadotConfig;
 use types::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 use types::substrate_interface::{self, api::runtime_types::cyborg_primitives::miner::MinerType};
 use types::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
@@ -16,6 +24,77 @@ use types::substrate_interface::api::edge_connect::Error as EdgeConnectError;
 use types::substrate_interface::api::neuro_zk::Error as NzkError;
 use types::substrate_interface::api::task_management::Error as TaskManagementError;
 use subxt_signer::sr25519::Keypair;
+
+pub async fn sign_and_send_tx<T>(
+    unsigned_tx: &DefaultPayload<T>,
+    miner_uuid: &MinerId,
+    miner_type: &MinerType,
+    keypair: Option<Arc<Keypair>>, //TODO remove once TEE singer and remote signing serive works
+) -> Result<subxt::blocks::ExtrinsicEvents<subxt::PolkadotConfig>, subxt::Error>
+    where T: EncodeAsFields
+{
+    let client = global_config::get_parachain_client()?;
+
+    let result = match miner_type {
+        MinerType::Edge => {
+            // ----------------------- FUTURE TEE OPERATION -----------------
+
+            println!("WARNING: Transactions are currently not signed by the TEE but by a plaintext key. This is a major vulnerability and needs to be addressed before launching the edge miners!");
+            let keypair = keypair
+                .ok_or("Cannot sign the tx, no keypair provided!")?;
+
+            let params = DefaultExtrinsicParamsBuilder::new()
+                .build();
+
+            let signed_tx = client.tx().
+                create_signed(unsigned_tx, keypair.as_ref(), params)
+                .await?;
+
+            // ---------------------------------------------------------------
+             
+            signed_tx.submit_and_watch()
+                .await?
+                .wait_for_finalized_success()
+                .await
+        }
+        MinerType::Cloud => {
+            let req_client = reqwest::Client::builder().build()?;
+
+            let unsigned_bytes = unsigned_tx.encode_call_data(&client.metadata())
+                .map_err(|e| Error::Custom(e.to_string()))?;
+
+            let conductor_url = &CYBORG_NETWORK_URLS.conductor;
+
+            let url = format!(
+                "{}/sign-tx/{}", 
+                conductor_url, 
+                String::from_utf8(miner_uuid.0.clone())?
+            );
+           
+            let signed_tx = req_client
+                .post(url)
+                .header("Content-Type", "application/octet-stream")
+                .body(unsigned_bytes)
+                .send()
+                .await?
+                .error_for_status()?
+                .bytes()
+                .await?
+                .to_vec();
+
+            let signed_tx = SubmittableExtrinsic
+                ::<PolkadotConfig, OnlineClient<PolkadotConfig>>
+                ::from_bytes(client.clone(), signed_tx);
+             
+            signed_tx.submit_and_watch()
+                .await?
+                .wait_for_finalized_success()
+                .await
+        }
+    };
+
+    result
+}
 
 /// Registers the miner on the blockchain.
 ///

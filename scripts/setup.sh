@@ -62,6 +62,9 @@ TASK_CONTAINER_PREFIX="cy-miner-task-container-"
 # The tailscale network (only for testnet) on which the miner will be reachable
 TAILSCALE_NET="tail78ea2b.ts.net"
 
+# The adress of the cyborg conductor server
+CYBORG_CONDUCTOR_URL="https://conductor.cyborgnetwork.io"
+
 verify_release() {
     local file="$1"
     local checksum_file="${file}.sha256"
@@ -264,6 +267,7 @@ setup_systemd() {
     Environment=TAILSCALE_NET=$TAILSCALE_NET
     Environment=FLASH_INFER_PORT=$FLASH_INFER_PORT
     Environment=TX_QUEUE_DB_PATH=$TX_QUEUE_DB_PATH
+    Environment=CYBORG_CONDUCTOR_URL=$CYBORG_CONDUCTOR_URL
     Environment=MINER_TYPE=$MINER_TYPE
     Environment=CYBORG_MINER_DOMAIN_NAME=$CYBORG_MINER_DOMAIN_NAME
     Environment=CYBORG_MINER_UUID=$MINER_UUID
@@ -356,7 +360,6 @@ install() {
     MINER_TYPE="${MINER_TYPE:-}"
     CYBORG_MINER_DOMAIN_NAME="${CYBORG_MINER_DOMAIN_NAME:-}"
     MINER_UUID="${MINER_UUID}"
-
 
     if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" || -z "$MINER_TYPE" || -z "$CYBORG_MINER_DOMAIN_NAME" || -z "$MINER_UUID" ]]; then
         echo "ERROR: PARACHAIN_URL and ACCOUNT_SEED must be set in environment."

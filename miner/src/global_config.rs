@@ -20,6 +20,11 @@ pub struct Paths {
     pub safe_tmp_dir_path: String,
 }
 
+#[derive(Debug)]
+pub struct CyborgNetworkUrls {
+    pub conductor: String
+}
+
 // We're setting a few global variables here for easy access throughout. If editing, make sure to add appropriate Lazy::force to `run_global_config` - THIS IS NOT COMPILE-TIME ENFORCED
 // Paths required throughout
 pub static PATHS: Lazy<Paths> = Lazy::new(|| Paths {
@@ -29,6 +34,10 @@ pub static PATHS: Lazy<Paths> = Lazy::new(|| Paths {
     task_owner_path: env::var("TASK_OWNER_FILE_PATH").expect("TASK_OWNER_PATH must be set"),
     identity_path: env::var("IDENTITY_FILE_PATH").expect("IDENTITY_PATH must be set"),
     safe_tmp_dir_path: env::var("MINER_TMP_DIR").expect("MINER_TMP_DIR must be set"),
+});
+
+pub static CYBORG_NETWORK_URLS: Lazy<CyborgNetworkUrls> = Lazy::new(|| CyborgNetworkUrls {
+    conductor: env::var("CYBORG_CONDUCTOR_URL").expect("CYBORG_CONDUCTOR_URL must be set"),
 });
 
 // The tailscale network that the miner is currently operating under
@@ -78,6 +87,7 @@ pub async fn run_global_config(parachain_url: &str) -> Result<()> {
     Lazy::force(&CURRENT_TASK_PATH);
     Lazy::force(&CONTAINER_PREFIX);
     Lazy::force(&CYBORG_MINER_DOMAIN_NAME);
+    Lazy::force(&CYBORG_NETWORK_URLS);
 
     // Set the transaction queue
     if let Err(_) = TRANSACTION_QUEUE.set(TransactionQueue::new()) {
