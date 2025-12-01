@@ -96,10 +96,10 @@ async fn main() -> Result<()> {
             miner_type,
             domain_name,
             tailscale_network,
-            miner_uuid,
+            conductor_url, 
         }) => {
             if let Some(domain_name) = domain_name {
-                self_management::install_self(parachain_url, miner_type, account_seed, domain_name, miner_uuid)
+                self_management::install_self(parachain_url, miner_type, account_seed, domain_name, conductor_url)
                     .expect("Failed to install");
 
                 return Ok(());
@@ -118,7 +118,7 @@ async fn main() -> Result<()> {
 
                 let domain_name = format!("https://{hostname}.{}", tailscale_network);
 
-                 self_management::install_self(parachain_url, miner_type, account_seed, &domain_name, miner_uuid)
+                 self_management::install_self(parachain_url, miner_type, account_seed, &domain_name, conductor_url)
                     .expect("Failed to install");
 
                 return Ok(());
@@ -130,7 +130,7 @@ async fn main() -> Result<()> {
                 .await.expect("Failed to get IP adress")
                 .ip;
 
-            self_management::install_self(parachain_url, miner_type, account_seed, &domain_name, miner_uuid)
+            self_management::install_self(parachain_url, miner_type, account_seed, &domain_name, conductor_url)
                 .expect("Failed to install");
 
             return Ok(());

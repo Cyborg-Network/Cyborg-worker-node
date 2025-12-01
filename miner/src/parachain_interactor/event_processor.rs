@@ -1,6 +1,7 @@
 use types::substrate_interface;
 use types::substrate_interface::api::runtime_types::cyborg_primitives::miner::OperationalStatus;
 use crate::traits::{InferenceServer, ParachainInteractor};
+use types::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 use types::CurrentTask;
 use crate::utils::task_handling::{self, return_task_container_name, set_current_task};
 use crate::utils::tx_builder::pub_confirm_task_reception;
@@ -117,8 +118,16 @@ pub async fn process_event(miner: Arc<Miner>, event: &EventDetails<PolkadotConfi
                     set_current_task(Arc::clone(&miner), current_task).await?;
 
                 let keypair = Arc::clone(&miner.keypair);
+                let miner_type = Arc::clone(&miner.miner_type);
+                let miner_identity = Arc::clone(&miner.identity);
                 tokio::spawn(async move {
-                    if let Err(e) = pub_confirm_task_reception(keypair, &current_task_id).await {
+                    if let Err(e) = pub_confirm_task_reception(
+                        &current_task_id, 
+                        keypair, 
+                        miner_type, 
+                        BoundedVec(miner_identity.miner_id.clone()),
+                        miner_identity.miner_owner.clone()
+                    ).await {
                         println!(
                             "Critical error encountered, please contact the support: {}",
                             e

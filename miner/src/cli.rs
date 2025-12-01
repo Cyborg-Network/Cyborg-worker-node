@@ -61,9 +61,9 @@ pub enum Commands {
         #[clap(long, value_name = "MINER_TYPE")]
         miner_type: String,
 
-        /// Omit if the miner is an edge miner as it will leverage the miner-attestor to get uuid
-        #[clap(long, value_name = "MINER_UUID")]
-        miner_uuid: Option<String>,
+        /// Conductor URL
+        #[clap(long, value_name = "CONDUCTOR_URL")]
+        conductor_url: String,
 
         /// Omit if communicating over the proxy or cynapse; Domain name that the miner is
         /// reachable under

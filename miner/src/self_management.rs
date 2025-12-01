@@ -3,25 +3,35 @@ use std::{
 };
 use std::os::unix::fs::PermissionsExt;
 
+use types::substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType;
+
 use crate::{builder::validate_miner_type, error::{Error, Result}, global_config};
 
 const INSTALLER: &[u8] = include_bytes!("../../scripts/setup.sh");
+
+pub fn generate_miner_id(miner_type: &MinerType) -> uuid::Uuid {
+    match miner_type {
+        MinerType::Edge => {
+            //TODO at the moment we don't have a working miner attestor, that creates a uuid based
+            //on the hardware of the miner so we have to simulate it
+            uuid::Uuid::new_v4()
+        }
+        MinerType::Cloud => {
+            uuid::Uuid::new_v4()
+        }
+    }
+}
 
 pub fn install_self(
     parachain_url: &str,
     miner_type: &str,
     account_seed: &str,
     domain_name: &str,
-    miner_uuid: &Option<String>,
+    conductor_url: &str,
 ) -> Result<()> {
-    validate_miner_type(miner_type)?;
+    let miner_type_enum = validate_miner_type(miner_type)?;
 
-    let miner_uuid = match miner_uuid {
-        Some(miner_uuid) => miner_uuid,
-        None => {
-            panic!("CRITICAL: If no uuid is provided, the miner is an edge miner, and will retrieve its id from the miner-attestor. Since this is not implemented yet, we panic here.")
-        }
-    };
+    let miner_uuid = generate_miner_id(&miner_type_enum).to_string();
 
     let mut child = Command::new("bash")
         .arg("-s")
@@ -34,6 +44,7 @@ pub fn install_self(
         .env("ACCOUNT_SEED", account_seed)
         .env("CYBORG_MINER_DOMAIN_NAME", domain_name)
         .env("MINER_UUID", miner_uuid)
+        .env("CYBORG_CONDUCTOR_URL", conductor_url)
         .spawn()?;
 
     child.stdin.take()

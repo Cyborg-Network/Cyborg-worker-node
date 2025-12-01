@@ -65,6 +65,7 @@ tar = { version = "0.4.44" }
 tempfile = "3.23.0"
 tokio-stream = { version = "0.1.17" }
 url = { version = "2.5.2" }
+uuid = "1.18.1"
 zbus = "5.1.1"
 zbus_names = "4.1.0"
 zip = "2.2.0"

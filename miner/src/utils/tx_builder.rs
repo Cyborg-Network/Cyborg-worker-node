@@ -1,17 +1,14 @@
 // Contains all the possible transactions to the parachain, kept out of the `Miner` struct for so that they can contain data that is not the current data (eg. previous taskId)
 
 use crate::error::Error;
-use crate::error::Result;
+use crate::error::{Result as CyborgResult};
 use crate::global_config;
 use crate::global_config::CYBORG_NETWORK_URLS;
 use crate::specs;
 use subxt::config::DefaultExtrinsicParamsBuilder;
 use subxt::ext::scale_encode::EncodeAsFields;
 use subxt::tx::DefaultPayload;
-use subxt::tx::Payload;
-use subxt::tx::SubmittableExtrinsic;
-use subxt::OnlineClient;
-use subxt::PolkadotConfig;
+use subxt::utils::{AccountId32, MultiAddress};
 use types::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 use types::substrate_interface::{self, api::runtime_types::cyborg_primitives::miner::MinerType};
 use types::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
@@ -23,14 +20,15 @@ use std::sync::Arc;
 use types::substrate_interface::api::edge_connect::Error as EdgeConnectError;
 use types::substrate_interface::api::neuro_zk::Error as NzkError;
 use types::substrate_interface::api::task_management::Error as TaskManagementError;
-use subxt_signer::sr25519::Keypair;
+use subxt_signer::sr25519::{Keypair, Signature};
 
 pub async fn sign_and_send_tx<T>(
     unsigned_tx: &DefaultPayload<T>,
     miner_uuid: &MinerId,
     miner_type: &MinerType,
+    miner_owner: AccountId32,
     keypair: Option<Arc<Keypair>>, //TODO remove once TEE singer and remote signing serive works
-) -> Result<subxt::blocks::ExtrinsicEvents<subxt::PolkadotConfig>, subxt::Error>
+) -> CyborgResult<Result<subxt::blocks::ExtrinsicEvents<subxt::PolkadotConfig>, subxt::Error>>
     where T: EncodeAsFields
 {
     let client = global_config::get_parachain_client()?;
@@ -60,8 +58,16 @@ pub async fn sign_and_send_tx<T>(
         MinerType::Cloud => {
             let req_client = reqwest::Client::builder().build()?;
 
-            let unsigned_bytes = unsigned_tx.encode_call_data(&client.metadata())
-                .map_err(|e| Error::Custom(e.to_string()))?;
+            let partial_tx = client
+                .tx()
+                .create_partial_signed(
+                    unsigned_tx, 
+                    &miner_owner, 
+                    Default::default(),
+                )
+                .await?;
+
+            let signer_payload_bytes = partial_tx.signer_payload();
 
             let conductor_url = &CYBORG_NETWORK_URLS.conductor;
 
@@ -70,21 +76,25 @@ pub async fn sign_and_send_tx<T>(
                 conductor_url, 
                 String::from_utf8(miner_uuid.0.clone())?
             );
-           
-            let signed_tx = req_client
+
+            let signature_bytes: [u8; 64] = req_client
                 .post(url)
                 .header("Content-Type", "application/octet-stream")
-                .body(unsigned_bytes)
+                .body(signer_payload_bytes)
                 .send()
                 .await?
                 .error_for_status()?
                 .bytes()
                 .await?
-                .to_vec();
+                .to_vec()
+                .try_into()
+                .map_err(|_| "Failed to turn signature response into signature bytes")?;
 
-            let signed_tx = SubmittableExtrinsic
-                ::<PolkadotConfig, OnlineClient<PolkadotConfig>>
-                ::from_bytes(client.clone(), signed_tx);
+            let signature = Signature(signature_bytes);
+
+            let multi_addr = MultiAddress::Id(miner_owner.clone());
+            let signed_tx = partial_tx
+                .sign_with_address_and_signature(&multi_addr, &signature.into());
              
             signed_tx.submit_and_watch()
                 .await?
@@ -93,7 +103,9 @@ pub async fn sign_and_send_tx<T>(
         }
     };
 
-    result
+    // Even though we return Ok(result) here, the return type STILL is a result so that the subxt
+    // success or error can be analyzed by the pre-existing structure
+    Ok(result)
 }
 
 /// Registers the miner on the blockchain.
@@ -104,7 +116,7 @@ pub async fn register(
     keypair: Arc<Keypair>,
     miner_type: Arc<MinerType>,
     miner_uuid: MinerId,
-) -> Result<MinerIdentity> {
+) -> CyborgResult<MinerIdentity> {
     let client = global_config::get_parachain_client()?;
 
     let worker_specs = specs::gather_worker_spec(Arc::clone(&miner_type)).await?;
@@ -126,6 +138,7 @@ pub async fn register(
     println!("Module: {:?}", tx.pallet_name());
     println!("Call: {:?}", tx.call_name());
     println!("Parameters: {:?}", tx.call_data());
+
 
     let tx_submission = client
         .tx()
@@ -185,16 +198,16 @@ pub async fn pub_register(
     keypair: Arc<Keypair>,
     miner_type: Arc<MinerType>,
     miner_uuid: MinerId,
-) -> Result<MinerIdentity> {
+) -> CyborgResult<MinerIdentity> {
     let tx_queue = global_config::get_tx_queue()?;
 
     let rx = tx_queue
         .enqueue(move || {
             let keypair = Arc::clone(&keypair);
             let miner_type = miner_type.clone();
-            let value = miner_uuid.clone();
+            let miner_uuid = miner_uuid.clone();
             async move {
-                let result = register(keypair, miner_type, value).await?;
+                let result = register(keypair, miner_type, miner_uuid).await?;
                 Ok(TxOutput::RegistrationInfo(result))
             }
         })
@@ -215,10 +228,15 @@ pub async fn pub_register(
 ///
 /// # Returns
 /// A `Result` indicating `Ok(())` if the result is successfully submitted, or an `Error` if it fails.
-pub async fn submit_proof(proof: Vec<u8>, keypair: Keypair, current_task: u64) -> Result<()> {
+pub async fn submit_proof(
+    current_task: u64,
+    proof: Vec<u8>, 
+    keypair: Arc<Keypair>, 
+    miner_type: Arc<MinerType>,
+    miner_uuid: MinerId,
+    miner_owner: AccountId32
+) -> CyborgResult<()> {
     let proof: BoundedVec<u8> = BoundedVec::from(BoundedVec(proof));
-
-    let client = global_config::get_parachain_client()?;
 
     let tx = substrate_interface::api::tx()
         .neuro_zk()
@@ -229,17 +247,8 @@ pub async fn submit_proof(proof: Vec<u8>, keypair: Keypair, current_task: u64) -
     println!("Call: {:?}", tx.call_name());
     println!("Parameters: {:?}", tx.call_data());
 
-    let tx_submission = client
-        .tx()
-        .sign_and_submit_then_watch_default(&tx, &keypair)
-        .await
-        .map(|e| {
-            println!("Proof submitted, waiting for transaction to be finalized...");
-            e
-        })?
-        .wait_for_finalized_success()
-        .await;
-
+    let tx_submission = sign_and_send_tx(&tx, &miner_uuid, &miner_type, miner_owner, Some(keypair)).await?;
+    
     match tx_submission {
         Ok(e) => {
             let tx_event =
@@ -259,9 +268,13 @@ pub async fn submit_proof(proof: Vec<u8>, keypair: Keypair, current_task: u64) -
     Ok(())
 }
 
-async fn confirm_task_reception(keypair: Arc<Keypair>, current_task: &u64) -> Result<()> {
-    let client = global_config::get_parachain_client()?;
-
+async fn confirm_task_reception(
+    current_task: &u64,
+    keypair: Arc<Keypair>, 
+    miner_type: Arc<MinerType>,
+    miner_uuid: MinerId,
+    miner_owner: AccountId32,
+) -> CyborgResult<()> {
     let tx = substrate_interface::api::tx()
         .task_management()
         .confirm_task_reception(*current_task);
@@ -271,18 +284,7 @@ async fn confirm_task_reception(keypair: Arc<Keypair>, current_task: &u64) -> Re
     println!("Call: {:?}", tx.call_name());
     println!("Parameters: {:?}", tx.call_data());
 
-    let tx_submission = client
-        .tx()
-        .sign_and_submit_then_watch_default(&tx, keypair.as_ref())
-        .await
-        .map(|e| {
-            println!(
-                "Task reception confirmation submitted, waiting for transaction to be finalized..."
-            );
-            e
-        })?
-        .wait_for_finalized_success()
-        .await;
+    let tx_submission = sign_and_send_tx(&tx, &miner_uuid, &miner_type, miner_owner, Some(keypair)).await?;
 
     match tx_submission {
         Ok(e) => {
@@ -311,17 +313,29 @@ async fn confirm_task_reception(keypair: Arc<Keypair>, current_task: &u64) -> Re
 }
 
 pub async fn pub_confirm_task_reception(
-    keypair: Arc<Keypair>,
     current_task_id: &u64,
-) -> Result<()> {
+    keypair: Arc<Keypair>,
+    miner_type: Arc<MinerType>,
+    miner_uuid: MinerId,
+    miner_owner: AccountId32,
+) -> CyborgResult<()> {
     let tx_queue = global_config::get_tx_queue()?;
     let current_task_id_copy = *current_task_id;
 
     let rx = tx_queue
         .enqueue(move || {
             let keypair = Arc::clone(&keypair);
+            let miner_type = Arc::clone(&miner_type);
+            let miner_uuid = miner_uuid.clone();
+            let miner_owner = miner_owner.clone();
             async move {
-                let _ = confirm_task_reception(keypair, &current_task_id_copy).await?;
+                let _ = confirm_task_reception(
+                    &current_task_id_copy, 
+                    keypair, 
+                    miner_type, 
+                    miner_uuid,
+                    miner_owner
+                ).await?;
                 Ok(TxOutput::Success)
             }
         })
@@ -341,12 +355,12 @@ pub async fn pub_confirm_task_reception(
 /// # Returns
 /// A `Result` indicating `Ok(())` if the session vacates successfully, or an `Error` if it fails.
 pub async fn confirm_miner_vacation(
-    keypair: Arc<Keypair>,
     task_id: u64,
     miner_type: Arc<MinerType>,
-) -> Result<()> {
-    let client = global_config::get_parachain_client()?;
-
+    keypair: Arc<Keypair>,
+    miner_uuid: MinerId,
+    miner_owner: AccountId32,
+) -> CyborgResult<()> {
     let tx = substrate_interface::api::tx()
         .task_management()
         .confirm_miner_vacation(task_id, miner_type.as_ref().clone());
@@ -356,18 +370,7 @@ pub async fn confirm_miner_vacation(
     println!("Call: {:?}", tx.call_name());
     println!("Parameters: {:?}", tx.call_data());
 
-    let tx_submission = client
-        .tx()
-        .sign_and_submit_then_watch_default(&tx, keypair.as_ref())
-        .await
-        .map(|e| {
-            println!(
-                "Miner vacation confirmation submitted, waiting for transaction to be finalized..."
-            );
-            e
-        })?
-        .wait_for_finalized_success()
-        .await;
+    let tx_submission = sign_and_send_tx(&tx, &miner_uuid, &miner_type, miner_owner, Some(keypair)).await?;
 
     match tx_submission {
         Ok(e) => {
@@ -393,7 +396,7 @@ pub async fn confirm_miner_vacation(
 /// will accept a transaction, but return an error anyway which will cause the transaction queue to re-queue the transaction. Upon trying again, the transaction will be rejected again,
 /// because the transaction DID already succeed previously. The function is a workaround for this. It checks the returned error and if it is an error of this sort it lets it pass,
 /// causing the transaction queue to not re-queue the transaction.
-fn check_for_acceptable_error<T: Debug>(expected_errors: &[T], e: subxt::Error) -> Result<()> {
+fn check_for_acceptable_error<T: Debug>(expected_errors: &[T], e: subxt::Error) -> CyborgResult<()> {
     match e {
         subxt::Error::Runtime(err) => {
             match err {

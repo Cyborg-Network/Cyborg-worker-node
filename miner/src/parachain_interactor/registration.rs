@@ -24,6 +24,8 @@ pub enum RegistrationStatus {
     Unknown,
 }
 
+
+
 async fn confirm_registration() -> Result<RegistrationStatus> {
     //TODO - REGISTRATION VIA ATTESTATION: At the moment we're saving the identity to the config file - this needs to be replaced by invoking the miner-attestor to obtain the pulic key of the miner and verify this way
     let client = global_config::get_parachain_client()?;

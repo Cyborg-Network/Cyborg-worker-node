@@ -27,10 +27,10 @@ use types::{
     substrate_interface::api::{
         runtime_types::cyborg_primitives::{miner::OperationalStatus, task::TaskStatusType},
         task_management::events::task_scheduled::TaskId,
+        runtime_types::bounded_collections::bounded_vec::BoundedVec,
     },
     CurrentTask
 };
-
 
 use crate::parachain_interactor::registration::update_operational_status;
 
@@ -189,9 +189,18 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
                 };
                 let (_, handle) = set_current_task(Arc::clone(&miner), task).await?;
 
-                let keypair = miner.keypair.clone();
+                let keypair = Arc::clone(&miner.keypair);
+                let miner_type = Arc::clone(&miner.miner_type);
+                let miner_uuid = miner.identity.miner_id.clone();
+                let miner_owner = miner.identity.miner_owner.clone();
                 tokio::spawn(async move {
-                    if let Err(e) = pub_confirm_task_reception(keypair, &task_id).await {
+                    if let Err(e) = pub_confirm_task_reception(
+                        &task_id, 
+                        keypair, 
+                        miner_type, 
+                        BoundedVec(miner_uuid),
+                        miner_owner
+                    ).await {
                         println!(
                             "Critical error encountered, please contact the support: {}",
                             e
@@ -333,6 +342,7 @@ pub async fn clean_up_current_task_and_vacate(miner: Arc<Miner>) -> Result<()> {
     let keypair = Arc::clone(&miner.keypair);
     let current_task_id = miner.current_task().await?.read().await.id;
     let miner_type = Arc::clone(&miner.miner_type);
+    let miner_identity = Arc::clone(&miner.identity);
 
     tokio::spawn(async move {
         if let Err(e) = async {
@@ -342,9 +352,17 @@ pub async fn clean_up_current_task_and_vacate(miner: Arc<Miner>) -> Result<()> {
                 .enqueue(move || {
                     let keypair = Arc::clone(&keypair);
                     let miner_type = Arc::clone(&miner_type);
+                    let miner_uuid = miner_identity.miner_id.clone();
+                    let miner_owner = miner_identity.miner_owner.clone();
                     async move {
                         let _ =
-                            confirm_miner_vacation(keypair, current_task_id, miner_type).await?;
+                            confirm_miner_vacation(
+                                current_task_id, 
+                                miner_type,
+                                keypair, 
+                                BoundedVec(miner_uuid),
+                                miner_owner
+                            ).await?;
                         Ok(TxOutput::Success)
                     }
                 })

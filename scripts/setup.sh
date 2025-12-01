@@ -62,9 +62,6 @@ TASK_CONTAINER_PREFIX="cy-miner-task-container-"
 # The tailscale network (only for testnet) on which the miner will be reachable
 TAILSCALE_NET="tail78ea2b.ts.net"
 
-# The adress of the cyborg conductor server
-CYBORG_CONDUCTOR_URL="https://conductor.cyborgnetwork.io"
-
 verify_release() {
     local file="$1"
     local checksum_file="${file}.sha256"
@@ -241,6 +238,7 @@ setup_systemd() {
     local MINER_TYPE="$3"
     local CYBORG_MINER_DOMAIN_NAME="$4"
     local MINER_UUID="$5"
+    local CYBORG_CONDUCTOR_URL="$6"
 
     echo "Creating systemd service for worker node: $MINER_SERVICE_FILE"
 
@@ -360,8 +358,9 @@ install() {
     MINER_TYPE="${MINER_TYPE:-}"
     CYBORG_MINER_DOMAIN_NAME="${CYBORG_MINER_DOMAIN_NAME:-}"
     MINER_UUID="${MINER_UUID}"
+    CYBORG_CONDUCTOR_URL="${CYBORG_CONDUCTOR_URL}"
 
-    if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" || -z "$MINER_TYPE" || -z "$CYBORG_MINER_DOMAIN_NAME" || -z "$MINER_UUID" ]]; then
+    if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" || -z "$MINER_TYPE" || -z "$CYBORG_MINER_DOMAIN_NAME" || -z "$MINER_UUID" || -z "$CYBORG_CONDUCTOR_URL"]]; then
         echo "ERROR: PARACHAIN_URL and ACCOUNT_SEED must be set in environment."
         exit 1
     fi
@@ -370,7 +369,7 @@ install() {
     prepare_environment
     setup_docker
     move_files
-    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE" "$CYBORG_MINER_DOMAIN_NAME" "$MINER_UUID"
+    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE" "$CYBORG_MINER_DOMAIN_NAME" "$MINER_UUID" "$CYBORG_CONDUCTOR_URL"
     open_firewall
     #prepare_triton
 }
@@ -394,6 +393,7 @@ update() {
     MINER_TYPE=$(systemctl show cyborg-miner.service -p Environment | grep -o 'MINER_TYPE=[^ ]*' | cut -d= -f2)
     CYBORG_MINER_DOMAIN_NAME=$(systemctl show cyborg-miner.service -p Environment | grep -o 'CYBORG_MINER_DOMAIN_NAME=[^ ]*' | cut -d= -f2)
     MINER_UUID=$(systemctl show cyborg-miner.service -p Environment | grep -o 'MINER_UUID=[^ ]*' | cut -d= -f2)
+    CYBORG_CONDUCTOR_URL=$(systemctl show cyborg-miner.service -p Environment | grep -o 'CYBORG_CONDUCTOR_URL=[^ ]*' | cut -d= -f2)
 
     if [[ -z "$PARACHAIN_URL" || -z "$ACCOUNT_SEED" || -z "$MINER_TYPE" || -z "$CYBORG_MINER_DOMAIN_NAME" || -z "$MINER_UUID" ]]; then
         echo "Failed to extract required variables from $SERVICE_FILE"
@@ -405,6 +405,7 @@ update() {
     echo "MINER_TYPE: $MINER_TYPE"
     echo "CYBORG_MINER_DOMAIN_NAME: $CYBORG_MINER_DOMAIN_NAME"
     echo "MINER_UUID: $MINER_UUID"
+    echo "CYBORG_CONDUCTOR_URL: $CYBORG_CONDUCTOR_URL"
 
     ###############################################################################################################
 
@@ -417,7 +418,7 @@ update() {
     systemctl stop cyborg-miner.service
 
     move_files
-    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE" "$CYBORG_MINER_DOMAIN_NAME" "$MINER_UUID"
+    setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE" "$CYBORG_MINER_DOMAIN_NAME" "$MINER_UUID" "$CYBORG_CONDUCTOR_URL"
     open_firewall
 
     echo "Update complete: $CURRENT_VERSION to $latest_tag"
