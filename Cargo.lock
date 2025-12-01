@@ -3571,7 +3571,7 @@ dependencies = [
 
 [[package]]
 name = "cyborg-miner"
-version = "0.0.85"
+version = "0.0.88"
 dependencies = [
  "async-stream",
  "async-trait 0.1.89 (git+https://github.com/dtolnay/async-trait.git)",
@@ -3644,6 +3644,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.9",
+ "sysinfo 0.32.1",
  "tokio",
  "types",
  "uuid",

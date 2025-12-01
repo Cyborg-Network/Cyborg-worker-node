@@ -52,6 +52,7 @@ const WS_ADDR: &str = "0.0.0.0:8081";
 
 const DEPOSIT_CONTAINER_KEYS_SCRIPT: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/scripts/deposit_container_key.sh"));
 const DEPOSIT_NATIVE_KEYS_SCRIPT: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/scripts/deposit_native_key.sh"));
+const DEPOSIT_VM_KEYS_SCRIPT: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/scripts/deposit_vm_key.sh"));
 
 #[derive(Deserialize, Serialize)]
 /// the required format for messages within text websocket frames
@@ -497,16 +498,15 @@ async fn deposit_public_key<'a>(
                 script: &DEPOSIT_NATIVE_KEYS_SCRIPT
             }
         },
-        CyCloudTask::Vm(_vm_task) => {
-            return Err(ClientError::DepositContainerKeyError("Cannot deposit key - VM is not supported yet!".to_string()));
-            /*
+        CyCloudTask::Vm(vm_task) => {
             DepositPublicKeyArgs {
                 identifier: &String::from_utf8_lossy(&vm_task.user_name.0),
                 script: &DEPOSIT_VM_KEYS_SCRIPT
             }
-            */
         },
     };
+
+
 
     let mut child = Command::new("bash")
         .arg("-s")

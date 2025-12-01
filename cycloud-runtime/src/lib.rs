@@ -1,10 +1,15 @@
 use async_trait::async_trait;
 use container_manager::ContainerManager;
 use native_manager::NativeManager;
-use types::{substrate_interface::api::runtime_types::cyborg_primitives::task::CyCloudTask, TaskType};
+use vm_manager::VmManager;
+use types::{
+    substrate_interface::api::runtime_types::cyborg_primitives::task::CyCloudTask, 
+    TaskType
+};
 
 mod container_manager;
 mod native_manager;
+mod vm_manager;
 
 pub struct CyCloudEngine {
     manager: Box<dyn TaskManager>,
@@ -89,6 +94,29 @@ impl TaskManager for NativeManager {
     }
 }
 
+#[async_trait]
+impl TaskManager for VmManager {
+    async fn setup(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        self.setup_impl() 
+    }
+
+    async fn status(&self) -> Result<TaskStatus, Box<dyn std::error::Error>> {
+        self.status_impl() 
+    }
+
+    async fn restart(&self) -> Result<(), Box<dyn std::error::Error>> {
+        self.restart_impl()
+    }
+
+    async fn stop(&self) -> Result<(), Box<dyn std::error::Error>> {
+        self.stop_impl() 
+    }
+    
+    async fn cleanup(&self) -> Result<(), Box<dyn std::error::Error>> {
+        self.cleanup_impl() 
+    }
+}
+
 impl CyCloudEngine {
     /// Creates a new `CyCloudEngine` instance with embedded TaskManager which can represent a
     /// container manager, a native user manager or a VM manager
@@ -121,7 +149,11 @@ impl CyCloudEngine {
                     }
                 ).await?
             ),
-            CyCloudTask::Vm(_vm_task) => return Err("Error setting up cycloud engine: Vm deployment is not available yet!".into())
+            CyCloudTask::Vm(_vm_task) => Box::new(
+                VmManager::new(
+
+                )
+            )
         };
 
         Ok( Self { manager } )

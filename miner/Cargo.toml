@@ -33,6 +33,7 @@ tracing-appender = { workspace = true }
 reqwest = { workspace = true }
 subxt = { workspace = true }
 subxt-signer = { workspace = true }
+sysinfo = { workspace = true }
 
 axum = { version = "0.8.4", features = ["ws"] }
 axum-macros = { version = "0.5.0" }
@@ -60,7 +61,6 @@ sp-blockchain = { version = "35.0.0" }
 sp-core = { version = "34.0.0", default-features = false }
 sp-runtime = { version = "38.0.0", default-features = false }
 sys-info = { version = "0.9.1" }
-sysinfo = "0.32.0"
 tar = { version = "0.4.44" }
 tempfile = "3.23.0"
 tokio-stream = { version = "0.1.17" }
