@@ -5,6 +5,8 @@ use std::io::Write;
 
 use sysinfo::System;
 
+use crate::TaskStatus;
+
 const VM_NAME: &str = "cycloud";
 const RESERVED_MEMORY_BYTES: u64 = 500 * 1024 * 1024;
 const VM_IMAGE_PATH: &str = "/var/lib/libvirt/images/cycloud_base.qcow2";
@@ -203,7 +205,7 @@ impl VmManager {
         ))
     }
 
-    pub fn setup_impl(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn setup_impl(&self) -> Result<(), Box<dyn std::error::Error>> {
         let xml_config = self.generate_vm_xml()?;
         let xml_path = format!("/tmp/{}_config.xml", VM_NAME);
         
@@ -243,7 +245,7 @@ impl VmManager {
         Ok(())
     }
 
-    pub fn stop_impl(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn stop_impl(&self) -> Result<(), Box<dyn std::error::Error>> {
         let output = Command::new("virsh")
             .arg("shutdown")
             .arg(VM_NAME)
@@ -267,7 +269,7 @@ impl VmManager {
         Ok(())
     }
 
-    pub fn restart_impl(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn restart_impl(&self) -> Result<(), Box<dyn std::error::Error>> {
         self.stop_impl()?;
         
         std::thread::sleep(std::time::Duration::from_secs(3));
@@ -288,7 +290,7 @@ impl VmManager {
         Ok(())
     }
 
-    pub fn cleanup_impl(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn cleanup_impl(&self) -> Result<(), Box<dyn std::error::Error>> {
         Command::new("virsh")
             .arg("destroy")
             .arg(VM_NAME)
@@ -312,22 +314,31 @@ impl VmManager {
         Ok(())
     }
 
-    pub fn status_impl(&self) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn status_impl(&self) -> Result<TaskStatus, Box<dyn std::error::Error>> {
         let output = Command::new("virsh")
             .arg("domstate")
             .arg(VM_NAME)
             .output()?;
 
         if !output.status.success() {
-            return Ok("Stopped".to_string());
+            // VM doesn't exist - could be cleaned or never created
+            return Ok(TaskStatus::Stopped);
         }
 
         let state = String::from_utf8_lossy(&output.stdout).trim().to_lowercase();
         
         match state.as_str() {
-            "running" => Ok("Running".to_string()),
-            "shut off" | "shutoff" => Ok("Stopped".to_string()),
-            _ => Ok("Stopped".to_string()),
+            "running" => Ok(TaskStatus::Running),
+            "shut off" | "shutoff" => Ok(TaskStatus::Stopped),
+            "paused" | "suspended" => Ok(TaskStatus::Stopped),
+            "in shutdown" | "shutdown" => Ok(TaskStatus::Stopped),
+            "crashed" | "dying" => Ok(TaskStatus::Broken),
+            "pmsuspended" => Ok(TaskStatus::Stopped),
+            "idle" | "blocked" => Ok(TaskStatus::Running),
+            _ => {
+                eprintln!("Unknown VM state: {}", state);
+                Ok(TaskStatus::Broken)
+            }
         }
     }
 }

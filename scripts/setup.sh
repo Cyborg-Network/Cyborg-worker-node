@@ -181,6 +181,78 @@ setup_docker() {
     echo "Docker setup complete."
 }
 
+install_vm_manager_dependencies() {
+    echo "Updating package lists..."
+    sudo apt update
+
+    echo ""
+    echo "Installing core virtualization packages..."
+    sudo apt install -y \
+        qemu-kvm \
+        libvirt-daemon-system \
+        libvirt-clients \
+        virtinst \
+        bridge-utils
+
+    echo ""
+    echo "Installing image management tools..."
+    sudo apt install -y \
+        libguestfs-tools \
+        qemu-utils
+
+    echo ""
+    echo "Installing download tools..."
+    sudo apt install -y wget curl
+
+    echo ""
+    echo "Enabling and starting libvirt service..."
+    sudo systemctl enable libvirtd
+    sudo systemctl start libvirtd
+
+    echo ""
+    echo "Verifying installation..."
+    echo ""
+
+    echo "Checking KVM module..."
+    if lsmod | grep -q kvm; then
+        echo "KVM module loaded"
+    else
+        echo "CRITICAL: KVM module NOT loaded - check if virtualization is enabled in BIOS"
+    fi
+
+    echo ""
+    echo "Checking CPU virtualization support..."
+    if grep -E -q 'vmx|svm' /proc/cpuinfo; then
+        echo "CPU supports virtualization"
+    else
+        echo "CRITICAL: CPU does NOT support virtualization or it's disabled in BIOS"
+    fi
+
+    echo ""
+    echo "Checking virsh..."
+    if virsh --version > /dev/null 2>&1; then
+        echo "virsh installed: $(virsh --version)"
+    else
+        echo "CRITICAL:virsh NOT working"
+    fi
+
+    echo ""
+    echo "Checking qemu-img..."
+    if qemu-img --version > /dev/null 2>&1; then
+        echo "qemu-img installed: $(qemu-img --version | head -n1)"
+    else
+        echo "CRITICAL: qemu-img NOT working"
+    fi
+
+    echo ""
+    echo "Checking virt-customize..."
+    if virt-customize --version > /dev/null 2>&1; then
+        echo "virt-customize installed: $(virt-customize --version | head -n1)"
+    else
+        echo "CRITICAL: virt-customize NOT working"
+    fi
+}
+
 prepare_triton() {
     echo "[*] Triton model repository directory: $MINER_TASK_DIR"
 
@@ -366,6 +438,7 @@ install() {
     download_and_extract
     prepare_environment
     setup_docker
+    install_vm_manager_dependencies
     move_files
     setup_systemd "$PARACHAIN_URL" "$ACCOUNT_SEED" "$MINER_TYPE" "$CYBORG_MINER_DOMAIN_NAME" "$MINER_UUID"
     open_firewall
@@ -407,6 +480,7 @@ update() {
 
     echo "Updating from $current_version to $latest_tag..."
     download_and_extract "$latest_tag"
+    install_vm_manager_dependencies
     prepare_environment
     setup_docker
 
