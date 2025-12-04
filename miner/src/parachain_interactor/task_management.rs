@@ -14,7 +14,7 @@ pub async fn confirm_task_reception(miner: Arc<Miner>) -> Result<()> {
 
     let task_confirmation = substrate_interface::api::tx()
         .task_management()
-        .confirm_task_reception(current_task);
+        .confirm_task_reception(current_task, false);
 
     println!("Transaction Details:");
     println!("Module: {:?}", task_confirmation.pallet_name());

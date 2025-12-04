@@ -20,6 +20,7 @@ pub struct CurrentTask {
     pub task_type: TaskType,
     pub container_name: String,
     pub task_owner: AccountId32,
+    pub status_sender: tokio::sync::watch::Sender<TaskPreparationStatus>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -34,4 +35,11 @@ pub struct MinerConfig {
     pub ram: u64,
     pub storage: u64,
     pub cpu: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TaskPreparationStatus {
+    Preparing,
+    Ready,
+    Failed(String),
 }

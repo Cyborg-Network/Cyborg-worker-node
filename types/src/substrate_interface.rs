@@ -1349,10 +1349,10 @@ pub mod api {
                         "query_call_info",
                         types::QueryCallInfo { call, len },
                         [
-                            255u8, 207u8, 148u8, 231u8, 100u8, 198u8, 168u8, 242u8, 148u8, 28u8,
-                            32u8, 99u8, 15u8, 188u8, 14u8, 32u8, 93u8, 252u8, 97u8, 139u8, 245u8,
-                            246u8, 213u8, 67u8, 113u8, 228u8, 159u8, 107u8, 122u8, 162u8, 240u8,
-                            21u8,
+                            84u8, 139u8, 222u8, 145u8, 143u8, 50u8, 223u8, 236u8, 33u8, 140u8,
+                            145u8, 167u8, 99u8, 76u8, 220u8, 191u8, 165u8, 159u8, 16u8, 162u8,
+                            251u8, 248u8, 68u8, 154u8, 180u8, 90u8, 68u8, 137u8, 171u8, 247u8,
+                            28u8, 187u8,
                         ],
                     )
                 }
@@ -1370,10 +1370,10 @@ pub mod api {
                         "query_call_fee_details",
                         types::QueryCallFeeDetails { call, len },
                         [
-                            126u8, 205u8, 162u8, 1u8, 220u8, 109u8, 118u8, 198u8, 240u8, 66u8,
-                            190u8, 116u8, 224u8, 224u8, 178u8, 83u8, 230u8, 223u8, 102u8, 62u8,
-                            28u8, 11u8, 8u8, 114u8, 109u8, 18u8, 15u8, 24u8, 244u8, 64u8, 97u8,
-                            148u8,
+                            226u8, 163u8, 143u8, 1u8, 27u8, 91u8, 93u8, 241u8, 233u8, 223u8, 150u8,
+                            112u8, 232u8, 168u8, 27u8, 114u8, 145u8, 249u8, 39u8, 45u8, 76u8,
+                            230u8, 35u8, 69u8, 219u8, 129u8, 65u8, 242u8, 117u8, 250u8, 11u8,
+                            133u8,
                         ],
                     )
                 }
@@ -1797,9 +1797,10 @@ pub mod api {
                         "get_recent_events",
                         types::GetRecentEvents {},
                         [
-                            168u8, 85u8, 19u8, 163u8, 52u8, 149u8, 19u8, 25u8, 216u8, 168u8, 16u8,
-                            86u8, 49u8, 131u8, 96u8, 254u8, 8u8, 147u8, 100u8, 57u8, 254u8, 238u8,
-                            60u8, 164u8, 70u8, 191u8, 250u8, 150u8, 40u8, 101u8, 214u8, 165u8,
+                            205u8, 62u8, 156u8, 12u8, 82u8, 186u8, 133u8, 9u8, 201u8, 114u8, 90u8,
+                            209u8, 195u8, 154u8, 77u8, 87u8, 238u8, 150u8, 95u8, 107u8, 235u8,
+                            135u8, 205u8, 86u8, 11u8, 109u8, 194u8, 243u8, 100u8, 216u8, 173u8,
+                            190u8,
                         ],
                     )
                 }
@@ -2047,9 +2048,9 @@ pub mod api {
             .hash();
         runtime_metadata_hash
             == [
-                243u8, 235u8, 231u8, 151u8, 179u8, 240u8, 113u8, 2u8, 205u8, 214u8, 182u8, 241u8,
-                247u8, 109u8, 215u8, 60u8, 95u8, 114u8, 149u8, 76u8, 104u8, 245u8, 46u8, 170u8,
-                211u8, 220u8, 188u8, 1u8, 116u8, 72u8, 33u8, 108u8,
+                78u8, 228u8, 117u8, 7u8, 66u8, 180u8, 141u8, 228u8, 26u8, 166u8, 87u8, 146u8,
+                102u8, 144u8, 91u8, 110u8, 248u8, 188u8, 77u8, 140u8, 189u8, 37u8, 44u8, 45u8,
+                125u8, 196u8, 91u8, 62u8, 133u8, 79u8, 52u8, 237u8,
             ]
     }
     pub mod system {
@@ -3257,10 +3258,9 @@ pub mod api {
                         "Events",
                         (),
                         [
-                            115u8, 12u8, 58u8, 113u8, 193u8, 242u8, 184u8, 8u8, 42u8, 9u8, 108u8,
-                            156u8, 104u8, 66u8, 13u8, 172u8, 205u8, 118u8, 196u8, 56u8, 68u8,
-                            111u8, 42u8, 153u8, 241u8, 135u8, 223u8, 76u8, 11u8, 176u8, 169u8,
-                            246u8,
+                            135u8, 177u8, 247u8, 230u8, 70u8, 112u8, 79u8, 5u8, 174u8, 116u8,
+                            128u8, 218u8, 53u8, 53u8, 7u8, 198u8, 67u8, 223u8, 208u8, 125u8, 103u8,
+                            230u8, 33u8, 190u8, 103u8, 173u8, 0u8, 21u8, 126u8, 66u8, 110u8, 112u8,
                         ],
                     )
                 }
@@ -6808,9 +6808,9 @@ pub mod api {
                             call: ::subxt::ext::subxt_core::alloc::boxed::Box::new(call),
                         },
                         [
-                            141u8, 218u8, 30u8, 207u8, 197u8, 151u8, 172u8, 74u8, 204u8, 15u8,
-                            132u8, 36u8, 26u8, 147u8, 122u8, 99u8, 72u8, 46u8, 222u8, 183u8, 131u8,
-                            39u8, 98u8, 255u8, 200u8, 54u8, 117u8, 191u8, 4u8, 161u8, 215u8, 110u8,
+                            27u8, 155u8, 75u8, 150u8, 88u8, 61u8, 76u8, 63u8, 190u8, 218u8, 112u8,
+                            137u8, 191u8, 46u8, 16u8, 168u8, 8u8, 78u8, 116u8, 100u8, 45u8, 66u8,
+                            13u8, 237u8, 205u8, 143u8, 195u8, 19u8, 58u8, 60u8, 167u8, 90u8,
                         ],
                     )
                 }
@@ -6833,10 +6833,9 @@ pub mod api {
                             weight,
                         },
                         [
-                            75u8, 246u8, 68u8, 212u8, 150u8, 29u8, 142u8, 53u8, 197u8, 224u8,
-                            100u8, 254u8, 144u8, 162u8, 240u8, 57u8, 78u8, 26u8, 233u8, 191u8,
-                            93u8, 101u8, 146u8, 111u8, 41u8, 228u8, 189u8, 47u8, 113u8, 150u8,
-                            65u8, 255u8,
+                            76u8, 28u8, 28u8, 124u8, 1u8, 143u8, 60u8, 44u8, 66u8, 158u8, 17u8,
+                            34u8, 187u8, 114u8, 8u8, 236u8, 41u8, 240u8, 207u8, 206u8, 89u8, 203u8,
+                            51u8, 185u8, 69u8, 43u8, 14u8, 137u8, 138u8, 227u8, 195u8, 221u8,
                         ],
                     )
                 }
@@ -6876,9 +6875,9 @@ pub mod api {
                             call: ::subxt::ext::subxt_core::alloc::boxed::Box::new(call),
                         },
                         [
-                            112u8, 167u8, 202u8, 111u8, 63u8, 173u8, 190u8, 78u8, 134u8, 199u8,
-                            143u8, 93u8, 76u8, 154u8, 82u8, 44u8, 248u8, 33u8, 244u8, 80u8, 244u8,
-                            143u8, 188u8, 170u8, 245u8, 197u8, 36u8, 187u8, 180u8, 6u8, 51u8, 80u8,
+                            171u8, 119u8, 134u8, 98u8, 11u8, 127u8, 70u8, 52u8, 32u8, 48u8, 18u8,
+                            14u8, 3u8, 248u8, 118u8, 146u8, 16u8, 30u8, 94u8, 2u8, 79u8, 230u8,
+                            166u8, 165u8, 48u8, 14u8, 247u8, 167u8, 202u8, 0u8, 134u8, 185u8,
                         ],
                     )
                 }
@@ -14307,7 +14306,7 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                #[doc = "Remove a miner from storage an deactivates it"]
+                #[doc = "Remove a miner from storage"]
                 pub struct RemoveMiner {
                     pub miner_type: remove_miner::MinerType,
                     pub miner_id: remove_miner::MinerId,
@@ -14592,6 +14591,60 @@ pub mod api {
                     const PALLET: &'static str = "EdgeConnect";
                     const CALL: &'static str = "resolve_maintenance";
                 }
+                #[derive(
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                    Clone,
+                    Debug,
+                )]
+                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+                #[codec(dumb_trait_bound)]
+                #[decode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
+                )]
+                #[encode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
+                )]
+                pub struct AddAccountAuthorizedForRegistration {
+                    pub account: add_account_authorized_for_registration::Account,
+                }
+                pub mod add_account_authorized_for_registration {
+                    use super::runtime_types;
+                    pub type Account = ::subxt::ext::subxt_core::utils::AccountId32;
+                }
+                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for AddAccountAuthorizedForRegistration {
+                    const PALLET: &'static str = "EdgeConnect";
+                    const CALL: &'static str = "add_account_authorized_for_registration";
+                }
+                #[derive(
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                    Clone,
+                    Debug,
+                )]
+                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+                #[codec(dumb_trait_bound)]
+                #[decode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
+                )]
+                #[encode_as_type(
+                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
+                )]
+                pub struct RemoveAccountAuthorizedForRegistration {
+                    pub account: remove_account_authorized_for_registration::Account,
+                }
+                pub mod remove_account_authorized_for_registration {
+                    use super::runtime_types;
+                    pub type Account = ::subxt::ext::subxt_core::utils::AccountId32;
+                }
+                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for RemoveAccountAuthorizedForRegistration {
+                    const PALLET: &'static str = "EdgeConnect";
+                    const CALL: &'static str = "remove_account_authorized_for_registration";
+                }
             }
             pub struct TransactionApi;
             impl TransactionApi {
@@ -14628,7 +14681,7 @@ pub mod api {
                         ],
                     )
                 }
-                #[doc = "Remove a miner from storage an deactivates it"]
+                #[doc = "Remove a miner from storage"]
                 pub fn remove_miner(
                     &self,
                     miner_type: types::remove_miner::MinerType,
@@ -14832,6 +14885,41 @@ pub mod api {
                             14u8, 72u8, 187u8, 175u8, 44u8, 214u8, 170u8, 232u8, 76u8, 129u8, 91u8,
                             136u8, 140u8, 46u8, 120u8, 80u8, 13u8, 149u8, 61u8, 11u8, 66u8, 37u8,
                             50u8, 194u8, 11u8, 171u8, 127u8, 134u8, 88u8, 86u8, 154u8, 191u8,
+                        ],
+                    )
+                }
+                pub fn add_account_authorized_for_registration(
+                    &self,
+                    account: types::add_account_authorized_for_registration::Account,
+                ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<
+                    types::AddAccountAuthorizedForRegistration,
+                > {
+                    ::subxt::ext::subxt_core::tx::payload::StaticPayload::new_static(
+                        "EdgeConnect",
+                        "add_account_authorized_for_registration",
+                        types::AddAccountAuthorizedForRegistration { account },
+                        [
+                            41u8, 127u8, 154u8, 184u8, 54u8, 133u8, 36u8, 12u8, 16u8, 175u8, 38u8,
+                            82u8, 55u8, 207u8, 182u8, 112u8, 152u8, 130u8, 184u8, 71u8, 72u8,
+                            173u8, 149u8, 165u8, 51u8, 48u8, 224u8, 76u8, 198u8, 229u8, 81u8,
+                            158u8,
+                        ],
+                    )
+                }
+                pub fn remove_account_authorized_for_registration(
+                    &self,
+                    account: types::remove_account_authorized_for_registration::Account,
+                ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<
+                    types::RemoveAccountAuthorizedForRegistration,
+                > {
+                    ::subxt::ext::subxt_core::tx::payload::StaticPayload::new_static(
+                        "EdgeConnect",
+                        "remove_account_authorized_for_registration",
+                        types::RemoveAccountAuthorizedForRegistration { account },
+                        [
+                            225u8, 232u8, 211u8, 207u8, 123u8, 241u8, 233u8, 163u8, 9u8, 9u8,
+                            114u8, 65u8, 63u8, 37u8, 177u8, 233u8, 78u8, 28u8, 6u8, 64u8, 97u8,
+                            77u8, 40u8, 24u8, 105u8, 47u8, 61u8, 239u8, 215u8, 72u8, 71u8, 62u8,
                         ],
                     )
                 }
@@ -15204,6 +15292,56 @@ pub mod api {
                 const PALLET: &'static str = "EdgeConnect";
                 const EVENT: &'static str = "MinerUnderMaintenance";
             }
+            #[derive(
+                :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                Clone,
+                Debug,
+            )]
+            # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+            #[codec(dumb_trait_bound)]
+            #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
+            #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
+            #[doc = "An account that is allowed to register a miner has been added"]
+            pub struct AccountAuthorizedForMinerRegistrationAdded {
+                pub account: account_authorized_for_miner_registration_added::Account,
+            }
+            pub mod account_authorized_for_miner_registration_added {
+                use super::runtime_types;
+                pub type Account = ::subxt::ext::subxt_core::utils::AccountId32;
+            }
+            impl ::subxt::ext::subxt_core::events::StaticEvent for AccountAuthorizedForMinerRegistrationAdded {
+                const PALLET: &'static str = "EdgeConnect";
+                const EVENT: &'static str = "AccountAuthorizedForMinerRegistrationAdded";
+            }
+            #[derive(
+                :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                Clone,
+                Debug,
+            )]
+            # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+            #[codec(dumb_trait_bound)]
+            #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
+            #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
+            #[doc = "An account that is allowed to register a miner has been removed"]
+            pub struct AccountAuthorizedForMinerRegistrationRemoved {
+                pub account: account_authorized_for_miner_registration_removed::Account,
+            }
+            pub mod account_authorized_for_miner_registration_removed {
+                use super::runtime_types;
+                pub type Account = ::subxt::ext::subxt_core::utils::AccountId32;
+            }
+            impl ::subxt::ext::subxt_core::events::StaticEvent
+                for AccountAuthorizedForMinerRegistrationRemoved
+            {
+                const PALLET: &'static str = "EdgeConnect";
+                const EVENT: &'static str = "AccountAuthorizedForMinerRegistrationRemoved";
+            }
         }
         pub mod storage {
             use super::runtime_types;
@@ -15215,6 +15353,11 @@ pub mod api {
                         runtime_types::bounded_collections::bounded_vec::BoundedVec<
                             ::core::primitive::u8,
                         >;
+                    pub type Param0 = ::subxt::ext::subxt_core::utils::AccountId32;
+                }
+                pub mod accounts_authorized_for_miner_registration {
+                    use super::runtime_types;
+                    pub type AccountsAuthorizedForMinerRegistration = ::core::primitive::bool;
                     pub type Param0 = ::subxt::ext::subxt_core::utils::AccountId32;
                 }
                 pub mod suspended_miners {
@@ -15305,6 +15448,36 @@ pub mod api {
                             158u8, 52u8, 82u8, 57u8, 152u8, 108u8, 177u8, 68u8, 231u8, 244u8, 24u8,
                             83u8, 57u8, 2u8, 9u8, 27u8, 48u8, 176u8, 14u8, 69u8, 177u8, 32u8,
                             149u8, 132u8, 161u8, 194u8, 77u8, 74u8, 165u8, 153u8, 7u8, 110u8,
+                        ],
+                    )
+                }
+                #[doc = " Storage Map that maps accounts that are allowed to register a miner and if they did register"]
+                #[doc = " a miner"]                pub fn accounts_authorized_for_miner_registration_iter (& self ,) -> :: subxt :: ext :: subxt_core :: storage :: address :: StaticAddress :: < () , types :: accounts_authorized_for_miner_registration :: AccountsAuthorizedForMinerRegistration , () , () , :: subxt :: ext :: subxt_core :: utils :: Yes >{
+                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
+                        "EdgeConnect",
+                        "AccountsAuthorizedForMinerRegistration",
+                        (),
+                        [
+                            247u8, 81u8, 246u8, 62u8, 159u8, 200u8, 188u8, 246u8, 219u8, 163u8,
+                            98u8, 162u8, 118u8, 67u8, 196u8, 29u8, 116u8, 146u8, 173u8, 86u8,
+                            122u8, 74u8, 75u8, 150u8, 185u8, 75u8, 247u8, 218u8, 208u8, 221u8,
+                            96u8, 104u8,
+                        ],
+                    )
+                }
+                #[doc = " Storage Map that maps accounts that are allowed to register a miner and if they did register"]
+                #[doc = " a miner"]                pub fn accounts_authorized_for_miner_registration (& self , _0 : impl :: core :: borrow :: Borrow < types :: accounts_authorized_for_miner_registration :: Param0 > ,) -> :: subxt :: ext :: subxt_core :: storage :: address :: StaticAddress :: < :: subxt :: ext :: subxt_core :: storage :: address :: StaticStorageKey < types :: accounts_authorized_for_miner_registration :: Param0 > , types :: accounts_authorized_for_miner_registration :: AccountsAuthorizedForMinerRegistration , :: subxt :: ext :: subxt_core :: utils :: Yes , () , () >{
+                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
+                        "EdgeConnect",
+                        "AccountsAuthorizedForMinerRegistration",
+                        ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
+                            _0.borrow(),
+                        ),
+                        [
+                            247u8, 81u8, 246u8, 62u8, 159u8, 200u8, 188u8, 246u8, 219u8, 163u8,
+                            98u8, 162u8, 118u8, 67u8, 196u8, 29u8, 116u8, 146u8, 173u8, 86u8,
+                            122u8, 74u8, 75u8, 150u8, 185u8, 75u8, 247u8, 218u8, 208u8, 221u8,
+                            96u8, 104u8,
                         ],
                     )
                 }
@@ -15568,10 +15741,12 @@ pub mod api {
                 #[doc = "Changes task state to `Running` and starts aggregation of resource usage."]
                 pub struct ConfirmTaskReception {
                     pub task_id: confirm_task_reception::TaskId,
+                    pub has_failed: confirm_task_reception::HasFailed,
                 }
                 pub mod confirm_task_reception {
                     use super::runtime_types;
                     pub type TaskId = ::core::primitive::u64;
+                    pub type HasFailed = ::core::primitive::bool;
                 }
                 impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for ConfirmTaskReception {
                     const PALLET: &'static str = "TaskManagement";
@@ -15789,16 +15964,20 @@ pub mod api {
                 pub fn confirm_task_reception(
                     &self,
                     task_id: types::confirm_task_reception::TaskId,
+                    has_failed: types::confirm_task_reception::HasFailed,
                 ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::ConfirmTaskReception>
                 {
                     ::subxt::ext::subxt_core::tx::payload::StaticPayload::new_static(
                         "TaskManagement",
                         "confirm_task_reception",
-                        types::ConfirmTaskReception { task_id },
+                        types::ConfirmTaskReception {
+                            task_id,
+                            has_failed,
+                        },
                         [
-                            178u8, 50u8, 114u8, 243u8, 98u8, 204u8, 29u8, 9u8, 135u8, 139u8, 212u8,
-                            35u8, 222u8, 243u8, 140u8, 67u8, 47u8, 212u8, 89u8, 177u8, 169u8, 25u8,
-                            21u8, 121u8, 2u8, 34u8, 198u8, 109u8, 74u8, 179u8, 152u8, 171u8,
+                            24u8, 20u8, 226u8, 40u8, 249u8, 168u8, 26u8, 54u8, 147u8, 76u8, 200u8,
+                            19u8, 165u8, 228u8, 146u8, 16u8, 191u8, 176u8, 70u8, 87u8, 80u8, 113u8,
+                            230u8, 66u8, 253u8, 215u8, 3u8, 86u8, 57u8, 92u8, 204u8, 130u8,
                         ],
                     )
                 }
@@ -15987,6 +16166,32 @@ pub mod api {
             impl ::subxt::ext::subxt_core::events::StaticEvent for TaskReceptionConfirmed {
                 const PALLET: &'static str = "TaskManagement";
                 const EVENT: &'static str = "TaskReceptionConfirmed";
+            }
+            #[derive(
+                :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
+                :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
+                :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
+                :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
+                Clone,
+                Debug,
+            )]
+            # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
+            #[codec(dumb_trait_bound)]
+            #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
+            #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
+            #[doc = "A miner confirmed the task reception, but failed to run the task"]
+            pub struct TaskReceptionFailed {
+                pub task_id: task_reception_failed::TaskId,
+                pub who: task_reception_failed::Who,
+            }
+            pub mod task_reception_failed {
+                use super::runtime_types;
+                pub type TaskId = ::core::primitive::u64;
+                pub type Who = ::subxt::ext::subxt_core::utils::AccountId32;
+            }
+            impl ::subxt::ext::subxt_core::events::StaticEvent for TaskReceptionFailed {
+                const PALLET: &'static str = "TaskManagement";
+                const EVENT: &'static str = "TaskReceptionFailed";
             }
             #[derive(
                 :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -16207,9 +16412,10 @@ pub mod api {
                         "TaskStatus",
                         (),
                         [
-                            155u8, 16u8, 154u8, 145u8, 194u8, 211u8, 188u8, 163u8, 254u8, 145u8,
-                            66u8, 55u8, 92u8, 183u8, 46u8, 244u8, 109u8, 192u8, 121u8, 45u8, 89u8,
-                            20u8, 82u8, 48u8, 27u8, 168u8, 202u8, 250u8, 242u8, 53u8, 157u8, 226u8,
+                            237u8, 159u8, 183u8, 58u8, 22u8, 63u8, 112u8, 69u8, 21u8, 93u8, 36u8,
+                            242u8, 147u8, 126u8, 217u8, 124u8, 249u8, 155u8, 92u8, 210u8, 144u8,
+                            168u8, 115u8, 221u8, 187u8, 249u8, 129u8, 183u8, 89u8, 235u8, 5u8,
+                            245u8,
                         ],
                     )
                 }
@@ -16233,9 +16439,10 @@ pub mod api {
                             _0.borrow(),
                         ),
                         [
-                            155u8, 16u8, 154u8, 145u8, 194u8, 211u8, 188u8, 163u8, 254u8, 145u8,
-                            66u8, 55u8, 92u8, 183u8, 46u8, 244u8, 109u8, 192u8, 121u8, 45u8, 89u8,
-                            20u8, 82u8, 48u8, 27u8, 168u8, 202u8, 250u8, 242u8, 53u8, 157u8, 226u8,
+                            237u8, 159u8, 183u8, 58u8, 22u8, 63u8, 112u8, 69u8, 21u8, 93u8, 36u8,
+                            242u8, 147u8, 126u8, 217u8, 124u8, 249u8, 155u8, 92u8, 210u8, 144u8,
+                            168u8, 115u8, 221u8, 187u8, 249u8, 129u8, 183u8, 89u8, 235u8, 5u8,
+                            245u8,
                         ],
                     )
                 }
@@ -16374,10 +16581,9 @@ pub mod api {
                         "Tasks",
                         (),
                         [
-                            147u8, 80u8, 137u8, 45u8, 19u8, 215u8, 39u8, 169u8, 74u8, 181u8, 235u8,
-                            7u8, 115u8, 191u8, 226u8, 45u8, 216u8, 141u8, 249u8, 77u8, 185u8,
-                            119u8, 156u8, 193u8, 61u8, 17u8, 154u8, 250u8, 209u8, 175u8, 233u8,
-                            151u8,
+                            5u8, 76u8, 152u8, 140u8, 36u8, 54u8, 71u8, 248u8, 42u8, 107u8, 60u8,
+                            231u8, 169u8, 177u8, 217u8, 233u8, 62u8, 104u8, 179u8, 140u8, 52u8,
+                            189u8, 159u8, 170u8, 144u8, 240u8, 87u8, 10u8, 234u8, 12u8, 16u8, 82u8,
                         ],
                     )
                 }
@@ -16401,10 +16607,9 @@ pub mod api {
                             _0.borrow(),
                         ),
                         [
-                            147u8, 80u8, 137u8, 45u8, 19u8, 215u8, 39u8, 169u8, 74u8, 181u8, 235u8,
-                            7u8, 115u8, 191u8, 226u8, 45u8, 216u8, 141u8, 249u8, 77u8, 185u8,
-                            119u8, 156u8, 193u8, 61u8, 17u8, 154u8, 250u8, 209u8, 175u8, 233u8,
-                            151u8,
+                            5u8, 76u8, 152u8, 140u8, 36u8, 54u8, 71u8, 248u8, 42u8, 107u8, 60u8,
+                            231u8, 169u8, 177u8, 217u8, 233u8, 62u8, 104u8, 179u8, 140u8, 52u8,
+                            189u8, 159u8, 170u8, 144u8, 240u8, 87u8, 10u8, 234u8, 12u8, 16u8, 82u8,
                         ],
                     )
                 }
@@ -26589,6 +26794,8 @@ pub mod api {
                     Stopped,
                     #[codec(index = 3)]
                     Vacated,
+                    #[codec(index = 4)]
+                    Failed,
                 }
                 #[derive(
                     :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -29804,7 +30011,7 @@ pub mod api {
                         cpu: ::core::primitive::u16,
                     },
                     #[codec(index = 1)]
-                    #[doc = "Remove a miner from storage an deactivates it"]
+                    #[doc = "Remove a miner from storage"]
                     remove_miner {
                         miner_type: runtime_types::cyborg_primitives::miner::MinerType,
                         miner_id: runtime_types::bounded_collections::bounded_vec::BoundedVec<
@@ -29880,6 +30087,14 @@ pub mod api {
                         >,
                         miner_type: runtime_types::cyborg_primitives::miner::MinerType,
                     },
+                    #[codec(index = 10)]
+                    add_account_authorized_for_registration {
+                        account: ::subxt::ext::subxt_core::utils::AccountId32,
+                    },
+                    #[codec(index = 11)]
+                    remove_account_authorized_for_registration {
+                        account: ::subxt::ext::subxt_core::utils::AccountId32,
+                    },
                 }
                 #[derive(
                     :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -29922,6 +30137,7 @@ pub mod api {
                     #[doc = "Miner is inactive"]
                     MinerIsInactive,
                     #[codec(index = 7)]
+                    #[doc = "Not authorized to perform this action"]
                     NotAuthorized,
                     #[codec(index = 8)]
                     #[doc = "Provided UUID exceeded MaxUuidLen"]
@@ -29932,6 +30148,15 @@ pub mod api {
                     #[codec(index = 10)]
                     #[doc = "When the miner does not provide the correct prefix, based on what kind of miner it is "]
                     InvalidMinerIdPrefix,
+                    #[codec(index = 11)]
+                    #[doc = "User tries to register a miner with an account that is not authorized for registration"]
+                    MinerRegistrationNotAllowedWithThisAccount,
+                    #[codec(index = 12)]
+                    #[doc = "User tried to register multiple miners with one account"]
+                    CanOnlyRegisterOneMinerPerAccount,
+                    #[codec(index = 13)]
+                    #[doc = "The authorized account does not exists"]
+                    AuthorizedAccountDoesnNotExist,
                 }
                 #[derive(
                     :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
@@ -30072,6 +30297,16 @@ pub mod api {
                             ::core::primitive::u8,
                         >,
                         who: ::subxt::ext::subxt_core::utils::AccountId32,
+                    },
+                    #[codec(index = 12)]
+                    #[doc = "An account that is allowed to register a miner has been added"]
+                    AccountAuthorizedForMinerRegistrationAdded {
+                        account: ::subxt::ext::subxt_core::utils::AccountId32,
+                    },
+                    #[codec(index = 13)]
+                    #[doc = "An account that is allowed to register a miner has been removed"]
+                    AccountAuthorizedForMinerRegistrationRemoved {
+                        account: ::subxt::ext::subxt_core::utils::AccountId32,
                     },
                 }
                 #[derive(
@@ -31374,7 +31609,10 @@ pub mod api {
                     #[doc = ""]
                     #[doc = "Allowed only if task is still `Assigned`."]
                     #[doc = "Changes task state to `Running` and starts aggregation of resource usage."]
-                    confirm_task_reception { task_id: ::core::primitive::u64 },
+                    confirm_task_reception {
+                        task_id: ::core::primitive::u64,
+                        has_failed: ::core::primitive::bool,
+                    },
                     #[codec(index = 5)]
                     #[doc = "Signals the miner to exit task execution and reset itself"]
                     #[doc = "Running -> Stopped"]
@@ -31524,22 +31762,28 @@ pub mod api {
                         who: ::subxt::ext::subxt_core::utils::AccountId32,
                     },
                     #[codec(index = 2)]
+                    #[doc = "A miner confirmed the task reception, but failed to run the task"]
+                    TaskReceptionFailed {
+                        task_id: ::core::primitive::u64,
+                        who: ::subxt::ext::subxt_core::utils::AccountId32,
+                    },
+                    #[codec(index = 3)]
                     #[doc = "Controller/admin requested to stop a running task."]
                     TaskStopRequested { task_id: ::core::primitive::u64 },
-                    #[codec(index = 3)]
+                    #[codec(index = 4)]
                     #[doc = "Miner confirmed that they have vacated/reset after stopping."]
                     MinerVacated { task_id: ::core::primitive::u64 },
-                    #[codec(index = 4)]
+                    #[codec(index = 5)]
                     ModelHashRegistered(
                         ::subxt::ext::subxt_core::alloc::vec::Vec<::core::primitive::u8>,
                         ::subxt::ext::subxt_core::utils::H256,
                     ),
-                    #[codec(index = 5)]
+                    #[codec(index = 6)]
                     ModelHashQueried(
                         ::subxt::ext::subxt_core::alloc::vec::Vec<::core::primitive::u8>,
                         ::subxt::ext::subxt_core::utils::H256,
                     ),
-                    #[codec(index = 6)]
+                    #[codec(index = 7)]
                     #[doc = "Event emitted when a task is manually reset by admin"]
                     TaskManuallyReset {
                         task_id: ::core::primitive::u64,
