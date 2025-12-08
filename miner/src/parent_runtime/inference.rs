@@ -18,7 +18,6 @@ use axum::{
 use cycloud_runtime::CyCloudEngine;
 use flash_infer_runtime::FlashInferEngine;
 use futures::{SinkExt, StreamExt};
-use neuro_zk_runtime::NeuroZKEngine;
 use once_cell::sync::Lazy;
 use open_inference_runtime::TritonClient;
 use std::{
@@ -38,7 +37,6 @@ use tokio_stream::wrappers::ReceiverStream;
 #[derive(Clone)]
 pub enum InferenceEngine {
     OpenInference(Arc<Mutex<TritonClient>>),
-    NeuroZk(Arc<Mutex<NeuroZKEngine>>),
     FlashInference(Arc<Mutex<FlashInferEngine>>),
     CyCloud(Arc<Mutex<CyCloudEngine>>),
 }
@@ -66,9 +64,6 @@ impl InferenceEngine {
                 }
 
                 Ok(())
-            }
-            InferenceEngine::NeuroZk(_engine) => {
-                todo!("Implement kill_engine for NeuroZk")
             }
             InferenceEngine::FlashInference(engine) => {
                 engine.lock().await.kill_engine().await.map_err(|e| {
@@ -158,15 +153,7 @@ pub async fn spawn_inference_server(
             })?;
             InferenceEngine::OpenInference(Arc::new(Mutex::new(triton_client)))
         }
-        TaskKind::NeuroZK(_) => {
-            let neurozk_engine = NeuroZKEngine::new(PathBuf::from(format!(
-                "{}/{}",
-                PATHS.task_dir_path, PATHS.task_file_name
-            )))
-            .map_err(|e| Error::Custom(format!("Failed to create engine: {}", e.to_string())))?;
-            InferenceEngine::NeuroZk(Arc::new(Mutex::new(neurozk_engine)))
-        }
-        TaskKind::FlashInferInfer(fi) => match fi {
+        TaskKind::FlashInfer(fi) => match fi {
             FlashInferTask::Huggingface(hf) => {
                 let hf_identifier = String::from_utf8(hf.hf_identifier.0.clone())?;
                 let fi_engine = FlashInferEngine::new(
@@ -198,18 +185,6 @@ pub async fn spawn_inference_server(
 
             InferenceEngine::OpenInference(_) => {
                 let _ = status_tx.send(EngineStatus::Ready);
-            }
-
-            InferenceEngine::NeuroZk(engine_clone) => {
-                match engine_clone.lock().await.setup().await {
-                    Ok(()) => {
-                        let _ = status_tx.send(EngineStatus::Ready);
-                    }
-                    Err(e) => {
-                        println!("Error setting up inference engine: {}", e);
-                        let _ = status_tx.send(EngineStatus::Failed(e.to_string()));
-                    }
-                }
             }
 
             InferenceEngine::FlashInference(engine_clone) => {
@@ -392,16 +367,6 @@ async fn handle_socket(socket: WebSocket, state: AppState) -> Result<()> {
                         .await
                     {
                         tracing::error!("Error running OpenInference engine: {}", e);
-                    }
-                }
-                InferenceEngine::NeuroZk(ref engine) => {
-                    if let Err(e) = engine
-                        .lock()
-                        .await
-                        .run(request_stream, response_stream)
-                        .await
-                    {
-                        tracing::error!("Error running NeuroZK inference engine: {}", e);
                     }
                 }
                 InferenceEngine::FlashInference(ref engine) => {

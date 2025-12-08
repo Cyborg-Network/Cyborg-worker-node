@@ -1,6 +1,5 @@
 use types::{substrate_interface, TaskPreparationStatus};
 use types::substrate_interface::api::runtime_types::cyborg_primitives::miner::OperationalStatus;
-use crate::traits::{InferenceServer, ParachainInteractor};
 use types::CurrentTask;
 use crate::utils::task_handling::{self, return_task_container_name, set_current_task};
 use crate::utils::tx_builder::pub_confirm_task_reception;
@@ -159,44 +158,6 @@ pub async fn process_event(miner: Arc<Miner>, event: &EventDetails<PolkadotConfi
             _ => {} // Skip non-matching events
         }
     }
-
-    if let Some(current_task_id) = current_task_id {
-        match event.as_event::<substrate_interface::api::neuro_zk::events::NzkProofRequested>() {
-            Ok(Some(requested_proof)) => {
-                let task_id = &requested_proof.task_id;
-
-                if *task_id == current_task_id {
-                    let proof = miner.parent_runtime.read().await.generate_proof().await?;
-                    let _ = miner.submit_zkml_proof(proof).await?;
-                }
-            }
-            Err(e) => {
-                println!("Error decoding SubmittedCompletedTask event: {:?}", e);
-                return Err(Error::Subxt(e.into()));
-            }
-            _ => {} // Skip non-matching events
-        }
-    }
-
-    /*
-    //TODO check if proof was submitted (after parachain update)
-    // Check for SubmittedCompletedTask event to check if miner was assigned to verify task
-    match event.as_event::<substrate_interface::api::neuro_zk::events::ProofSubmitted>() {
-        Ok(Some(submitted_proof)) => {
-            let prover = &submitted_task.prover;
-
-            if *prover == self.identity {
-                //TODO add an proof submission state somewhere that tracks if the proof was submitted or not (wait 60sec otherwise retry)
-                //TODO set the above mentioned state to submitted
-            }
-        }
-        Err(e) => {
-            println!("Error decoding SubmittedCompletedTask event: {:?}", e);
-            return Err(Error::Subxt(e.into()));
-        }
-        _ => {} // Skip non-matching events
-    }
-    */
 
     Ok(())
 }

@@ -14,7 +14,6 @@ use crate::utils::tx_queue::TxOutput;
 use std::fmt::Debug;
 use std::sync::Arc;
 use types::substrate_interface::api::edge_connect::Error as EdgeConnectError;
-use types::substrate_interface::api::neuro_zk::Error as NzkError;
 use types::substrate_interface::api::task_management::Error as TaskManagementError;
 use subxt_signer::sr25519::Keypair;
 
@@ -128,57 +127,6 @@ pub async fn pub_register(
         Err(_) => Err("Response channel dropped.".into()),
         _ => Err("Missing identity string from registration event".into()),
     }
-}
-
-/// Submits a zkml (Zero Knowledge Machine Learning) proof to the blockchain.
-///
-/// # Arguments
-/// * `proof` - A `Vec<u8>` containing the zkml proof.
-///
-/// # Returns
-/// A `Result` indicating `Ok(())` if the result is successfully submitted, or an `Error` if it fails.
-pub async fn submit_proof(proof: Vec<u8>, keypair: Keypair, current_task: u64) -> Result<()> {
-    let proof: BoundedVec<u8> = BoundedVec::from(BoundedVec(proof));
-
-    let client = global_config::get_parachain_client()?;
-
-    let tx = substrate_interface::api::tx()
-        .neuro_zk()
-        .submit_proof(current_task, proof);
-
-    println!("Transaction Details:");
-    println!("Module: {:?}", tx.pallet_name());
-    println!("Call: {:?}", tx.call_name());
-    println!("Parameters: {:?}", tx.call_data());
-
-    let tx_submission = client
-        .tx()
-        .sign_and_submit_then_watch_default(&tx, &keypair)
-        .await
-        .map(|e| {
-            println!("Proof submitted, waiting for transaction to be finalized...");
-            e
-        })?
-        .wait_for_finalized_success()
-        .await;
-
-    match tx_submission {
-        Ok(e) => {
-            let tx_event =
-                e.find_first::<substrate_interface::api::neuro_zk::events::NzkProofSubmitted>()?;
-
-            if let Some(event) = tx_event {
-                println!("Proof submission confirmed: {event:?}");
-            } else {
-                println!("No proof submission event found!");
-            }
-        }
-        Err(e) => {
-            check_for_acceptable_error(&[NzkError::ProofAlreadySubmitted], e)?;
-        }
-    }
-
-    Ok(())
 }
 
 async fn confirm_task_reception(keypair: Arc<Keypair>, current_task: &u64, task_status: TaskPreparationStatus) -> Result<()> {
