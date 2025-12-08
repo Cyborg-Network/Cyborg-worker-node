@@ -1,7 +1,7 @@
 [package]
 name = "cyborg-miner"
 description = "An AI inference mine, designed to connect to the cyborg-network, built, among others with Polkadot SDK."
-version = "0.0.91"
+version = "0.0.93"
 license = "Unlicense"
 authors = ["Cyborg Network <https://github.com/Cyborg-Network>"]
 edition = "2021"
@@ -13,7 +13,6 @@ publish = false
 # name = "cyborg-miner"
 
 [dependencies]
-neuro-zk-runtime = { workspace = true }
 open-inference-runtime = { workspace = true }
 flash-infer-runtime = { workspace = true }
 cycloud-runtime = { workspace = true }
@@ -40,25 +39,16 @@ cess-rust-sdk = { git = 'https://github.com/CESSProject/cess-rust-sdk.git' , bra
 chrono = "0.4.38"
 clap = { version = "4.5.3", features = ["derive"] }
 codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false }
-color-print = { version = "0.3.4" } 
 derive_more = { version = "1.0.0", features = ["from"] }
-dirs = "5.0.1"
 docify = { version = "0.2.8" }
 dotenv = "0.15.0"
 lazy_static = "1.5.0"
-bincode = "1.3"
-sled = "0.34"
 libc = "0.2.177"
 once_cell = "1.21.3"
-fs2 = "0.4.3"
 hex = { version = "0.4.3" } 
-jsonrpsee = { version = "0.22", features = ["server"] }
 nix = { version = "0.30.1", features = ["user"] }
 regex = { version = "1.11.1" }
-sp-api = { version = "33.0.0", default-features = false }
-sp-blockchain = { version = "35.0.0" }
 sp-core = { version = "34.0.0", default-features = false }
-sp-runtime = { version = "38.0.0", default-features = false }
 sys-info = { version = "0.9.1" }
 sysinfo = "0.32.0"
 tar = { version = "0.4.44" }
@@ -67,16 +57,9 @@ tokio-stream = { version = "0.1.17" }
 url = { version = "2.5.2" }
 zbus = "5.1.1"
 zbus_names = "4.1.0"
-zip = "2.2.0"
 zstd = "0.13.3"
 
 [build-dependencies]
 
 [dev-dependencies]
 mockall = "0.13.1"
-
-[features]
-default = []
-runtime-benchmarks = ["sp-runtime/runtime-benchmarks"]
-try-runtime = ["sp-runtime/try-runtime"]
-

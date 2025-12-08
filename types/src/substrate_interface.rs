@@ -6,7 +6,7 @@ pub mod api {
     mod root_mod {
         pub use super::*;
     }
-    pub static PALLETS: [&str; 26usize] = [
+    pub static PALLETS: [&str; 25usize] = [
         "System",
         "ParachainSystem",
         "Timestamp",
@@ -30,7 +30,6 @@ pub mod api {
         "StatusAggregator",
         "Payment",
         "ZKVerifier",
-        "NeuroZk",
         "Treasury",
         "Assets",
     ];
@@ -1349,10 +1348,9 @@ pub mod api {
                         "query_call_info",
                         types::QueryCallInfo { call, len },
                         [
-                            84u8, 139u8, 222u8, 145u8, 143u8, 50u8, 223u8, 236u8, 33u8, 140u8,
-                            145u8, 167u8, 99u8, 76u8, 220u8, 191u8, 165u8, 159u8, 16u8, 162u8,
-                            251u8, 248u8, 68u8, 154u8, 180u8, 90u8, 68u8, 137u8, 171u8, 247u8,
-                            28u8, 187u8,
+                            83u8, 98u8, 171u8, 55u8, 229u8, 130u8, 234u8, 126u8, 128u8, 73u8, 12u8,
+                            223u8, 62u8, 38u8, 79u8, 129u8, 146u8, 230u8, 127u8, 67u8, 52u8, 226u8,
+                            229u8, 230u8, 127u8, 119u8, 120u8, 43u8, 166u8, 195u8, 111u8, 172u8,
                         ],
                     )
                 }
@@ -1370,10 +1368,9 @@ pub mod api {
                         "query_call_fee_details",
                         types::QueryCallFeeDetails { call, len },
                         [
-                            226u8, 163u8, 143u8, 1u8, 27u8, 91u8, 93u8, 241u8, 233u8, 223u8, 150u8,
-                            112u8, 232u8, 168u8, 27u8, 114u8, 145u8, 249u8, 39u8, 45u8, 76u8,
-                            230u8, 35u8, 69u8, 219u8, 129u8, 65u8, 242u8, 117u8, 250u8, 11u8,
-                            133u8,
+                            131u8, 28u8, 96u8, 151u8, 83u8, 75u8, 210u8, 23u8, 31u8, 254u8, 182u8,
+                            70u8, 255u8, 249u8, 86u8, 186u8, 109u8, 57u8, 234u8, 56u8, 63u8, 173u8,
+                            81u8, 48u8, 24u8, 199u8, 211u8, 106u8, 250u8, 120u8, 227u8, 88u8,
                         ],
                     )
                 }
@@ -1797,10 +1794,9 @@ pub mod api {
                         "get_recent_events",
                         types::GetRecentEvents {},
                         [
-                            205u8, 62u8, 156u8, 12u8, 82u8, 186u8, 133u8, 9u8, 201u8, 114u8, 90u8,
-                            209u8, 195u8, 154u8, 77u8, 87u8, 238u8, 150u8, 95u8, 107u8, 235u8,
-                            135u8, 205u8, 86u8, 11u8, 109u8, 194u8, 243u8, 100u8, 216u8, 173u8,
-                            190u8,
+                            123u8, 62u8, 16u8, 82u8, 36u8, 189u8, 90u8, 97u8, 238u8, 115u8, 87u8,
+                            183u8, 5u8, 138u8, 219u8, 37u8, 162u8, 0u8, 23u8, 9u8, 32u8, 19u8,
+                            80u8, 57u8, 116u8, 23u8, 78u8, 249u8, 65u8, 19u8, 174u8, 41u8,
                         ],
                     )
                 }
@@ -1885,9 +1881,6 @@ pub mod api {
         pub fn zk_verifier(&self) -> zk_verifier::constants::ConstantsApi {
             zk_verifier::constants::ConstantsApi
         }
-        pub fn neuro_zk(&self) -> neuro_zk::constants::ConstantsApi {
-            neuro_zk::constants::ConstantsApi
-        }
         pub fn treasury(&self) -> treasury::constants::ConstantsApi {
             treasury::constants::ConstantsApi
         }
@@ -1963,9 +1956,6 @@ pub mod api {
         pub fn zk_verifier(&self) -> zk_verifier::storage::StorageApi {
             zk_verifier::storage::StorageApi
         }
-        pub fn neuro_zk(&self) -> neuro_zk::storage::StorageApi {
-            neuro_zk::storage::StorageApi
-        }
         pub fn treasury(&self) -> treasury::storage::StorageApi {
             treasury::storage::StorageApi
         }
@@ -2029,9 +2019,6 @@ pub mod api {
         pub fn zk_verifier(&self) -> zk_verifier::calls::TransactionApi {
             zk_verifier::calls::TransactionApi
         }
-        pub fn neuro_zk(&self) -> neuro_zk::calls::TransactionApi {
-            neuro_zk::calls::TransactionApi
-        }
         pub fn treasury(&self) -> treasury::calls::TransactionApi {
             treasury::calls::TransactionApi
         }
@@ -2048,9 +2035,9 @@ pub mod api {
             .hash();
         runtime_metadata_hash
             == [
-                78u8, 228u8, 117u8, 7u8, 66u8, 180u8, 141u8, 228u8, 26u8, 166u8, 87u8, 146u8,
-                102u8, 144u8, 91u8, 110u8, 248u8, 188u8, 77u8, 140u8, 189u8, 37u8, 44u8, 45u8,
-                125u8, 196u8, 91u8, 62u8, 133u8, 79u8, 52u8, 237u8,
+                200u8, 130u8, 60u8, 224u8, 25u8, 56u8, 174u8, 126u8, 235u8, 45u8, 21u8, 212u8,
+                206u8, 154u8, 132u8, 210u8, 138u8, 114u8, 99u8, 240u8, 125u8, 116u8, 151u8, 95u8,
+                203u8, 232u8, 28u8, 233u8, 16u8, 166u8, 186u8, 74u8,
             ]
     }
     pub mod system {
@@ -3258,9 +3245,10 @@ pub mod api {
                         "Events",
                         (),
                         [
-                            135u8, 177u8, 247u8, 230u8, 70u8, 112u8, 79u8, 5u8, 174u8, 116u8,
-                            128u8, 218u8, 53u8, 53u8, 7u8, 198u8, 67u8, 223u8, 208u8, 125u8, 103u8,
-                            230u8, 33u8, 190u8, 103u8, 173u8, 0u8, 21u8, 126u8, 66u8, 110u8, 112u8,
+                            254u8, 182u8, 56u8, 174u8, 31u8, 105u8, 127u8, 237u8, 29u8, 89u8,
+                            230u8, 22u8, 211u8, 50u8, 142u8, 201u8, 47u8, 40u8, 107u8, 207u8, 18u8,
+                            110u8, 49u8, 155u8, 138u8, 126u8, 79u8, 222u8, 249u8, 10u8, 134u8,
+                            83u8,
                         ],
                     )
                 }
@@ -6808,9 +6796,10 @@ pub mod api {
                             call: ::subxt::ext::subxt_core::alloc::boxed::Box::new(call),
                         },
                         [
-                            27u8, 155u8, 75u8, 150u8, 88u8, 61u8, 76u8, 63u8, 190u8, 218u8, 112u8,
-                            137u8, 191u8, 46u8, 16u8, 168u8, 8u8, 78u8, 116u8, 100u8, 45u8, 66u8,
-                            13u8, 237u8, 205u8, 143u8, 195u8, 19u8, 58u8, 60u8, 167u8, 90u8,
+                            161u8, 15u8, 241u8, 138u8, 19u8, 236u8, 149u8, 48u8, 186u8, 125u8,
+                            207u8, 119u8, 35u8, 191u8, 240u8, 148u8, 109u8, 2u8, 213u8, 108u8,
+                            199u8, 83u8, 83u8, 237u8, 117u8, 240u8, 212u8, 241u8, 175u8, 82u8,
+                            56u8, 24u8,
                         ],
                     )
                 }
@@ -6833,9 +6822,10 @@ pub mod api {
                             weight,
                         },
                         [
-                            76u8, 28u8, 28u8, 124u8, 1u8, 143u8, 60u8, 44u8, 66u8, 158u8, 17u8,
-                            34u8, 187u8, 114u8, 8u8, 236u8, 41u8, 240u8, 207u8, 206u8, 89u8, 203u8,
-                            51u8, 185u8, 69u8, 43u8, 14u8, 137u8, 138u8, 227u8, 195u8, 221u8,
+                            142u8, 190u8, 249u8, 19u8, 242u8, 81u8, 145u8, 3u8, 161u8, 128u8,
+                            120u8, 224u8, 81u8, 93u8, 10u8, 154u8, 230u8, 82u8, 125u8, 145u8,
+                            157u8, 76u8, 163u8, 71u8, 10u8, 69u8, 176u8, 46u8, 214u8, 81u8, 123u8,
+                            11u8,
                         ],
                     )
                 }
@@ -6875,9 +6865,10 @@ pub mod api {
                             call: ::subxt::ext::subxt_core::alloc::boxed::Box::new(call),
                         },
                         [
-                            171u8, 119u8, 134u8, 98u8, 11u8, 127u8, 70u8, 52u8, 32u8, 48u8, 18u8,
-                            14u8, 3u8, 248u8, 118u8, 146u8, 16u8, 30u8, 94u8, 2u8, 79u8, 230u8,
-                            166u8, 165u8, 48u8, 14u8, 247u8, 167u8, 202u8, 0u8, 134u8, 185u8,
+                            16u8, 7u8, 116u8, 136u8, 159u8, 230u8, 170u8, 217u8, 131u8, 197u8,
+                            192u8, 176u8, 177u8, 206u8, 162u8, 251u8, 1u8, 23u8, 40u8, 51u8, 252u8,
+                            212u8, 153u8, 46u8, 212u8, 77u8, 166u8, 203u8, 146u8, 191u8, 235u8,
+                            10u8,
                         ],
                     )
                 }
@@ -15709,7 +15700,7 @@ pub mod api {
                 }
                 pub mod task_scheduler {
                     use super::runtime_types;
-                    pub type TaskKind = runtime_types::cyborg_primitives::task::TaskSubmissionData;
+                    pub type TaskKind = runtime_types::cyborg_primitives::task::TaskKind;
                     pub type MinerId = runtime_types::bounded_collections::bounded_vec::BoundedVec<
                         ::core::primitive::u8,
                     >;
@@ -15951,9 +15942,10 @@ pub mod api {
                             compute_hours_deposit,
                         },
                         [
-                            54u8, 77u8, 85u8, 223u8, 94u8, 17u8, 182u8, 62u8, 124u8, 77u8, 209u8,
-                            89u8, 216u8, 11u8, 239u8, 175u8, 209u8, 23u8, 33u8, 43u8, 103u8, 91u8,
-                            220u8, 18u8, 26u8, 34u8, 146u8, 19u8, 243u8, 156u8, 221u8, 87u8,
+                            179u8, 118u8, 117u8, 137u8, 10u8, 79u8, 247u8, 146u8, 172u8, 119u8,
+                            188u8, 95u8, 218u8, 7u8, 50u8, 127u8, 209u8, 231u8, 252u8, 140u8,
+                            233u8, 166u8, 160u8, 209u8, 173u8, 13u8, 45u8, 186u8, 220u8, 51u8,
+                            215u8, 14u8,
                         ],
                     )
                 }
@@ -16132,8 +16124,7 @@ pub mod api {
                     runtime_types::bounded_collections::bounded_vec::BoundedVec<
                         ::core::primitive::u8,
                     >;
-                pub type TaskKind =
-                    runtime_types::cyborg_primitives::task::TaskKind<::core::primitive::u32>;
+                pub type TaskKind = runtime_types::cyborg_primitives::task::TaskKind;
                 pub type TaskOwner = ::subxt::ext::subxt_core::utils::AccountId32;
                 pub type TaskId = ::core::primitive::u64;
             }
@@ -16581,9 +16572,10 @@ pub mod api {
                         "Tasks",
                         (),
                         [
-                            5u8, 76u8, 152u8, 140u8, 36u8, 54u8, 71u8, 248u8, 42u8, 107u8, 60u8,
-                            231u8, 169u8, 177u8, 217u8, 233u8, 62u8, 104u8, 179u8, 140u8, 52u8,
-                            189u8, 159u8, 170u8, 144u8, 240u8, 87u8, 10u8, 234u8, 12u8, 16u8, 82u8,
+                            44u8, 210u8, 251u8, 169u8, 177u8, 49u8, 105u8, 60u8, 154u8, 140u8,
+                            120u8, 221u8, 193u8, 14u8, 96u8, 55u8, 188u8, 29u8, 220u8, 169u8,
+                            214u8, 30u8, 169u8, 105u8, 184u8, 38u8, 172u8, 162u8, 201u8, 134u8,
+                            161u8, 166u8,
                         ],
                     )
                 }
@@ -16607,9 +16599,10 @@ pub mod api {
                             _0.borrow(),
                         ),
                         [
-                            5u8, 76u8, 152u8, 140u8, 36u8, 54u8, 71u8, 248u8, 42u8, 107u8, 60u8,
-                            231u8, 169u8, 177u8, 217u8, 233u8, 62u8, 104u8, 179u8, 140u8, 52u8,
-                            189u8, 159u8, 170u8, 144u8, 240u8, 87u8, 10u8, 234u8, 12u8, 16u8, 82u8,
+                            44u8, 210u8, 251u8, 169u8, 177u8, 49u8, 105u8, 60u8, 154u8, 140u8,
+                            120u8, 221u8, 193u8, 14u8, 96u8, 55u8, 188u8, 29u8, 220u8, 169u8,
+                            214u8, 30u8, 169u8, 105u8, 184u8, 38u8, 172u8, 162u8, 201u8, 134u8,
+                            161u8, 166u8,
                         ],
                     )
                 }
@@ -19773,529 +19766,6 @@ pub mod api {
                     ::subxt::ext::subxt_core::constants::address::StaticAddress::new_static(
                         "ZKVerifier",
                         "MaxVerificationKeyLength",
-                        [
-                            98u8, 252u8, 116u8, 72u8, 26u8, 180u8, 225u8, 83u8, 200u8, 157u8,
-                            125u8, 151u8, 53u8, 76u8, 168u8, 26u8, 10u8, 9u8, 98u8, 68u8, 9u8,
-                            178u8, 197u8, 113u8, 31u8, 79u8, 200u8, 90u8, 203u8, 100u8, 41u8,
-                            145u8,
-                        ],
-                    )
-                }
-            }
-        }
-    }
-    pub mod neuro_zk {
-        use super::root_mod;
-        use super::runtime_types;
-        #[doc = "Errors inform users that something went wrong."]
-        pub type Error = runtime_types::pallet_neuro_zk::pallet::Error;
-        #[doc = "Contains a variant per dispatchable extrinsic that this pallet has."]
-        pub type Call = runtime_types::pallet_neuro_zk::pallet::Call;
-        pub mod calls {
-            use super::root_mod;
-            use super::runtime_types;
-            type DispatchError = runtime_types::sp_runtime::DispatchError;
-            pub mod types {
-                use super::runtime_types;
-                #[derive(
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                    Clone,
-                    Debug,
-                )]
-                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-                #[codec(dumb_trait_bound)]
-                #[decode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
-                )]
-                #[encode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
-                )]
-                #[doc = "Requests a nzk proof from the given task"]
-                pub struct RequestProof {
-                    pub task_id: request_proof::TaskId,
-                }
-                pub mod request_proof {
-                    use super::runtime_types;
-                    pub type TaskId = ::core::primitive::u64;
-                }
-                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for RequestProof {
-                    const PALLET: &'static str = "NeuroZk";
-                    const CALL: &'static str = "request_proof";
-                }
-                #[derive(
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                    Clone,
-                    Debug,
-                )]
-                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-                #[codec(dumb_trait_bound)]
-                #[decode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
-                )]
-                #[encode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
-                )]
-                #[doc = "Submits a nzk proof from the given task"]
-                pub struct SubmitProof {
-                    pub task_id: submit_proof::TaskId,
-                    pub proof: submit_proof::Proof,
-                }
-                pub mod submit_proof {
-                    use super::runtime_types;
-                    pub type TaskId = ::core::primitive::u64;
-                    pub type Proof = runtime_types::bounded_collections::bounded_vec::BoundedVec<
-                        ::core::primitive::u8,
-                    >;
-                }
-                impl ::subxt::ext::subxt_core::blocks::StaticExtrinsic for SubmitProof {
-                    const PALLET: &'static str = "NeuroZk";
-                    const CALL: &'static str = "submit_proof";
-                }
-            }
-            pub struct TransactionApi;
-            impl TransactionApi {
-                #[doc = "Requests a nzk proof from the given task"]
-                pub fn request_proof(
-                    &self,
-                    task_id: types::request_proof::TaskId,
-                ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::RequestProof>
-                {
-                    ::subxt::ext::subxt_core::tx::payload::StaticPayload::new_static(
-                        "NeuroZk",
-                        "request_proof",
-                        types::RequestProof { task_id },
-                        [
-                            7u8, 238u8, 41u8, 83u8, 144u8, 109u8, 250u8, 119u8, 162u8, 216u8,
-                            146u8, 173u8, 11u8, 224u8, 129u8, 57u8, 107u8, 69u8, 140u8, 98u8, 89u8,
-                            55u8, 26u8, 214u8, 67u8, 79u8, 122u8, 233u8, 77u8, 234u8, 239u8, 204u8,
-                        ],
-                    )
-                }
-                #[doc = "Submits a nzk proof from the given task"]
-                pub fn submit_proof(
-                    &self,
-                    task_id: types::submit_proof::TaskId,
-                    proof: types::submit_proof::Proof,
-                ) -> ::subxt::ext::subxt_core::tx::payload::StaticPayload<types::SubmitProof>
-                {
-                    ::subxt::ext::subxt_core::tx::payload::StaticPayload::new_static(
-                        "NeuroZk",
-                        "submit_proof",
-                        types::SubmitProof { task_id, proof },
-                        [
-                            94u8, 161u8, 96u8, 164u8, 30u8, 218u8, 222u8, 133u8, 175u8, 93u8,
-                            126u8, 236u8, 189u8, 228u8, 68u8, 217u8, 231u8, 179u8, 143u8, 30u8,
-                            188u8, 101u8, 118u8, 24u8, 10u8, 83u8, 151u8, 66u8, 244u8, 133u8,
-                            219u8, 250u8,
-                        ],
-                    )
-                }
-            }
-        }
-        #[doc = "The `Event` enum contains the various events that can be emitted by this pallet."]
-        #[doc = "Events are emitted when significant actions or state changes happen in the pallet."]
-        pub type Event = runtime_types::pallet_neuro_zk::pallet::Event;
-        pub mod events {
-            use super::runtime_types;
-            #[derive(
-                :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                Clone,
-                Debug,
-            )]
-            # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-            #[codec(dumb_trait_bound)]
-            #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
-            #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
-            #[doc = "Emitted when a proof has been requested."]
-            pub struct NzkProofRequested {
-                pub requesting_account: nzk_proof_requested::RequestingAccount,
-                pub task_id: nzk_proof_requested::TaskId,
-            }
-            pub mod nzk_proof_requested {
-                use super::runtime_types;
-                pub type RequestingAccount = ::subxt::ext::subxt_core::utils::AccountId32;
-                pub type TaskId = ::core::primitive::u64;
-            }
-            impl ::subxt::ext::subxt_core::events::StaticEvent for NzkProofRequested {
-                const PALLET: &'static str = "NeuroZk";
-                const EVENT: &'static str = "NzkProofRequested";
-            }
-            #[derive(
-                :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                Clone,
-                Debug,
-            )]
-            # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-            #[codec(dumb_trait_bound)]
-            #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
-            #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
-            #[doc = "Emitted when a proof has been submitted."]
-            pub struct NzkProofSubmitted {
-                pub submitting_miner: nzk_proof_submitted::SubmittingMiner,
-                pub task_id: nzk_proof_submitted::TaskId,
-            }
-            pub mod nzk_proof_submitted {
-                use super::runtime_types;
-                pub type SubmittingMiner = ::subxt::ext::subxt_core::utils::AccountId32;
-                pub type TaskId = ::core::primitive::u64;
-            }
-            impl ::subxt::ext::subxt_core::events::StaticEvent for NzkProofSubmitted {
-                const PALLET: &'static str = "NeuroZk";
-                const EVENT: &'static str = "NzkProofSubmitted";
-            }
-            #[derive(
-                :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                Clone,
-                Debug,
-            )]
-            # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-            #[codec(dumb_trait_bound)]
-            #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
-            #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
-            #[doc = "Emitted when a proof has successfully been verified after aggregation."]
-            pub struct NzkProofVerified {
-                pub task_id: nzk_proof_verified::TaskId,
-                pub last_block_processed: nzk_proof_verified::LastBlockProcessed,
-            }
-            pub mod nzk_proof_verified {
-                use super::runtime_types;
-                pub type TaskId = ::core::primitive::u64;
-                pub type LastBlockProcessed = ::core::primitive::u32;
-            }
-            impl ::subxt::ext::subxt_core::events::StaticEvent for NzkProofVerified {
-                const PALLET: &'static str = "NeuroZk";
-                const EVENT: &'static str = "NzkProofVerified";
-            }
-            #[derive(
-                :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                Clone,
-                Debug,
-            )]
-            # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-            #[codec(dumb_trait_bound)]
-            #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
-            #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
-            #[doc = "Emitted when a proof has been rejected after aggregation."]
-            pub struct NzkProofRejected {
-                pub task_id: nzk_proof_rejected::TaskId,
-                pub last_block_processed: nzk_proof_rejected::LastBlockProcessed,
-            }
-            pub mod nzk_proof_rejected {
-                use super::runtime_types;
-                pub type TaskId = ::core::primitive::u64;
-                pub type LastBlockProcessed = ::core::primitive::u32;
-            }
-            impl ::subxt::ext::subxt_core::events::StaticEvent for NzkProofRejected {
-                const PALLET: &'static str = "NeuroZk";
-                const EVENT: &'static str = "NzkProofRejected";
-            }
-            #[derive(
-                :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                Clone,
-                Debug,
-            )]
-            # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-            #[codec(dumb_trait_bound)]
-            #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
-            #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
-            #[doc = "Event emitted when the last block is updated after clearing data for the current period."]
-            #[doc = "This indicates that data from the oracle has been successfully processed and cleared for the given block range."]
-            #[doc = ""]
-            #[doc = "- `block_number`: The block number at which the clearing occurred."]
-            pub struct LastBlockUpdated {
-                pub block_number: last_block_updated::BlockNumber,
-            }
-            pub mod last_block_updated {
-                use super::runtime_types;
-                pub type BlockNumber = ::core::primitive::u32;
-            }
-            impl ::subxt::ext::subxt_core::events::StaticEvent for LastBlockUpdated {
-                const PALLET: &'static str = "NeuroZk";
-                const EVENT: &'static str = "LastBlockUpdated";
-            }
-        }
-        pub mod storage {
-            use super::runtime_types;
-            pub mod types {
-                use super::runtime_types;
-                pub mod requested_proofs {
-                    use super::runtime_types;
-                    pub type RequestedProofs =
-                        runtime_types::cyborg_primitives::zkml::ProofVerificationStage;
-                    pub type Param0 = ::core::primitive::u64;
-                }
-                pub mod verification_results_per_proof {
-                    use super::runtime_types;
-                    pub type VerificationResultsPerProof =
-                        runtime_types::bounded_collections::bounded_vec::BoundedVec<
-                            runtime_types::pallet_neuro_zk::VerificationResult<
-                                ::core::primitive::u32,
-                            >,
-                        >;
-                    pub type Param0 = ::core::primitive::u64;
-                }
-                pub mod submitted_per_proof {
-                    use super::runtime_types;
-                    pub type SubmittedPerProof = ::core::primitive::bool;
-                    pub type Param0 = ::subxt::ext::subxt_core::utils::AccountId32;
-                    pub type Param1 = ::core::primitive::u64;
-                }
-            }
-            pub struct StorageApi;
-            impl StorageApi {
-                #[doc = " Keeps track of if a proof is already being processed, so that the user can't request more"]
-                pub fn requested_proofs_iter(
-                    &self,
-                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
-                    (),
-                    types::requested_proofs::RequestedProofs,
-                    (),
-                    (),
-                    ::subxt::ext::subxt_core::utils::Yes,
-                > {
-                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
-                        "NeuroZk",
-                        "RequestedProofs",
-                        (),
-                        [
-                            68u8, 4u8, 126u8, 10u8, 3u8, 138u8, 182u8, 38u8, 39u8, 130u8, 57u8,
-                            103u8, 42u8, 82u8, 155u8, 237u8, 49u8, 184u8, 196u8, 158u8, 129u8,
-                            74u8, 202u8, 233u8, 197u8, 217u8, 207u8, 199u8, 57u8, 118u8, 7u8, 69u8,
-                        ],
-                    )
-                }
-                #[doc = " Keeps track of if a proof is already being processed, so that the user can't request more"]
-                pub fn requested_proofs(
-                    &self,
-                    _0: impl ::core::borrow::Borrow<types::requested_proofs::Param0>,
-                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
-                    ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
-                        types::requested_proofs::Param0,
-                    >,
-                    types::requested_proofs::RequestedProofs,
-                    ::subxt::ext::subxt_core::utils::Yes,
-                    (),
-                    (),
-                > {
-                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
-                        "NeuroZk",
-                        "RequestedProofs",
-                        ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
-                            _0.borrow(),
-                        ),
-                        [
-                            68u8, 4u8, 126u8, 10u8, 3u8, 138u8, 182u8, 38u8, 39u8, 130u8, 57u8,
-                            103u8, 42u8, 82u8, 155u8, 237u8, 49u8, 184u8, 196u8, 158u8, 129u8,
-                            74u8, 202u8, 233u8, 197u8, 217u8, 207u8, 199u8, 57u8, 118u8, 7u8, 69u8,
-                        ],
-                    )
-                }
-                #[doc = " Stores the verification results for each neuro-zk task."]
-                #[doc = " The result is provided by different oracle feeders, and the data is collected and aggregated to calculate"]
-                #[doc = " the overall status for each task."]
-                #[doc = ""]
-                #[doc = " - The storage key is a `TaskId`, which uniquely identifies the task."]
-                #[doc = " - The value is a bounded vector of `VerificationResult`, which contains the verification status."]
-                pub fn verification_results_per_proof_iter(
-                    &self,
-                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
-                    (),
-                    types::verification_results_per_proof::VerificationResultsPerProof,
-                    (),
-                    ::subxt::ext::subxt_core::utils::Yes,
-                    ::subxt::ext::subxt_core::utils::Yes,
-                > {
-                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
-                        "NeuroZk",
-                        "VerificationResultsPerProof",
-                        (),
-                        [
-                            68u8, 36u8, 125u8, 111u8, 139u8, 130u8, 134u8, 217u8, 75u8, 35u8, 33u8,
-                            84u8, 205u8, 232u8, 111u8, 115u8, 117u8, 229u8, 140u8, 48u8, 90u8,
-                            242u8, 106u8, 134u8, 61u8, 158u8, 22u8, 20u8, 47u8, 19u8, 10u8, 97u8,
-                        ],
-                    )
-                }
-                #[doc = " Stores the verification results for each neuro-zk task."]
-                #[doc = " The result is provided by different oracle feeders, and the data is collected and aggregated to calculate"]
-                #[doc = " the overall status for each task."]
-                #[doc = ""]
-                #[doc = " - The storage key is a `TaskId`, which uniquely identifies the task."]
-                #[doc = " - The value is a bounded vector of `VerificationResult`, which contains the verification status."]
-                pub fn verification_results_per_proof(
-                    &self,
-                    _0: impl ::core::borrow::Borrow<types::verification_results_per_proof::Param0>,
-                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
-                    ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
-                        types::verification_results_per_proof::Param0,
-                    >,
-                    types::verification_results_per_proof::VerificationResultsPerProof,
-                    ::subxt::ext::subxt_core::utils::Yes,
-                    ::subxt::ext::subxt_core::utils::Yes,
-                    (),
-                > {
-                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
-                        "NeuroZk",
-                        "VerificationResultsPerProof",
-                        ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
-                            _0.borrow(),
-                        ),
-                        [
-                            68u8, 36u8, 125u8, 111u8, 139u8, 130u8, 134u8, 217u8, 75u8, 35u8, 33u8,
-                            84u8, 205u8, 232u8, 111u8, 115u8, 117u8, 229u8, 140u8, 48u8, 90u8,
-                            242u8, 106u8, 134u8, 61u8, 158u8, 22u8, 20u8, 47u8, 19u8, 10u8, 97u8,
-                        ],
-                    )
-                }
-                #[doc = " Tracks whether a specific oracle provider has submitted zk proof data during the current period."]
-                #[doc = " This is used to prevent multiple submissions from the same oracle feeder within a period."]
-                #[doc = ""]
-                #[doc = " - The key is a tuple of the oracle feeder's account and required proof info `(T::AccountId, TaskId)`."]
-                #[doc = " - The value is a boolean indicating whether the oracle has already submitted data."]
-                pub fn submitted_per_proof_iter(
-                    &self,
-                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
-                    (),
-                    types::submitted_per_proof::SubmittedPerProof,
-                    (),
-                    ::subxt::ext::subxt_core::utils::Yes,
-                    ::subxt::ext::subxt_core::utils::Yes,
-                > {
-                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
-                        "NeuroZk",
-                        "SubmittedPerProof",
-                        (),
-                        [
-                            38u8, 30u8, 125u8, 238u8, 237u8, 136u8, 52u8, 109u8, 247u8, 160u8,
-                            77u8, 227u8, 3u8, 41u8, 104u8, 221u8, 230u8, 0u8, 89u8, 85u8, 155u8,
-                            35u8, 70u8, 0u8, 24u8, 181u8, 173u8, 77u8, 141u8, 73u8, 242u8, 6u8,
-                        ],
-                    )
-                }
-                #[doc = " Tracks whether a specific oracle provider has submitted zk proof data during the current period."]
-                #[doc = " This is used to prevent multiple submissions from the same oracle feeder within a period."]
-                #[doc = ""]
-                #[doc = " - The key is a tuple of the oracle feeder's account and required proof info `(T::AccountId, TaskId)`."]
-                #[doc = " - The value is a boolean indicating whether the oracle has already submitted data."]
-                pub fn submitted_per_proof_iter1(
-                    &self,
-                    _0: impl ::core::borrow::Borrow<types::submitted_per_proof::Param0>,
-                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
-                    ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
-                        types::submitted_per_proof::Param0,
-                    >,
-                    types::submitted_per_proof::SubmittedPerProof,
-                    (),
-                    ::subxt::ext::subxt_core::utils::Yes,
-                    ::subxt::ext::subxt_core::utils::Yes,
-                > {
-                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
-                        "NeuroZk",
-                        "SubmittedPerProof",
-                        ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
-                            _0.borrow(),
-                        ),
-                        [
-                            38u8, 30u8, 125u8, 238u8, 237u8, 136u8, 52u8, 109u8, 247u8, 160u8,
-                            77u8, 227u8, 3u8, 41u8, 104u8, 221u8, 230u8, 0u8, 89u8, 85u8, 155u8,
-                            35u8, 70u8, 0u8, 24u8, 181u8, 173u8, 77u8, 141u8, 73u8, 242u8, 6u8,
-                        ],
-                    )
-                }
-                #[doc = " Tracks whether a specific oracle provider has submitted zk proof data during the current period."]
-                #[doc = " This is used to prevent multiple submissions from the same oracle feeder within a period."]
-                #[doc = ""]
-                #[doc = " - The key is a tuple of the oracle feeder's account and required proof info `(T::AccountId, TaskId)`."]
-                #[doc = " - The value is a boolean indicating whether the oracle has already submitted data."]
-                pub fn submitted_per_proof(
-                    &self,
-                    _0: impl ::core::borrow::Borrow<types::submitted_per_proof::Param0>,
-                    _1: impl ::core::borrow::Borrow<types::submitted_per_proof::Param1>,
-                ) -> ::subxt::ext::subxt_core::storage::address::StaticAddress<
-                    (
-                        ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
-                            types::submitted_per_proof::Param0,
-                        >,
-                        ::subxt::ext::subxt_core::storage::address::StaticStorageKey<
-                            types::submitted_per_proof::Param1,
-                        >,
-                    ),
-                    types::submitted_per_proof::SubmittedPerProof,
-                    ::subxt::ext::subxt_core::utils::Yes,
-                    ::subxt::ext::subxt_core::utils::Yes,
-                    (),
-                > {
-                    ::subxt::ext::subxt_core::storage::address::StaticAddress::new_static(
-                        "NeuroZk",
-                        "SubmittedPerProof",
-                        (
-                            ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
-                                _0.borrow(),
-                            ),
-                            ::subxt::ext::subxt_core::storage::address::StaticStorageKey::new(
-                                _1.borrow(),
-                            ),
-                        ),
-                        [
-                            38u8, 30u8, 125u8, 238u8, 237u8, 136u8, 52u8, 109u8, 247u8, 160u8,
-                            77u8, 227u8, 3u8, 41u8, 104u8, 221u8, 230u8, 0u8, 89u8, 85u8, 155u8,
-                            35u8, 70u8, 0u8, 24u8, 181u8, 173u8, 77u8, 141u8, 73u8, 242u8, 6u8,
-                        ],
-                    )
-                }
-            }
-        }
-        pub mod constants {
-            use super::runtime_types;
-            pub struct ConstantsApi;
-            impl ConstantsApi {
-                #[doc = " The percentage of active oracle entries needed to determine proof acceptance status"]
-                pub fn acceptance_threshold(
-                    &self,
-                ) -> ::subxt::ext::subxt_core::constants::address::StaticAddress<
-                    ::core::primitive::u8,
-                > {
-                    ::subxt::ext::subxt_core::constants::address::StaticAddress::new_static(
-                        "NeuroZk",
-                        "AcceptanceThreshold",
-                        [
-                            141u8, 130u8, 11u8, 35u8, 226u8, 114u8, 92u8, 179u8, 168u8, 110u8,
-                            28u8, 91u8, 221u8, 64u8, 4u8, 148u8, 201u8, 193u8, 185u8, 66u8, 226u8,
-                            114u8, 97u8, 79u8, 62u8, 212u8, 202u8, 114u8, 237u8, 228u8, 183u8,
-                            165u8,
-                        ],
-                    )
-                }
-                #[doc = " Number of feed values needed to reach consensus on a proof"]
-                pub fn aggregate_length(
-                    &self,
-                ) -> ::subxt::ext::subxt_core::constants::address::StaticAddress<
-                    ::core::primitive::u32,
-                > {
-                    ::subxt::ext::subxt_core::constants::address::StaticAddress::new_static(
-                        "NeuroZk",
-                        "AggregateLength",
                         [
                             98u8, 252u8, 116u8, 72u8, 26u8, 180u8, 225u8, 83u8, 200u8, 157u8,
                             125u8, 151u8, 53u8, 76u8, 168u8, 26u8, 10u8, 9u8, 98u8, 68u8, 9u8,
@@ -26464,28 +25934,6 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                pub struct AzureTask {
-                    pub storage_location_identifier:
-                        runtime_types::bounded_collections::bounded_vec::BoundedVec<
-                            ::core::primitive::u8,
-                        >,
-                }
-                #[derive(
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                    Clone,
-                    Debug,
-                )]
-                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-                #[codec(dumb_trait_bound)]
-                #[decode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
-                )]
-                #[encode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
-                )]
                 pub struct CyCloudContainerTask {
                     pub _marker: (),
                 }
@@ -26612,75 +26060,6 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                pub struct NeuroZkTaskSubmissionDetails {
-                    pub location: runtime_types::cyborg_primitives::task::AzureTask,
-                    pub zk_input: runtime_types::bounded_collections::bounded_vec::BoundedVec<
-                        ::core::primitive::u8,
-                    >,
-                    pub zk_settings: runtime_types::bounded_collections::bounded_vec::BoundedVec<
-                        ::core::primitive::u8,
-                    >,
-                    pub zk_verifying_key:
-                        runtime_types::bounded_collections::bounded_vec::BoundedVec<
-                            ::core::primitive::u8,
-                        >,
-                    pub gatekeeper_pub: ::core::option::Option<
-                        runtime_types::bounded_collections::bounded_vec::BoundedVec<
-                            ::core::primitive::u8,
-                        >,
-                    >,
-                }
-                #[derive(
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                    Clone,
-                    Debug,
-                )]
-                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-                #[codec(dumb_trait_bound)]
-                #[decode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
-                )]
-                #[encode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
-                )]
-                pub struct NzkData<_0> {
-                    pub location: runtime_types::cyborg_primitives::task::AzureTask,
-                    pub zk_input: runtime_types::bounded_collections::bounded_vec::BoundedVec<
-                        ::core::primitive::u8,
-                    >,
-                    pub zk_settings: runtime_types::bounded_collections::bounded_vec::BoundedVec<
-                        ::core::primitive::u8,
-                    >,
-                    pub zk_verifying_key:
-                        runtime_types::bounded_collections::bounded_vec::BoundedVec<
-                            ::core::primitive::u8,
-                        >,
-                    pub zk_proof: ::core::option::Option<
-                        runtime_types::bounded_collections::bounded_vec::BoundedVec<
-                            ::core::primitive::u8,
-                        >,
-                    >,
-                    pub last_proof_accepted: ::core::option::Option<(::core::primitive::bool, _0)>,
-                }
-                #[derive(
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                    Clone,
-                    Debug,
-                )]
-                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-                #[codec(dumb_trait_bound)]
-                #[decode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
-                )]
-                #[encode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
-                )]
                 pub struct OnnxTask {
                     pub storage_location_identifier:
                         runtime_types::bounded_collections::bounded_vec::BoundedVec<
@@ -26733,7 +26112,7 @@ pub mod api {
                     pub create_block: _1,
                     pub time_elapsed: ::core::option::Option<_1>,
                     pub average_cpu_percentage_use: ::core::option::Option<::core::primitive::u8>,
-                    pub task_kind: runtime_types::cyborg_primitives::task::TaskKind<_1>,
+                    pub task_kind: runtime_types::cyborg_primitives::task::TaskKind,
                     pub result: ::core::option::Option<
                         runtime_types::bounded_collections::bounded_vec::BoundedVec<
                             ::core::primitive::u8,
@@ -26759,14 +26138,12 @@ pub mod api {
                 #[encode_as_type(
                     crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
                 )]
-                pub enum TaskKind<_0> {
+                pub enum TaskKind {
                     #[codec(index = 0)]
-                    NeuroZK(runtime_types::cyborg_primitives::task::NzkData<_0>),
-                    #[codec(index = 1)]
                     OpenInference(runtime_types::cyborg_primitives::task::OpenInferenceTask),
+                    #[codec(index = 1)]
+                    FlashInfer(runtime_types::cyborg_primitives::task::FlashInferTask),
                     #[codec(index = 2)]
-                    FlashInferInfer(runtime_types::cyborg_primitives::task::FlashInferTask),
-                    #[codec(index = 3)]
                     CyCloud(runtime_types::cyborg_primitives::task::CyCloudTask),
                 }
                 #[derive(
@@ -26796,59 +26173,6 @@ pub mod api {
                     Vacated,
                     #[codec(index = 4)]
                     Failed,
-                }
-                #[derive(
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                    Clone,
-                    Debug,
-                )]
-                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-                #[codec(dumb_trait_bound)]
-                #[decode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
-                )]
-                #[encode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
-                )]
-                pub enum TaskSubmissionData {
-                    #[codec(index = 0)]
-                    NeuroZK(runtime_types::cyborg_primitives::task::NeuroZkTaskSubmissionDetails),
-                    #[codec(index = 1)]
-                    OpenInference(runtime_types::cyborg_primitives::task::OpenInferenceTask),
-                    #[codec(index = 2)]
-                    FlashInfer(runtime_types::cyborg_primitives::task::FlashInferTask),
-                    #[codec(index = 3)]
-                    CyCloud(runtime_types::cyborg_primitives::task::CyCloudTask),
-                }
-            }
-            pub mod zkml {
-                use super::runtime_types;
-                #[derive(
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                    Clone,
-                    Debug,
-                )]
-                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-                #[codec(dumb_trait_bound)]
-                #[decode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
-                )]
-                #[encode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
-                )]
-                pub enum ProofVerificationStage {
-                    #[codec(index = 0)]
-                    Requested,
-                    #[codec(index = 1)]
-                    Pending,
-                    #[codec(index = 2)]
-                    Finalized,
                 }
             }
         }
@@ -26917,10 +26241,8 @@ pub mod api {
                 #[codec(index = 46)]
                 ZKVerifier(runtime_types::pallet_zk_verifier::pallet::Call),
                 #[codec(index = 47)]
-                NeuroZk(runtime_types::pallet_neuro_zk::pallet::Call),
-                #[codec(index = 48)]
                 Treasury(runtime_types::pallet_treasury::pallet::Call),
-                #[codec(index = 49)]
+                #[codec(index = 48)]
                 Assets(runtime_types::pallet_assets::pallet::Call),
             }
             #[derive(
@@ -26967,10 +26289,8 @@ pub mod api {
                 #[codec(index = 46)]
                 ZKVerifier(runtime_types::pallet_zk_verifier::pallet::Error),
                 #[codec(index = 47)]
-                NeuroZk(runtime_types::pallet_neuro_zk::pallet::Error),
-                #[codec(index = 48)]
                 Treasury(runtime_types::pallet_treasury::pallet::Error),
-                #[codec(index = 49)]
+                #[codec(index = 48)]
                 Assets(runtime_types::pallet_assets::pallet::Error),
             }
             #[derive(
@@ -27023,10 +26343,8 @@ pub mod api {
                 #[codec(index = 46)]
                 ZKVerifier(runtime_types::pallet_zk_verifier::pallet::Event),
                 #[codec(index = 47)]
-                NeuroZk(runtime_types::pallet_neuro_zk::pallet::Event),
-                #[codec(index = 48)]
                 Treasury(runtime_types::pallet_treasury::pallet::Event),
-                #[codec(index = 49)]
+                #[codec(index = 48)]
                 Assets(runtime_types::pallet_assets::pallet::Event),
             }
             #[derive(
@@ -30714,144 +30032,6 @@ pub mod api {
                 >,
             }
         }
-        pub mod pallet_neuro_zk {
-            use super::runtime_types;
-            pub mod pallet {
-                use super::runtime_types;
-                #[derive(
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                    Clone,
-                    Debug,
-                )]
-                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-                #[codec(dumb_trait_bound)]
-                #[decode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
-                )]
-                #[encode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
-                )]
-                #[doc = "Contains a variant per dispatchable extrinsic that this pallet has."]
-                pub enum Call {
-                    #[codec(index = 0)]
-                    #[doc = "Requests a nzk proof from the given task"]
-                    request_proof { task_id: ::core::primitive::u64 },
-                    #[codec(index = 1)]
-                    #[doc = "Submits a nzk proof from the given task"]
-                    submit_proof {
-                        task_id: ::core::primitive::u64,
-                        proof: runtime_types::bounded_collections::bounded_vec::BoundedVec<
-                            ::core::primitive::u8,
-                        >,
-                    },
-                }
-                #[derive(
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                    Clone,
-                    Debug,
-                )]
-                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-                #[codec(dumb_trait_bound)]
-                #[decode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
-                )]
-                #[encode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
-                )]
-                #[doc = "Errors inform users that something went wrong."]
-                pub enum Error {
-                    #[codec(index = 0)]
-                    #[doc = "The proof has already been requested and needs to be verified before a new one can be requested."]
-                    ProofAlreadyRequested,
-                    #[codec(index = 1)]
-                    #[doc = "The proof has already been submitted and another one cannot be submitted until a new one is requested."]
-                    ProofAlreadySubmitted,
-                    #[codec(index = 2)]
-                    #[doc = "The miner tried to submit a proof that wasn't requested."]
-                    ProofNotRequested,
-                    #[codec(index = 3)]
-                    #[doc = "The task for which the proof was requested is a non-neuro-zk task type."]
-                    InvalidTaskType,
-                    #[codec(index = 4)]
-                    #[doc = "The task for which the proof was requested does not exist."]
-                    TaskDoesNotExist,
-                }
-                #[derive(
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                    :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                    :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                    Clone,
-                    Debug,
-                )]
-                # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-                #[codec(dumb_trait_bound)]
-                #[decode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode"
-                )]
-                #[encode_as_type(
-                    crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode"
-                )]
-                #[doc = "The `Event` enum contains the various events that can be emitted by this pallet."]
-                #[doc = "Events are emitted when significant actions or state changes happen in the pallet."]
-                pub enum Event {
-                    #[codec(index = 0)]
-                    #[doc = "Emitted when a proof has been requested."]
-                    NzkProofRequested {
-                        requesting_account: ::subxt::ext::subxt_core::utils::AccountId32,
-                        task_id: ::core::primitive::u64,
-                    },
-                    #[codec(index = 1)]
-                    #[doc = "Emitted when a proof has been submitted."]
-                    NzkProofSubmitted {
-                        submitting_miner: ::subxt::ext::subxt_core::utils::AccountId32,
-                        task_id: ::core::primitive::u64,
-                    },
-                    #[codec(index = 2)]
-                    #[doc = "Emitted when a proof has successfully been verified after aggregation."]
-                    NzkProofVerified {
-                        task_id: ::core::primitive::u64,
-                        last_block_processed: ::core::primitive::u32,
-                    },
-                    #[codec(index = 3)]
-                    #[doc = "Emitted when a proof has been rejected after aggregation."]
-                    NzkProofRejected {
-                        task_id: ::core::primitive::u64,
-                        last_block_processed: ::core::primitive::u32,
-                    },
-                    #[codec(index = 4)]
-                    #[doc = "Event emitted when the last block is updated after clearing data for the current period."]
-                    #[doc = "This indicates that data from the oracle has been successfully processed and cleared for the given block range."]
-                    #[doc = ""]
-                    #[doc = "- `block_number`: The block number at which the clearing occurred."]
-                    LastBlockUpdated {
-                        block_number: ::core::primitive::u32,
-                    },
-                }
-            }
-            #[derive(
-                :: subxt :: ext :: subxt_core :: ext :: codec :: Decode,
-                :: subxt :: ext :: subxt_core :: ext :: codec :: Encode,
-                :: subxt :: ext :: subxt_core :: ext :: scale_decode :: DecodeAsType,
-                :: subxt :: ext :: subxt_core :: ext :: scale_encode :: EncodeAsType,
-                Clone,
-                Debug,
-            )]
-            # [codec (crate = :: subxt :: ext :: subxt_core :: ext :: codec)]
-            #[codec(dumb_trait_bound)]
-            #[decode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_decode")]
-            #[encode_as_type(crate_path = ":: subxt :: ext :: subxt_core :: ext :: scale_encode")]
-            pub struct VerificationResult<_0> {
-                pub is_accepted: ::core::primitive::bool,
-                pub block: _0,
-            }
-        }
         pub mod pallet_payment {
             use super::runtime_types;
             pub mod pallet {
@@ -31598,7 +30778,7 @@ pub mod api {
                     #[doc = "Creates a new task and assigns it to a randomly selected miner."]
                     #[doc = "None -> Assigned"]
                     task_scheduler {
-                        task_kind: runtime_types::cyborg_primitives::task::TaskSubmissionData,
+                        task_kind: runtime_types::cyborg_primitives::task::TaskKind,
                         miner_id: runtime_types::bounded_collections::bounded_vec::BoundedVec<
                             ::core::primitive::u8,
                         >,
@@ -31749,9 +30929,7 @@ pub mod api {
                         assigned_miner: runtime_types::bounded_collections::bounded_vec::BoundedVec<
                             ::core::primitive::u8,
                         >,
-                        task_kind: runtime_types::cyborg_primitives::task::TaskKind<
-                            ::core::primitive::u32,
-                        >,
+                        task_kind: runtime_types::cyborg_primitives::task::TaskKind,
                         task_owner: ::subxt::ext::subxt_core::utils::AccountId32,
                         task_id: ::core::primitive::u64,
                     },

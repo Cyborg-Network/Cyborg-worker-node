@@ -5,7 +5,7 @@ pub mod substrate_interface;
 
 pub type MinerIdVec = Vec<u8>;
 
-pub type TaskType = substrate_interface::api::runtime_types::cyborg_primitives::task::TaskKind<u32>;
+pub type TaskType = substrate_interface::api::runtime_types::cyborg_primitives::task::TaskKind;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct MinerIdentity {
