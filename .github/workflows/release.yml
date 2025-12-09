@@ -40,6 +40,9 @@ jobs:
         run: rm -rf target/*/build/svm-rs-builds-*
 
       - name: Build project
+        env:
+          OPENSSL_STATIC: "1"
+          OPENSSL_VENDORED: "1"
         run: |
           export RUSTFLAGS="-Awarnings"
           if [ "${{ matrix.use_cross }}" = "true" ]; then
