@@ -79,7 +79,7 @@ pub async fn register(
             }
         }
         Err(e) => {
-            if let Err(e) = check_for_acceptable_error(&[EdgeConnectError::MinerExists], e) {
+            if let Err(e) = check_for_acceptable_error(&[EdgeConnectError::MinerExists, EdgeConnectError::CanOnlyRegisterOneMinerPerAccount], e) {
                 return Err(Error::Custom(e.to_string()));
             } else {
                 match get_miner_by_id(client, miner_uuid.clone(), miner_type).await {

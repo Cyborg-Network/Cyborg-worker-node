@@ -2732,7 +2732,7 @@ dependencies = [
 
 [[package]]
 name = "cyborg-miner"
-version = "0.0.91"
+version = "0.0.96"
 dependencies = [
  "async-stream",
  "async-trait 0.1.89 (git+https://github.com/dtolnay/async-trait.git)",
@@ -2756,6 +2756,7 @@ dependencies = [
  "nix",
  "once_cell",
  "open-inference-runtime",
+ "openssl",
  "parity-scale-codec",
  "regex",
  "reqwest 0.12.24",
@@ -6114,6 +6115,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d05e27ee213611ffe7d6348b942e8f942b37114c00cc03cec254295a4a17852e"
 
 [[package]]
+name = "openssl-src"
+version = "300.5.4+3.5.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a507b3792995dae9b0df8a1c1e3771e8418b7c2d9f0baeba32e6fe8b06c7cb72"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "openssl-sys"
 version = "0.9.111"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6121,6 +6131,7 @@ checksum = "82cab2d520aa75e3c58898289429321eb788c3106963d0dc886ec7a5f4adc321"
 dependencies = [
  "cc",
  "libc",
+ "openssl-src",
  "pkg-config",
  "vcpkg",
 ]
