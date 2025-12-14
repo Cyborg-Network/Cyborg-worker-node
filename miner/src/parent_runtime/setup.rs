@@ -24,12 +24,7 @@ pub async fn process_task(task: Arc<RwLock<CurrentTask>>) -> Result<()> {
                 Ok(())
             }
         },
-        TaskKind::NeuroZK(_nzk_task) => {
-            // TODO implement NZK
-            //let _ = storage_interactor::azure::download_nzk_model(nzk_task).await?;
-            Ok(())
-        }
-        TaskKind::FlashInferInfer(fi_task) => match fi_task {
+        TaskKind::FlashInfer(fi_task) => match fi_task {
             FlashInferTask::Huggingface(_huggingface_task) => {
                 println!("Received FlashInfer Huggingface Task, passing download responsibility on to docker container.");
                 Ok(())

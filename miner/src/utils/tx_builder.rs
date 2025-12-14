@@ -8,12 +8,12 @@ use types::substrate_interface::api::runtime_types::bounded_collections::bounded
 use types::substrate_interface::{self, api::runtime_types::cyborg_primitives::miner::MinerType};
 use types::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
 use types::MinerIdentity;
+use types::TaskPreparationStatus;
 use crate::utils::substrate_queries::get_miner_by_id;
 use crate::utils::tx_queue::TxOutput;
 use std::fmt::Debug;
 use std::sync::Arc;
 use types::substrate_interface::api::edge_connect::Error as EdgeConnectError;
-use types::substrate_interface::api::neuro_zk::Error as NzkError;
 use types::substrate_interface::api::task_management::Error as TaskManagementError;
 use subxt_signer::sr25519::Keypair;
 
@@ -79,7 +79,7 @@ pub async fn register(
             }
         }
         Err(e) => {
-            if let Err(e) = check_for_acceptable_error(&[EdgeConnectError::MinerExists], e) {
+            if let Err(e) = check_for_acceptable_error(&[EdgeConnectError::MinerExists, EdgeConnectError::CanOnlyRegisterOneMinerPerAccount], e) {
                 return Err(Error::Custom(e.to_string()));
             } else {
                 match get_miner_by_id(client, miner_uuid.clone(), miner_type).await {
@@ -129,63 +129,21 @@ pub async fn pub_register(
     }
 }
 
-/// Submits a zkml (Zero Knowledge Machine Learning) proof to the blockchain.
-///
-/// # Arguments
-/// * `proof` - A `Vec<u8>` containing the zkml proof.
-///
-/// # Returns
-/// A `Result` indicating `Ok(())` if the result is successfully submitted, or an `Error` if it fails.
-pub async fn submit_proof(proof: Vec<u8>, keypair: Keypair, current_task: u64) -> Result<()> {
-    let proof: BoundedVec<u8> = BoundedVec::from(BoundedVec(proof));
-
-    let client = global_config::get_parachain_client()?;
-
-    let tx = substrate_interface::api::tx()
-        .neuro_zk()
-        .submit_proof(current_task, proof);
-
-    println!("Transaction Details:");
-    println!("Module: {:?}", tx.pallet_name());
-    println!("Call: {:?}", tx.call_name());
-    println!("Parameters: {:?}", tx.call_data());
-
-    let tx_submission = client
-        .tx()
-        .sign_and_submit_then_watch_default(&tx, &keypair)
-        .await
-        .map(|e| {
-            println!("Proof submitted, waiting for transaction to be finalized...");
-            e
-        })?
-        .wait_for_finalized_success()
-        .await;
-
-    match tx_submission {
-        Ok(e) => {
-            let tx_event =
-                e.find_first::<substrate_interface::api::neuro_zk::events::NzkProofSubmitted>()?;
-
-            if let Some(event) = tx_event {
-                println!("Proof submission confirmed: {event:?}");
-            } else {
-                println!("No proof submission event found!");
-            }
+async fn confirm_task_reception(keypair: Arc<Keypair>, current_task: &u64, task_status: TaskPreparationStatus) -> Result<()> {
+    let has_failed = match task_status {
+        TaskPreparationStatus::Preparing => return Err("Cannot confirm task reception, task is still preparing!".into()),
+        TaskPreparationStatus::Ready => false,
+        TaskPreparationStatus::Failed(reason) => {
+            println!("Task deployment failed: {}", reason);
+            true
         }
-        Err(e) => {
-            check_for_acceptable_error(&[NzkError::ProofAlreadySubmitted], e)?;
-        }
-    }
+    };
 
-    Ok(())
-}
-
-async fn confirm_task_reception(keypair: Arc<Keypair>, current_task: &u64) -> Result<()> {
     let client = global_config::get_parachain_client()?;
 
     let tx = substrate_interface::api::tx()
         .task_management()
-        .confirm_task_reception(*current_task);
+        .confirm_task_reception(*current_task, has_failed);
 
     println!("Transaction Details:");
     println!("Module: {:?}", tx.pallet_name());
@@ -234,6 +192,7 @@ async fn confirm_task_reception(keypair: Arc<Keypair>, current_task: &u64) -> Re
 pub async fn pub_confirm_task_reception(
     keypair: Arc<Keypair>,
     current_task_id: &u64,
+    task_status: TaskPreparationStatus,
 ) -> Result<()> {
     let tx_queue = global_config::get_tx_queue()?;
     let current_task_id_copy = *current_task_id;
@@ -241,8 +200,9 @@ pub async fn pub_confirm_task_reception(
     let rx = tx_queue
         .enqueue(move || {
             let keypair = Arc::clone(&keypair);
+            let task_status = task_status.clone();
             async move {
-                let _ = confirm_task_reception(keypair, &current_task_id_copy).await?;
+                let _ = confirm_task_reception(keypair, &current_task_id_copy, task_status).await?;
                 Ok(TxOutput::Success)
             }
         })

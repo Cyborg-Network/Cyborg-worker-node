@@ -36,6 +36,9 @@ jobs:
         if: matrix.use_cross == true
         run: cargo install cross
 
+      - name: Clean SVM build artifacts
+        run: rm -rf target/*/build/svm-rs-builds-*
+
       - name: Build project
         run: |
           export RUSTFLAGS="-Awarnings"

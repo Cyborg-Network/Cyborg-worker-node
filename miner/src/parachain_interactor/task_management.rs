@@ -1,4 +1,4 @@
-use types::substrate_interface::{self, api::runtime_types::bounded_collections::bounded_vec::BoundedVec};
+use types::substrate_interface;
 
 use std::sync::Arc;
 
@@ -14,7 +14,7 @@ pub async fn confirm_task_reception(miner: Arc<Miner>) -> Result<()> {
 
     let task_confirmation = substrate_interface::api::tx()
         .task_management()
-        .confirm_task_reception(current_task);
+        .confirm_task_reception(current_task, false);
 
     println!("Transaction Details:");
     println!("Module: {:?}", task_confirmation.pallet_name());
@@ -39,54 +39,6 @@ pub async fn confirm_task_reception(miner: Arc<Miner>) -> Result<()> {
     )?;
 
     if let Some(event) = registration_event {
-        println!("Task reception confirmed: {event:?}");
-    } else {
-        println!("Task reception confirmation failed!");
-    }
-
-    Ok(())
-}
-
-pub async fn stop_task_and_vacate_miner() -> Result<()> {
-    //TODO implement a tokio::sync::watch for the inference task
-    println!("Task stop and vacate miner is unimplemented!!!!");
-
-    Ok(())
-}
-
-pub async fn submit_zkml_proof(miner: Arc<Miner>, proof: Vec<u8>) -> Result<()> {
-    let proof: BoundedVec<u8> = BoundedVec::from(BoundedVec(proof));
-
-    let client = global_config::get_parachain_client()?;
-    let current_task = miner.current_task().await?.read().await.id;
-
-    let proof_submission = substrate_interface::api::tx()
-        .neuro_zk()
-        .submit_proof(current_task, proof);
-
-    println!("Transaction Details:");
-    println!("Module: {:?}", proof_submission.pallet_name());
-    println!("Call: {:?}", proof_submission.call_name());
-    println!("Parameters: {:?}", proof_submission.call_data());
-
-    let proof_submission_events = client
-        .tx()
-        .sign_and_submit_then_watch_default(&proof_submission, miner.keypair.as_ref())
-        .await
-        .map(|e| {
-            println!(
-                "Task reception confirmation submitted, waiting for transaction to be finalized..."
-            );
-            e
-        })?
-        .wait_for_finalized_success()
-        .await?;
-
-    let proof_submission_event = proof_submission_events
-        .find_first::<substrate_interface::api::neuro_zk::events::NzkProofSubmitted>(
-    )?;
-
-    if let Some(event) = proof_submission_event {
         println!("Task reception confirmed: {event:?}");
     } else {
         println!("Task reception confirmation failed!");

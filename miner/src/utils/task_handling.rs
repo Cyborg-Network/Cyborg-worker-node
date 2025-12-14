@@ -28,7 +28,7 @@ use types::{
         runtime_types::cyborg_primitives::{miner::OperationalStatus, task::TaskStatusType},
         task_management::events::task_scheduled::TaskId,
     },
-    CurrentTask
+    CurrentTask, TaskPreparationStatus
 };
 
 
@@ -77,9 +77,9 @@ pub async fn set_current_task(
 
     update_current_task_file(task.id)?;
 
-    miner.activate_task(task.clone()).await;
-
     let task_id = task.id;
+    miner.activate_task(task).await;
+
     let handle = handle_spawn_inference_server(
         Arc::clone(&miner.parent_runtime),
         Arc::clone(&miner.current_task().await?),
@@ -152,11 +152,13 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
             TaskStatusType::Stopped => {
                 println!("Task already stopped, cleaning up and vacating miner...");
 
+                let (status_tx, _status_rx) = tokio::sync::watch::channel(TaskPreparationStatus::Preparing);
                 let task = CurrentTask {
                     task_type: task.task_kind,
                     task_owner: task.task_owner,
                     id: task_id,
                     container_name: return_task_container_name(task_id),
+                    status_sender: status_tx,
                 };
 
                 // This is required because task vacation will require the miner to actually hold a task
@@ -167,8 +169,8 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
                 Ok(TaskPickupReturnType::Failure(()))
             }
             // Task is not active anymore
-            TaskStatusType::Vacated => {
-                println!("Miner already vacated, cleaning up...");
+            TaskStatusType::Vacated | TaskStatusType::Failed => {
+                println!("Miner is already vacated or task execution failed, cleaning up...");
 
                 nuke_all_running_task_containers().await?;
 
@@ -181,23 +183,32 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
                 // Update operational status to Busy when picking up a task
                 update_operational_status(Arc::clone(&miner), OperationalStatus::Busy).await?;
 
+                let (status_tx, mut status_rx) = tokio::sync::watch::channel(TaskPreparationStatus::Preparing);
                 let task = CurrentTask {
                     task_type: task.task_kind,
                     task_owner: task.task_owner,
                     id: task_id,
                     container_name: return_task_container_name(task_id),
+                    status_sender: status_tx,
                 };
+
                 let (_, handle) = set_current_task(Arc::clone(&miner), task).await?;
 
-                let keypair = miner.keypair.clone();
-                tokio::spawn(async move {
-                    if let Err(e) = pub_confirm_task_reception(keypair, &task_id).await {
-                        println!(
-                            "Critical error encountered, please contact the support: {}",
-                            e
-                        );
-                    }
-                });
+                if let Ok(status_ref) = status_rx
+                    .wait_for(|status| *status != TaskPreparationStatus::Preparing)
+                    .await 
+                {
+                    let status = status_ref.clone();
+                    let keypair = miner.keypair.clone();
+                    tokio::spawn(async move {
+                        if let Err(e) = pub_confirm_task_reception(keypair, &task_id, status).await {
+                            println!(
+                                "Critical error encountered, please contact the support: {}",
+                                e
+                            );
+                        }
+                    });
+                }
 
                 Ok(TaskPickupReturnType::Success(handle))
             }
@@ -206,13 +217,21 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
                 // Update operational status to Busy when picking up a running task
                 update_operational_status(Arc::clone(&miner), OperationalStatus::Busy).await?;
 
+                let (status_tx, _status_rx) = tokio::sync::watch::channel(TaskPreparationStatus::Preparing);
                 let task = CurrentTask {
                     task_type: task.task_kind,
                     task_owner: task.task_owner,
                     id: task_id,
                     container_name: return_task_container_name(task_id),
+                    status_sender: status_tx
                 };
                 let (_, handle) = set_current_task(miner, task).await?;
+
+                //TODO We need another extrinsic where miners can notify the parachain of a failed
+                //task setup eg:
+                // Wait until _status_rx changes
+                // if successful, continue
+                // if unsuccessful, submit tx notifying of failure to pick up
 
                 Ok(TaskPickupReturnType::Success(handle))
             }

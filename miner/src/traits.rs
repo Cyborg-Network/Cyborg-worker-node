@@ -3,8 +3,8 @@ use std::sync::Arc;
 use crate::{
     error::Result,
     global_config,
-    parachain_interactor::{behavior_control, event_processor, registration, task_management},
-    parent_runtime::{inference, proof, setup},
+    parachain_interactor::{behavior_control, event_processor, registration},
+    parent_runtime::{inference, setup},
     miner_types::{Miner, ParentRuntime},
 };
 use async_trait::async_trait;
@@ -35,12 +35,6 @@ pub trait InferenceServer {
         &self,
         current_task: Arc<RwLock<CurrentTask>>,
     ) -> Result</*JoinHandle<()>*/ ()>;
-
-    /// Generates a zkml proof for the model currently in execution.
-    ///
-    /// # Returns
-    /// A `Result` containing a vector of bytes representing the proof.
-    async fn generate_proof(&self) -> Result<Vec<u8>>;
 }
 
 #[async_trait]
@@ -54,10 +48,6 @@ impl InferenceServer for ParentRuntime {
         current_task: Arc<RwLock<CurrentTask>>,
     ) -> Result</*JoinHandle<()>*/ ()> {
         inference::spawn_inference_server(current_task, self.port).await
-    }
-
-    async fn generate_proof(&self) -> Result<Vec<u8>> {
-        proof::generate_proof().await
     }
 }
 
@@ -81,21 +71,6 @@ pub trait ParachainInteractor {
     /// # Returns
     /// An `Option<String>` containing relevant information derived from the event, or `None` if no information is extracted.
     async fn process_event(&self, event: &EventDetails<PolkadotConfig>) -> Result<()>;
-
-    /// Submits a zkml (Zero Knowledge Machine Learning) proof to the blockchain.
-    ///
-    /// # Arguments
-    /// * `proof` - A `Vec<u8>` containing the zkml proof.
-    ///
-    /// # Returns
-    /// A `Result` indicating `Ok(())` if the result is successfully submitted, or an `Error` if it fails.
-    async fn submit_zkml_proof(&self, proof: Vec<u8>) -> Result<()>;
-
-    /// Vacates a miner erasing current user data and resetting the miner state.
-    ///
-    /// # Returns
-    /// A `Result` indicating `Ok(())` if the session vacates successfully, or an `Error` if it fails.
-    async fn stop_task_and_vacate_miner(&self) -> Result<()>;
 
     /// Attempts to update the miner identity file.
     ///
@@ -121,14 +96,6 @@ impl ParachainInteractor for Arc<Miner> {
 
     async fn process_event(&self, event: &EventDetails<PolkadotConfig>) -> Result<()> {
         event_processor::process_event(Arc::clone(self), event).await
-    }
-
-    async fn stop_task_and_vacate_miner(&self) -> Result<()> {
-        task_management::stop_task_and_vacate_miner().await
-    }
-
-    async fn submit_zkml_proof(&self, proof: Vec<u8>) -> Result<()> {
-        task_management::submit_zkml_proof(Arc::clone(self), proof).await
     }
 
     fn update_identity_file(&self, path: &str, content: &str) -> Result<()> {
