@@ -4,7 +4,7 @@ use types::{
     substrate_interface::api::runtime_types::cyborg_primitives::task::{
         FlashInferTask, TaskKind,
     },
-    CurrentTask
+    CurrentTask, TaskPreparationStatus
 };
 use crate::error::{Error, Result};
 use axum::{
@@ -134,12 +134,17 @@ pub async fn spawn_inference_server(
     task: Arc<RwLock<CurrentTask>>,
     port: Option<u16>,
 ) -> Result</*tokio::task::JoinHandle<()>*/ ()> {
-    tracing::info!("Spawning inference server for current task.");
+    tracing::info!("Setting up miner for current task...");
 
     let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
     let (shutdown_done_tx, shutdown_done_rx) = oneshot::channel::<()>();
 
     let (status_tx, status_rx) = watch::channel(EngineStatus::Idle);
+
+    let miner_ip = reqwest::get("https://api.ipify.org")
+        .await?
+        .text()
+        .await?;
 
     let engine = match &task.read().await.task_type {
         TaskKind::OpenInference(_) => {
@@ -178,6 +183,7 @@ pub async fn spawn_inference_server(
     let engine_clone = engine.clone();
     let status_tx = status_tx.clone();
 
+    let task_status_sender_clone = task.read().await.status_sender.clone();
     tokio::spawn(async move {
         let _ = status_tx.send(EngineStatus::Initializing);
 
@@ -185,12 +191,14 @@ pub async fn spawn_inference_server(
 
             InferenceEngine::OpenInference(_) => {
                 let _ = status_tx.send(EngineStatus::Ready);
+                let _ = task_status_sender_clone.send(TaskPreparationStatus::Ready);
             }
 
             InferenceEngine::FlashInference(engine_clone) => {
                 match engine_clone.lock().await.setup().await {
                     Ok(()) => {
                         let _ = status_tx.send(EngineStatus::Ready);
+                        let _ = task_status_sender_clone.send(TaskPreparationStatus::Ready);
                     }
                     Err(e) => {
                         println!("Error setting up inference engine: {}", e);
@@ -203,6 +211,7 @@ pub async fn spawn_inference_server(
                 match engine_clone.lock().await.setup().await {
                     Ok(()) => {
                         let _ = status_tx.send(EngineStatus::Ready);
+                        let _ = task_status_sender_clone.send(TaskPreparationStatus::Ready);
                     }
                     Err(e) => {
                         println!("Error setting up inference engine: {}", e);
@@ -257,20 +266,9 @@ pub async fn spawn_inference_server(
             }
         };
 
-        let hostname = match std::process::Command::new("hostname").output() {
-            Ok(output) => String::from_utf8_lossy(&output.stdout).to_string(),
-            Err(e) => {
-                tracing::error!("Error while setting up inference engine, please contact support.");
-                println!("Failed to get hostname: {}", e);
-                return;
-            }
-        };
-
         tracing::info!(
-            "Inference engine ready, miner is reachable at wss://{}.{}/inference{}",
-            hostname,
-            *TAILSCALE_NET,
-            route_path
+            "Miner is ready, to reach it, generate or deposit keys and then access it at `ssh -i <YOUR_SSH_KEY> <YOUR_USER_NAME>@{}`",
+            miner_ip
         );
 
         if let Err(e) = axum::serve(
