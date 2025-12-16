@@ -1,3 +1,5 @@
+mod tests;
+
 use bollard::models::{ContainerCreateBody, HostConfig, PortBinding};
 use bollard::query_parameters::{
     CreateContainerOptionsBuilder, InspectContainerOptions, RemoveContainerOptions,
@@ -32,14 +34,14 @@ impl FlashInferEngine {
     pub fn new(
         hf_id: &str,
         port: u16,
-        containe_name: &str,
+        container_name: &str,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let client = reqwest::Client::new();
 
         Ok(Self {
             hf_id: hf_id.to_string(),
             torch_infer_port: port,
-            container_name: containe_name.to_string(),
+            container_name: container_name.to_string(),
             container_id: None,
             client,
         })
@@ -50,7 +52,7 @@ impl FlashInferEngine {
 
         let docker = Docker::connect_with_local_defaults()?;
 
-        //This would be for if an image is hosted
+        // This would be for if an image is hosted
         /*
         let mut stream = docker.create_image(
             Some(bollard::query_parameters::CreateImageOptions {
@@ -101,12 +103,12 @@ impl FlashInferEngine {
                 ..Default::default()
             };
 
-            let create_contaienr_options = CreateContainerOptionsBuilder::new()
+            let create_container_options = CreateContainerOptionsBuilder::new()
                 .name(&self.container_name)
                 .build();
 
             let container = docker
-                .create_container(Some(create_contaienr_options), config)
+                .create_container(Some(create_container_options), config)
                 .await?;
 
             println!("Created new container {}", container.id);
@@ -147,19 +149,14 @@ impl FlashInferEngine {
         while let Some(request) = request_stream.next().await {
             println!("Processing inference for request: {}", request);
 
-            let response: String;
-
-            match self.generate_inference_result(request.clone()).await {
-                Ok(result) => {
-                    response = result;
-                }
+            let response: String = match self.generate_inference_result(request.clone()).await {
+                Ok(result) => result,
                 Err(e) => {
                     println!("Failed to generate inference result, likely incorrect request format! Error: {}", e);
-                    response =
-                        "Failed to generate inference result, likely incorrect request format!"
-                            .to_string();
+                    "Failed to generate inference result, likely incorrect request format!"
+                        .to_string()
                 }
-            }
+            };
 
             println!("Generated inference result: {}", response);
 
@@ -213,7 +210,7 @@ impl FlashInferEngine {
             .await
             .ok();
 
-        if let Some(_container) = container {
+        if container.is_some() {
             docker
                 .remove_container(
                     container_id,
@@ -225,14 +222,14 @@ impl FlashInferEngine {
                 .await?;
             println!("Force-removed container {}", container_id);
 
-            return Ok(());
+            Ok(())
         } else {
             println!(
                 "Could not find container {}, likely already removed.",
                 container_id
             );
 
-            return Ok(());
+            Ok(())
         }
     }
 }

@@ -1,10 +1,10 @@
+use types::substrate_interface;
 use types::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 use types::substrate_interface::api::runtime_types::cyborg_primitives::miner::OperationalStatus;
-use types::substrate_interface;
 
-use crate::miner_types::Miner;
 use crate::error::Result;
 use crate::global_config;
+use crate::miner_types::Miner;
 
 pub async fn _miner_self_suspend(miner: &Miner) -> Result<()> {
     let client = global_config::get_parachain_client()?;
@@ -29,9 +29,8 @@ pub async fn _miner_self_suspend(miner: &Miner) -> Result<()> {
         .tx()
         .sign_and_submit_then_watch_default(&worker_suspension, miner.keypair.as_ref())
         .await
-        .map(|e| {
+        .inspect(|_e| {
             println!("Miner suspension submitted, waiting for transaction to be finalized...");
-            e
         })?
         .wait_for_finalized_success()
         .await?;

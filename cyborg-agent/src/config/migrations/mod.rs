@@ -7,12 +7,14 @@ pub mod none {
     use super::*;
 
     #[derive(Deserialize)]
+    #[allow(dead_code)]
     struct OldConfiguration {
         /// basic configuration
         base: BaseConfig,
     }
 
     #[derive(Deserialize)]
+    #[allow(dead_code)]
     struct BaseConfig {
         websocket_server_url: String,
         oracle_url: String,
@@ -20,6 +22,7 @@ pub mod none {
         user_token: String,
     }
 
+    #[allow(dead_code)]
     pub fn create_config(value: toml::Value) -> Result<Configuration> {
         assert!(value.get("version").is_none());
         let config: OldConfiguration = value

@@ -1,5 +1,7 @@
 use serde::Serialize;
 
+#[allow(clippy::enum_variant_names)]
+#[derive(Debug)]
 pub enum ClientError {
     AuthError(String),
     InitError(String),
@@ -26,63 +28,84 @@ pub fn construct_client_error_message(err: ClientError) -> String {
                 error_message: "Something went wrong during the authentication process, please try again later.".to_string()
             };
 
-            serde_json::to_string(&error_message)
-                .unwrap_or("Cyborg Agent ecountered an unrecoverable error, please try again later.".to_string())
+            serde_json::to_string(&error_message).unwrap_or(
+                "Cyborg Agent ecountered an unrecoverable error, please try again later."
+                    .to_string(),
+            )
         }
         ClientError::UsageError(message) => {
             println!("Usage error: {}", message);
             let error_message = NonEncryptedErrorMessage {
                 response_type: "Error".to_string(),
                 error_type: "Usage".to_string(),
-                error_message: "Something went wrong while streaming the usage, please try again later.".to_string()
+                error_message:
+                    "Something went wrong while streaming the usage, please try again later."
+                        .to_string(),
             };
 
-            serde_json::to_string(&error_message)
-                .unwrap_or("Cyborg Agent ecountered an unrecoverable error, please try again later.".to_string())
+            serde_json::to_string(&error_message).unwrap_or(
+                "Cyborg Agent ecountered an unrecoverable error, please try again later."
+                    .to_string(),
+            )
         }
         ClientError::InitError(message) => {
             println!("Init error: {}", message);
             let error_message = NonEncryptedErrorMessage {
                 response_type: "Error".to_string(),
                 error_type: "Init".to_string(),
-                error_message: "Something went wrong fetching the nodes specs, please try again later.".to_string()
+                error_message:
+                    "Something went wrong fetching the nodes specs, please try again later."
+                        .to_string(),
             };
 
-            serde_json::to_string(&error_message)
-                .unwrap_or("Cyborg Agent ecountered an unrecoverable error, please try again later.".to_string())
+            serde_json::to_string(&error_message).unwrap_or(
+                "Cyborg Agent ecountered an unrecoverable error, please try again later."
+                    .to_string(),
+            )
         }
         ClientError::InvalidRequestError => {
             println!("Invalid request error");
             let error_message = NonEncryptedErrorMessage {
                 response_type: "Error".to_string(),
                 error_type: "InvalidRequest".to_string(),
-                error_message: "Cyborg Agent is not able to process requests of this format.".to_string()
+                error_message: "Cyborg Agent is not able to process requests of this format."
+                    .to_string(),
             };
 
-            serde_json::to_string(&error_message)
-                .unwrap_or("Cyborg Agent ecountered an unrecoverable error, please try again later.".to_string())
-        },
+            serde_json::to_string(&error_message).unwrap_or(
+                "Cyborg Agent ecountered an unrecoverable error, please try again later."
+                    .to_string(),
+            )
+        }
         ClientError::CreateContainerKeyError(message) => {
             println!("Create container key error: {}", message);
             let error_message = NonEncryptedErrorMessage {
                 response_type: "Error".to_string(),
                 error_type: "CreateContainerKey".to_string(),
-                error_message: "Something went wrong creating the container key, please try again later.".to_string()
+                error_message:
+                    "Something went wrong creating the container key, please try again later."
+                        .to_string(),
             };
 
-            serde_json::to_string(&error_message)
-                .unwrap_or("Cyborg Agent ecountered an unrecoverable error, please try again later.".to_string())
-        },
+            serde_json::to_string(&error_message).unwrap_or(
+                "Cyborg Agent ecountered an unrecoverable error, please try again later."
+                    .to_string(),
+            )
+        }
         ClientError::DepositContainerKeyError(message) => {
             println!("Deposit container key error: {}", message);
             let error_message = NonEncryptedErrorMessage {
                 response_type: "Error".to_string(),
                 error_type: "DepositContainerKey".to_string(),
-                error_message: "Something went wrong depositing the container key, please try again later.".to_string()
+                error_message:
+                    "Something went wrong depositing the container key, please try again later."
+                        .to_string(),
             };
 
-            serde_json::to_string(&error_message)
-                .unwrap_or("Cyborg Agent ecountered an unrecoverable error, please try again later.".to_string())
+            serde_json::to_string(&error_message).unwrap_or(
+                "Cyborg Agent ecountered an unrecoverable error, please try again later."
+                    .to_string(),
+            )
         }
     }
 }

@@ -13,17 +13,21 @@ pub fn return_total_storage() -> u64 {
         .expect("Failed to execute command");
 
     // Print the raw command output for debugging
-    println!("Command output: {}", String::from_utf8_lossy(&output.stdout));
+    println!(
+        "Command output: {}",
+        String::from_utf8_lossy(&output.stdout)
+    );
 
     let stdout = str::from_utf8(&output.stdout).expect("Invalid UTF-8");
 
     let mut total_space: u64 = 0;
 
-    for line in stdout.lines().skip(1) {  // Skip the header line
+    for line in stdout.lines().skip(1) {
+        // Skip the header line
         let parts: Vec<&str> = line.split_whitespace().collect();
-        
+
         // Check if the first column (filesystem) starts with "/dev/"
-        if let Some(filesystem) = parts.get(0) {
+        if let Some(filesystem) = parts.first() {
             if filesystem.starts_with("/dev/") {
                 if let Some(space) = parts.get(1) {
                     total_space += space.parse::<u64>().unwrap_or(0);
@@ -36,4 +40,3 @@ pub fn return_total_storage() -> u64 {
     println!("Total disk space from /dev/: {}", total_space);
     total_space
 }
-

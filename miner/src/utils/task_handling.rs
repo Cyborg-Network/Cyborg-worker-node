@@ -4,9 +4,9 @@ use crate::{
         self, get_parachain_client, update_config_file, CONTAINER_PREFIX, CURRENT_TASK_PATH, PATHS,
     },
     log,
+    miner_types::{Miner, ParentRuntime},
     parent_runtime::inference::CURRENT_SERVER,
     traits::InferenceServer,
-    miner_types::{Miner, ParentRuntime},
     utils::{
         substrate_queries::{
             get_currently_assigned_task_id, get_miner_id_assigned_to_task, get_task,
@@ -28,9 +28,8 @@ use types::{
         runtime_types::cyborg_primitives::{miner::OperationalStatus, task::TaskStatusType},
         task_management::events::task_scheduled::TaskId,
     },
-    CurrentTask, TaskPreparationStatus
+    CurrentTask, TaskPreparationStatus,
 };
-
 
 use crate::parachain_interactor::registration::update_operational_status;
 
@@ -39,6 +38,7 @@ struct TaskOwner {
     address: AccountId32,
 }
 
+#[allow(dead_code)]
 pub enum TaskPickupReturnType {
     Success(JoinHandle<()>),
     Failure(()),
@@ -111,7 +111,7 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
                 eprintln!("Original error was: {}", e);
             }
 
-            return Err(e.into());
+            return Err(e);
         }
     };
 
@@ -125,7 +125,7 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
                 eprintln!("Original error was: {}", e);
             }
 
-            return Err(e.into());
+            return Err(e);
         }
     };
 
@@ -139,20 +139,21 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
                 eprintln!("Original error was: {}", e);
             }
 
-            return Err(e.into());
+            return Err(e);
         }
     };
 
     if task_miner_id.0 != miner.identity.miner_id {
         nuke_all_running_task_containers().await?;
-        return Err("Miner is not assigned to any task, nuking all possible remaining running task containers".into());
+        Err("Miner is not assigned to any task, nuking all possible remaining running task containers".into())
     } else {
         match task.task_status {
             // Task is not active anymore, but the miner vacation has not yet been confirmed, for the parachain to assign new tasks we need to confirm
             TaskStatusType::Stopped => {
                 println!("Task already stopped, cleaning up and vacating miner...");
 
-                let (status_tx, _status_rx) = tokio::sync::watch::channel(TaskPreparationStatus::Preparing);
+                let (status_tx, _status_rx) =
+                    tokio::sync::watch::channel(TaskPreparationStatus::Preparing);
                 let task = CurrentTask {
                     task_type: task.task_kind,
                     task_owner: task.task_owner,
@@ -183,7 +184,8 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
                 // Update operational status to Busy when picking up a task
                 update_operational_status(Arc::clone(&miner), OperationalStatus::Busy).await?;
 
-                let (status_tx, mut status_rx) = tokio::sync::watch::channel(TaskPreparationStatus::Preparing);
+                let (status_tx, mut status_rx) =
+                    tokio::sync::watch::channel(TaskPreparationStatus::Preparing);
                 let task = CurrentTask {
                     task_type: task.task_kind,
                     task_owner: task.task_owner,
@@ -196,12 +198,13 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
 
                 if let Ok(status_ref) = status_rx
                     .wait_for(|status| *status != TaskPreparationStatus::Preparing)
-                    .await 
+                    .await
                 {
                     let status = status_ref.clone();
                     let keypair = miner.keypair.clone();
                     tokio::spawn(async move {
-                        if let Err(e) = pub_confirm_task_reception(keypair, &task_id, status).await {
+                        if let Err(e) = pub_confirm_task_reception(keypair, &task_id, status).await
+                        {
                             println!(
                                 "Critical error encountered, please contact the support: {}",
                                 e
@@ -217,13 +220,14 @@ pub async fn pick_up_task(miner: Arc<Miner>) -> Result<TaskPickupReturnType> {
                 // Update operational status to Busy when picking up a running task
                 update_operational_status(Arc::clone(&miner), OperationalStatus::Busy).await?;
 
-                let (status_tx, _status_rx) = tokio::sync::watch::channel(TaskPreparationStatus::Preparing);
+                let (status_tx, _status_rx) =
+                    tokio::sync::watch::channel(TaskPreparationStatus::Preparing);
                 let task = CurrentTask {
                     task_type: task.task_kind,
                     task_owner: task.task_owner,
                     id: task_id,
                     container_name: return_task_container_name(task_id),
-                    status_sender: status_tx
+                    status_sender: status_tx,
                 };
                 let (_, handle) = set_current_task(miner, task).await?;
 
@@ -362,8 +366,7 @@ pub async fn clean_up_current_task_and_vacate(miner: Arc<Miner>) -> Result<()> {
                     let keypair = Arc::clone(&keypair);
                     let miner_type = Arc::clone(&miner_type);
                     async move {
-                        let _ =
-                            confirm_miner_vacation(keypair, current_task_id, miner_type).await?;
+                        confirm_miner_vacation(keypair, current_task_id, miner_type).await?;
                         Ok(TxOutput::Success)
                     }
                 })
@@ -389,7 +392,7 @@ pub async fn clean_up_current_task_and_vacate(miner: Arc<Miner>) -> Result<()> {
     );
 
     // Remove task owner file
-    fs::remove_file(&task_owner_path)?;
+    fs::remove_file(task_owner_path)?;
 
     // Remove current task id file
     fs::remove_file(&*CURRENT_TASK_PATH)?;

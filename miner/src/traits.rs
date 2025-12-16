@@ -3,9 +3,9 @@ use std::sync::Arc;
 use crate::{
     error::Result,
     global_config,
+    miner_types::{Miner, ParentRuntime},
     parachain_interactor::{behavior_control, event_processor, registration},
     parent_runtime::{inference, setup},
-    miner_types::{Miner, ParentRuntime},
 };
 use async_trait::async_trait;
 use subxt::events::EventDetails;
@@ -77,6 +77,7 @@ pub trait ParachainInteractor {
     /// # Arguments
     /// * `file_path` - A `&str` representing the path to the config file.
     /// * `content` - A `&str` representing the content to be written to the config file.
+    #[allow(dead_code)]
     fn update_identity_file(&self, path: &str, content: &str) -> Result<()>;
 
     //TODO this might also notify the user that the miner has been corrupted and that the current task should be pulled
@@ -84,6 +85,7 @@ pub trait ParachainInteractor {
     ///
     /// # Returns
     /// A `Result` indicating `Ok(())` if the miner is successfully suspended, or an `Error` if it fails.
+    #[allow(dead_code)]
     async fn suspend_miner(&self) -> Result<()>;
 }
 

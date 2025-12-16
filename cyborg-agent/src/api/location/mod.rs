@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use anyhow::{Error, Result};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::process::Command;
 
@@ -16,17 +16,17 @@ pub struct Location {
 }
 
 impl Location {
-    pub async fn get_location() -> Result<Location>{
+    pub async fn get_location() -> Result<Location> {
         // Try getting GPS location first
         if let Ok((lat, lon)) = get_gps_location() {
-            Ok(Location{
-                coordinates: f64_to_i32_coordinates(lat, lon)
+            Ok(Location {
+                coordinates: f64_to_i32_coordinates(lat, lon),
             })
         } else if let Ok((lat, lon)) = get_ip_location().await {
             // Fallback to IP-based geolocation
             println!("Failed to get GPS location. Falling back to IP-based geolocation.");
-            Ok(Location{
-                coordinates: f64_to_i32_coordinates(lat, lon)
+            Ok(Location {
+                coordinates: f64_to_i32_coordinates(lat, lon),
             })
         } else {
             Err(anyhow::anyhow!("Failed to get location"))
@@ -44,8 +44,9 @@ fn f64_to_i32_coordinates(lat: f64, lon: f64) -> Coordinates {
 fn get_gps_location() -> Result<(f64, f64), Error> {
     // Use gpspipe to get single GPS datum
     let output = Command::new("gpspipe")
-        .arg("-w") 
-        .arg("-n").arg("1")
+        .arg("-w")
+        .arg("-n")
+        .arg("1")
         .output()?;
 
     if !output.status.success() {
@@ -65,7 +66,9 @@ fn get_gps_location() -> Result<(f64, f64), Error> {
         }
     }
 
-    Err(anyhow::anyhow!("Failed to extract GPS coordinates from JSON"))
+    Err(anyhow::anyhow!(
+        "Failed to extract GPS coordinates from JSON"
+    ))
 }
 
 async fn get_ip_location() -> Result<(f64, f64), Error> {
@@ -75,13 +78,19 @@ async fn get_ip_location() -> Result<(f64, f64), Error> {
     if response.status().is_success() {
         let ip_info: IpLocation = response.json().await?;
 
-        let loc = ip_info.loc.ok_or_else(|| anyhow::anyhow!("Failed to get location via IP."))?;
+        let loc = ip_info
+            .loc
+            .ok_or_else(|| anyhow::anyhow!("Failed to get location via IP."))?;
 
         let loc_parts: Vec<&str> = loc.split(',').collect();
-        
+
         if loc_parts.len() == 2 {
-            let lat = loc_parts[0].parse::<f64>().map_err(|_| anyhow::anyhow!("Failed to parse latitude"))?;
-            let lon = loc_parts[1].parse::<f64>().map_err(|_| anyhow::anyhow!("Failed to parse longitude"))?;
+            let lat = loc_parts[0]
+                .parse::<f64>()
+                .map_err(|_| anyhow::anyhow!("Failed to parse latitude"))?;
+            let lon = loc_parts[1]
+                .parse::<f64>()
+                .map_err(|_| anyhow::anyhow!("Failed to parse longitude"))?;
 
             return Ok((lat, lon));
         }

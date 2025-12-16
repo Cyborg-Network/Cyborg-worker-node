@@ -1,21 +1,21 @@
 use anyhow::anyhow;
-use x25519_dalek::{PublicKey, EphemeralSecret};
+use anyhow::Result;
 use rand::rngs::OsRng;
-use sp_core::sr25519;
-use sp_core::Pair;
-use sp_core::ByteArray;
-use subxt::utils::AccountId32;
-use std::time::{SystemTime, UNIX_EPOCH};
+use serde::{Deserialize, Serialize};
 use sodiumoxide::crypto::secretbox;
 use sodiumoxide::randombytes::randombytes;
-use serde::{Serialize, Deserialize};
-use anyhow::Result;
+use sp_core::sr25519;
+use sp_core::ByteArray;
+use sp_core::Pair;
+use std::time::{SystemTime, UNIX_EPOCH};
+use subxt::utils::AccountId32;
+use x25519_dalek::{EphemeralSecret, PublicKey};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncryptedMessage {
-    response_type: String,
-    encrypted_data_hex: String,
-    nonce_hex: String
+    pub response_type: String,
+    pub encrypted_data_hex: String,
+    pub nonce_hex: String,
 }
 
 pub fn decode_polkadot_address(account_id: &AccountId32) -> [u8; 32] {
@@ -26,13 +26,16 @@ fn verify_timestamp(received_timestamp: String) -> Result<(), &'static str> {
     let mut stripped_timestamp = received_timestamp;
     // Cleaning up a potential wrapper the polkadot-js wallet added when signing
     if stripped_timestamp.starts_with("<Bytes>") {
-        stripped_timestamp = stripped_timestamp.replace("<Bytes>", "").replace("</Bytes>", "");
+        stripped_timestamp = stripped_timestamp
+            .replace("<Bytes>", "")
+            .replace("</Bytes>", "");
     }
     let stripped_timestamp = stripped_timestamp
         .parse::<u64>()
         .map_err(|_| "Failed to parse timestamp")?;
 
-    let current_time = SystemTime::now().duration_since(UNIX_EPOCH)
+    let current_time = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
         .map_err(|_| "Failed to get current time")?
         .as_secs();
 
@@ -46,32 +49,42 @@ fn verify_timestamp(received_timestamp: String) -> Result<(), &'static str> {
     }
 
     Ok(())
-}  
+}
 
-pub fn verify_signature(signed_timestamp: String, signature_bytes: &[u8], user_polkadot_address_bytes: &[u8]) -> Result<(), &'static str> {
-    let user_polkadot_address = sr25519::Public::from_slice(user_polkadot_address_bytes).map_err(|_| "Invalid public key")?;
-    
-    let signature = sr25519::Signature::from_slice(&signature_bytes).map_err(|_| "Invalid signature")?;
+pub fn verify_signature(
+    signed_timestamp: String,
+    signature_bytes: &[u8],
+    user_polkadot_address_bytes: &[u8],
+) -> Result<(), &'static str> {
+    let user_polkadot_address = sr25519::Public::from_slice(user_polkadot_address_bytes)
+        .map_err(|_| "Invalid public key")?;
+
+    let signature =
+        sr25519::Signature::from_slice(signature_bytes).map_err(|_| "Invalid signature")?;
 
     println!("Signed timestamp: {}", signed_timestamp);
 
-    let timestamp_bytes = signed_timestamp.clone().into_bytes(); 
-    
-    let is_signature_valid = sr25519::Pair::verify(&signature, &timestamp_bytes, &user_polkadot_address);
+    let timestamp_bytes = signed_timestamp.clone().into_bytes();
+
+    let is_signature_valid =
+        sr25519::Pair::verify(&signature, &timestamp_bytes, &user_polkadot_address);
 
     println!("Signature verification result: {}", is_signature_valid);
 
     let is_timestamp_valid = verify_timestamp(signed_timestamp);
 
-    println!("Timestamp verification result: {}", is_timestamp_valid.is_ok());
-    
+    println!(
+        "Timestamp verification result: {}",
+        is_timestamp_valid.is_ok()
+    );
+
     if !is_signature_valid {
         println!("Signature verification failed");
         return Err("Signature verification failed");
-    } 
-    if !is_timestamp_valid.is_ok() {
+    }
+    if is_timestamp_valid.is_err() {
         print!("Timestamp verification failed");
-        return  Err("Timestamp verification failed");
+        return Err("Timestamp verification failed");
     }
 
     Ok(())
@@ -83,14 +96,21 @@ pub fn generate_server_ephemeral_keypair() -> (EphemeralSecret, PublicKey) {
     (server_secret, server_public)
 }
 
-pub fn compute_diffie_hellman_secret(server_secret: EphemeralSecret, client_public: PublicKey) -> [u8; 32] {
+pub fn compute_diffie_hellman_secret(
+    server_secret: EphemeralSecret,
+    client_public: PublicKey,
+) -> [u8; 32] {
     let shared_secret = server_secret.diffie_hellman(&client_public);
     *shared_secret.as_bytes()
 }
 
-pub fn encrypt_message(response_type: &str, diffie_hellman_key: &[u8; 32], data: String) -> Result<EncryptedMessage> {
+pub fn encrypt_message(
+    response_type: &str,
+    diffie_hellman_key: &[u8; 32],
+    data: String,
+) -> Result<EncryptedMessage> {
     // Initialize sodiumoxide (should only be called once in your application)
-    sodiumoxide::init();
+    let _ = sodiumoxide::init();
 
     // Generate a nonce (24 bytes for secretbox)
     let nonce = randombytes(secretbox::NONCEBYTES);
@@ -99,8 +119,10 @@ pub fn encrypt_message(response_type: &str, diffie_hellman_key: &[u8; 32], data:
     // Encrypt the data using secretbox
     let ciphertext = secretbox::seal(
         data_bytes,
-        &secretbox::Nonce::from_slice(&nonce).ok_or(anyhow!("Unable to create key from `diffie_hellman_key`"))?,
-        &secretbox::Key::from_slice(diffie_hellman_key).ok_or(anyhow!("Unable to create key from `diffie_hellman_key`"))?,
+        &secretbox::Nonce::from_slice(&nonce)
+            .ok_or(anyhow!("Unable to create key from `diffie_hellman_key`"))?,
+        &secretbox::Key::from_slice(diffie_hellman_key)
+            .ok_or(anyhow!("Unable to create key from `diffie_hellman_key`"))?,
     );
 
     // Encode the ciphertext and nonce as hex
@@ -108,7 +130,11 @@ pub fn encrypt_message(response_type: &str, diffie_hellman_key: &[u8; 32], data:
     let nonce_hex = hex::encode(&nonce);
 
     // Create the final message format
-    let message = EncryptedMessage{ response_type: response_type.to_string(), encrypted_data_hex, nonce_hex };
+    let message = EncryptedMessage {
+        response_type: response_type.to_string(),
+        encrypted_data_hex,
+        nonce_hex,
+    };
 
     Ok(message)
 }

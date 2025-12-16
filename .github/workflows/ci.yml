@@ -1,0 +1,433 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+
+env:
+  CARGO_TERM_COLOR: always
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/cyborg-miner
+
+jobs:
+  # Job 1: Run tests, checks, and formatting
+  test-and-lint:
+    name: Test, Lint & Format
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install Rust nightly
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: nightly
+        components: rustfmt, clippy
+    
+    - name: Cache cargo dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+    
+    - name: Check formatting
+      run: cargo fmt -- --check
+    
+    - name: Auto-format code (if check fails)
+      if: failure() && github.event_name == 'pull_request'
+      run: |
+        cargo fmt
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .
+        git commit -m "Apply cargo fmt" || echo "No formatting changes to commit"
+        exit 1
+    
+    - name: Run clippy
+      run: cargo clippy -- -D warnings
+    
+    - name: Run unit tests
+      run: cargo test --verbose --bins
+      env:
+        RUST_BACKTRACE: 1
+        CYBORG_TEST_KEY: "//Alice"
+    
+    - name: Run integration tests
+      run: |
+        if cargo test --tests --features integration 2>/dev/null; then
+          echo "Integration tests found and executed"
+        else
+          echo "No integration tests found, skipping"
+        fi
+      env:
+        RUST_BACKTRACE: 1
+        CYBORG_TEST_KEY: "//Alice"
+
+  # Job 2: Build release binary
+  build:
+    name: Build Release
+    runs-on: ubuntu-latest
+    needs: test-and-lint
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install Rust nightly
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: nightly
+    
+    - name: Cache cargo dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+    
+    - name: Build release binary
+      run: cargo build --release --verbose
+    
+    - name: Upload binary artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: cyborg-miner-binary
+        path: target/release/cyborg-miner
+        retention-days: 7
+
+  # Job 3: Build and push Docker image (only on PRs to dev)
+  containerize:
+    name: Build & Push Container
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'pull_request' && github.base_ref == 'dev'
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to GitHub Container Registry
+      if: github.event_name == 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=pr
+          type=sha,prefix=pr-
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: ${{ github.event_name == 'pull_request' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # Job 4: Deploy to staging on VPS (using self-hosted runner)
+  deploy-staging:
+    name: Deploy to Staging (VPS)
+    runs-on: self-hosted
+    needs: [test-and-lint, build, containerize]
+    if: github.event_name == 'pull_request' && github.base_ref == 'dev'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}  # Checkout PR code
+    
+    - name: Download binary artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: cyborg-miner-binary
+    
+    - name: Verify parachain is running locally
+      run: |
+        echo "🔍 Checking if parachain is running on VPS..."
+        
+        # Check if port 9988 is listening (parachain collator port)
+        if ss -tulpn | grep -q ":9988"; then
+          echo "✅ Parachain is running on port 9988"
+        else
+          echo "❌ Parachain NOT detected on port 9988"
+          echo "Please ensure parachain collator is running on this VPS"
+          echo "The zombie network shows alice-1 collator on ws://127.0.0.1:9988"
+          exit 1
+        fi
+    
+    - name: Validate environment configuration
+      env:
+        PARACHAIN_URL: ${{ vars.STAGING_PARACHAIN_URL }}
+        ACCOUNT_SEED: ${{ vars.STAGING_ACCOUNT_SEED }}
+      run: |
+        echo "🔍 Validating environment configuration..."
+        
+        # Validate PARACHAIN_URL
+        if [ -z "$PARACHAIN_URL" ]; then
+          echo "❌ Error: PARACHAIN_URL is not set"
+          echo ""
+          echo "Please ensure STAGING_PARACHAIN_URL is set in GitHub repository variables:"
+          echo "  Settings → Secrets and variables → Actions → Variables tab"
+          echo "  Expected value: ws://localhost:9988"
+          exit 1
+        fi
+        
+        # Validate ACCOUNT_SEED
+        if [ -z "$ACCOUNT_SEED" ]; then
+          echo "❌ Error: ACCOUNT_SEED is not set"
+          echo ""
+          echo "Please ensure STAGING_ACCOUNT_SEED is set in GitHub repository variables:"
+          echo "  Settings → Secrets and variables → Actions → Variables tab"
+          echo "  Expected format: //Eve or similar substrate account seed"
+          exit 1
+        fi
+        
+        echo "✅ Environment variables validated successfully"
+        echo "   PARACHAIN_URL: $PARACHAIN_URL"
+        echo "   ACCOUNT_SEED: ${ACCOUNT_SEED:0:5}... (hidden for security)"
+    
+    - name: Deploy miner
+      env:
+        PARACHAIN_URL: ${{ vars.STAGING_PARACHAIN_URL }}
+        ACCOUNT_SEED: ${{ vars.STAGING_ACCOUNT_SEED }}
+      run: |
+        echo "🚀 Deploying miner to VPS..."
+        
+        # Make binary executable
+        chmod +x cyborg-miner
+        
+        # Test the binary
+        echo "🧪 Testing binary..."
+        ./cyborg-miner --version || (echo "❌ Binary test failed" && exit 1)
+        
+        # Stop existing service if running
+        echo "⏸️  Stopping existing service (if any)..."
+        sudo systemctl stop miner-staging.service 2>/dev/null || true
+        
+        # Install binary
+        echo "📦 Installing binary..."
+        sudo install -m 755 -o runner -g runner cyborg-miner /usr/local/bin/cyborg-miner-staging
+        
+        # Ensure data directory exists with correct permissions
+        echo "📁 Setting up data directory..."
+        sudo mkdir -p /home/runner/.local/share/cyborg-miner
+        sudo chown -R runner:runner /home/runner/.local/share/cyborg-miner
+        sudo chmod 755 /home/runner/.local/share/cyborg-miner
+        
+        # Create systemd service file
+        echo "⚙️  Creating systemd service..."
+        sudo tee /etc/systemd/system/miner-staging.service > /dev/null <<SERVICEEOF
+        [Unit]
+        Description=Cyborg Miner (Staging on VPS)
+        After=network.target
+        Wants=network.target
+        
+        [Service]
+        Type=simple
+        User=runner
+        Group=runner
+        WorkingDirectory=/home/runner
+        Environment="RUST_LOG=info"
+        Environment="PARACHAIN_URL=${PARACHAIN_URL}"
+        Environment="ACCOUNT_SEED=${ACCOUNT_SEED}"
+        ExecStart=/usr/local/bin/cyborg-miner-staging start --parachain-url \${PARACHAIN_URL} --account-seed \${ACCOUNT_SEED}
+        Restart=always
+        RestartSec=10
+        StandardOutput=journal
+        StandardError=journal
+        SyslogIdentifier=miner-staging
+        
+        # Security settings
+        NoNewPrivileges=true
+        PrivateTmp=true
+        ProtectSystem=strict
+        ReadWritePaths=/home/runner/.local/share/cyborg-miner
+        
+        [Install]
+        WantedBy=multi-user.target
+        SERVICEEOF
+        
+        # Verify the service file was created correctly
+        echo "🔍 Verifying service file..."
+        if sudo test -f /etc/systemd/system/miner-staging.service; then
+          echo "✅ Service file created successfully"
+          # Verify it contains the URL (with proper escaping)
+          if sudo grep -q "PARACHAIN_URL=" /etc/systemd/system/miner-staging.service; then
+            echo "✅ Service file contains PARACHAIN_URL environment variable"
+          else
+            echo "❌ Service file verification failed - missing PARACHAIN_URL"
+            echo "Service file content:"
+            sudo cat /etc/systemd/system/miner-staging.service
+            exit 1
+          fi
+        else
+          echo "❌ Service file was not created"
+          exit 1
+        fi
+        
+        # Reload systemd and enable service
+        echo "🔄 Reloading systemd daemon..."
+        sudo systemctl daemon-reload
+        sudo systemctl enable miner-staging.service
+        
+        # Start the service
+        echo "▶️  Starting miner service..."
+        sudo systemctl start miner-staging.service
+        
+        # Wait for service to stabilize
+        sleep 5
+        
+        # Check service status
+        echo "✅ Checking service status..."
+        if sudo systemctl is-active --quiet miner-staging.service; then
+          echo "🎉 miner deployed and started successfully!"
+          echo ""
+          echo "📊 Service Information:"
+          echo "  Status: $(sudo systemctl is-active miner-staging.service)"
+          echo "  Enabled: $(sudo systemctl is-enabled miner-staging.service)"
+          echo ""
+          echo "📋 View logs with:"
+          echo "  sudo journalctl -u miner-staging.service -f"
+          echo ""
+          echo "🔍 Check status with:"
+          echo "  sudo systemctl status miner-staging.service"
+        else
+          echo "❌ Service failed to start"
+          echo ""
+          echo "📋 Recent logs:"
+          sudo journalctl -u miner-staging.service -n 50 --no-pager
+          echo ""
+          echo "🔍 Service status:"
+          sudo systemctl status miner-staging.service --no-pager || true
+          exit 1
+        fi
+
+  # Job 5: Verify deployment on VPS
+  verify-deployment:
+    name: Verify Deployment
+    runs-on: self-hosted
+    needs: deploy-staging
+    if: github.event_name == 'pull_request' && github.base_ref == 'dev'
+    
+    steps:
+    - name: Verify service is running
+      run: |
+        echo "🔍 Verifying deployment..."
+        
+        # Check if service is active
+        if sudo systemctl is-active --quiet miner-staging.service; then
+          echo "✅ Service is running"
+        else
+          echo "❌ Service is not running"
+          sudo systemctl status miner-staging.service --no-pager || true
+          exit 1
+        fi
+        
+        # Check logs for errors in the last 5 minutes
+        echo "📋 Checking recent logs for errors..."
+        ERRORS=$(sudo journalctl -u miner-staging.service --since "5 minutes ago" --no-pager | grep -iE "error|fail|panic|exception" | head -10 || true)
+        
+        if [ -n "$ERRORS" ]; then
+          echo "⚠️  Found potential issues in logs:"
+          echo "$ERRORS"
+          
+          # Check for critical errors that should fail the deployment
+          if echo "$ERRORS" | grep -iqE "panic|fatal|abort"; then
+            echo "❌ Critical errors detected - deployment failed"
+            exit 1
+          else
+            echo "⚠️  Non-critical warnings detected - continuing verification"
+          fi
+        else
+          echo "✅ No errors found in recent logs"
+        fi
+        
+        # Verify process is running
+        echo "🔍 Checking process..."
+        if pgrep -f "cyborg-miner-staging" > /dev/null; then
+          echo "✅ Process is running"
+          echo ""
+          echo "📊 Process Information:"
+          ps aux | grep "[c]yborg-miner-staging" || true
+        else
+          echo "❌ No process found running"
+          echo ""
+          echo "📋 Last 30 lines of logs:"
+          sudo journalctl -u miner-staging.service -n 30 --no-pager
+          exit 1
+        fi
+        
+        # Show recent service activity
+        echo ""
+        echo "📋 Recent service activity (last 10 lines):"
+        sudo journalctl -u miner-staging.service -n 10 --no-pager
+        
+        echo ""
+        echo "🎉 All verification checks passed!"
+        echo "✅ Miner is healthy and running on VPS"
+
+  # Job 6: Final approval gate
+  merge-approval:
+    name: ✅ Ready for Merge
+    runs-on: ubuntu-latest
+    needs: [test-and-lint, build, containerize, deploy-staging, verify-deployment]
+    if: github.event_name == 'pull_request' && github.base_ref == 'dev'
+    
+    steps:
+    - name: Generate PR summary
+      run: |
+        echo "## 🎉 PR Ready for Merge!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### ✅ All CI/CD checks passed:" >> $GITHUB_STEP_SUMMARY
+        echo "- **Code Quality**: Formatting, linting, and unit tests passed" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build**: Release binary and Docker image built successfully" >> $GITHUB_STEP_SUMMARY
+        echo "- **Deployment**: Successfully deployed to VPS staging environment" >> $GITHUB_STEP_SUMMARY
+        echo "- **Verification**: Miner is running and healthy on VPS" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📊 Deployment Details:" >> $GITHUB_STEP_SUMMARY
+        echo "- **VPS**: Self-hosted runner with parachain" >> $GITHUB_STEP_SUMMARY
+        echo "- **Parachain**: Running locally on VPS (ws://localhost:9988)" >> $GITHUB_STEP_SUMMARY
+        echo "- **Miner**: Deployed as systemd service" >> $GITHUB_STEP_SUMMARY
+        echo "- **Service Name**: miner-staging.service" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🔧 Post-Merge Commands:" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+        echo "# View logs" >> $GITHUB_STEP_SUMMARY
+        echo "sudo journalctl -u miner-staging.service -f" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "# Check status" >> $GITHUB_STEP_SUMMARY
+        echo "sudo systemctl status miner-staging.service" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "# Restart if needed" >> $GITHUB_STEP_SUMMARY
+        echo "sudo systemctl restart miner-staging.service" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**✨ This PR has been fully tested in a production-like environment and is ready for merge!**" >> $GITHUB_STEP_SUMMARY

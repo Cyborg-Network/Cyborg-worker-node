@@ -1,9 +1,16 @@
-use std::{
-    env, io::Write, path::PathBuf, process::{Command, Stdio}
-};
 use std::os::unix::fs::PermissionsExt;
+use std::{
+    env,
+    io::Write,
+    path::PathBuf,
+    process::{Command, Stdio},
+};
 
-use crate::{builder::validate_miner_type, error::{Error, Result}, global_config};
+use crate::{
+    builder::validate_miner_type,
+    error::{Error, Result},
+    global_config,
+};
 
 const INSTALLER: &[u8] = include_bytes!("../../scripts/setup.sh");
 
@@ -36,11 +43,14 @@ pub fn install_self(
         .env("MINER_UUID", miner_uuid)
         .spawn()?;
 
-    child.stdin.take()
+    child
+        .stdin
+        .take()
         .ok_or(Error::custom("Failed to get stdin"))?
         .write_all(INSTALLER)?;
 
-    let status = child.wait()
+    let status = child
+        .wait()
         .map_err(|e| Error::Custom(format!("Failed to wait for installer: {}", e)))?;
 
     if !status.success() {
@@ -55,8 +65,11 @@ pub fn install_self(
 
 pub fn try_apply_update_if_available() -> Result<()> {
     let current_version = env!("CARGO_PKG_VERSION");
-    println!("Trying to update from version {} to latest.", current_version);
-    
+    println!(
+        "Trying to update from version {} to latest.",
+        current_version
+    );
+
     let mut check_cmd = Command::new("bash")
         .arg("-s")
         .arg("check-update")
@@ -65,30 +78,32 @@ pub fn try_apply_update_if_available() -> Result<()> {
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()?;
-    
-    check_cmd.stdin.as_mut()
+
+    check_cmd
+        .stdin
+        .as_mut()
         .ok_or_else(|| Error::from("Failed to open stdin"))?
         .write_all(INSTALLER)?;
-    
+
     let output = check_cmd.wait_with_output()?;
     let stdout = String::from_utf8_lossy(&output.stdout);
     let latest_tag = stdout.trim();
     let stderr = String::from_utf8_lossy(&output.stderr);
-    
+
     if !output.status.success() {
         eprintln!("Update check failed: {stderr}");
         return Ok(());
     }
-    
+
     if latest_tag.is_empty() {
         println!("No update available.");
         return Ok(());
     }
-    
+
     println!("Update available: {}", latest_tag);
-    
-    let temp_installer_path = PathBuf::from(&global_config::PATHS.safe_tmp_dir_path)
-        .join("updater.sh");
+
+    let temp_installer_path =
+        PathBuf::from(&global_config::PATHS.safe_tmp_dir_path).join("updater.sh");
 
     // To make sure that the updater is always up to date, we re-create it every time
     if temp_installer_path.metadata().is_ok() {

@@ -1,13 +1,10 @@
-use types::substrate_interface;
+use types::substrate_interface::{self};
 
 use std::sync::Arc;
 
-use crate::{
-    error::Result,
-    global_config,
-    miner_types::Miner,
-};
+use crate::{error::Result, global_config, miner_types::Miner};
 
+#[allow(dead_code)]
 pub async fn confirm_task_reception(miner: Arc<Miner>) -> Result<()> {
     let client = global_config::get_parachain_client()?;
     let current_task = miner.current_task().await?.read().await.id;
@@ -25,11 +22,10 @@ pub async fn confirm_task_reception(miner: Arc<Miner>) -> Result<()> {
         .tx()
         .sign_and_submit_then_watch_default(&task_confirmation, miner.keypair.as_ref())
         .await
-        .map(|e| {
+        .inspect(|_e| {
             println!(
                 "Task reception confirmation submitted, waiting for transaction to be finalized..."
             );
-            e
         })?
         .wait_for_finalized_success()
         .await?;

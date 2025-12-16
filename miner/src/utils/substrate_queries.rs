@@ -1,12 +1,12 @@
+use crate::error::Result;
+use std::sync::Arc;
+use subxt::utils::AccountId32;
+use types::substrate_interface;
 use types::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
 use types::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 use types::substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType;
 use types::substrate_interface::api::runtime_types::cyborg_primitives::task::TaskInfo;
-use types::substrate_interface;
-use types::{MinerIdentity, MinerIdVec};
-use crate::error::Result;
-use std::sync::Arc;
-use subxt::utils::AccountId32;
+use types::{MinerIdVec, MinerIdentity};
 
 use subxt::{OnlineClient, PolkadotConfig};
 
@@ -36,15 +36,10 @@ pub async fn get_currently_assigned_task_id(
             .cloud_miners(&bounded_id),
     };
 
-    let miner_info = api
-        .storage()
-        .at_latest()
-        .await?
-        .fetch(&miner_query)
-        .await?;
+    let miner_info = api.storage().at_latest().await?.fetch(&miner_query).await?;
 
-    if let Some(miner)=miner_info{
-        if &miner.id.0==miner_id{
+    if let Some(miner) = miner_info {
+        if &miner.id.0 == miner_id {
             if let Some(task_id) = miner.current_task {
                 return Ok(task_id);
             } else {
@@ -101,6 +96,7 @@ pub async fn get_miner_id_assigned_to_task(
 }
 
 /// TODO - once attestation is in place, this needs to be via ID, not domain
+#[allow(dead_code)]
 pub async fn get_miner_by_domain(
     api: &OnlineClient<PolkadotConfig>,
     domain: &String,
@@ -138,7 +134,6 @@ pub async fn get_miner_by_id(
 ) -> Result<MinerIdentity> {
     // Determine miner type and convert ID
     let storage = api.storage().at_latest().await?;
-  
 
     let miner_query = match miner_type.as_ref() {
         MinerType::Edge => substrate_interface::api::storage()

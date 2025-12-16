@@ -4,18 +4,18 @@ use crate::error::Error;
 use crate::error::Result;
 use crate::global_config;
 use crate::specs;
-use types::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
-use types::substrate_interface::{self, api::runtime_types::cyborg_primitives::miner::MinerType};
-use types::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
-use types::MinerIdentity;
-use types::TaskPreparationStatus;
 use crate::utils::substrate_queries::get_miner_by_id;
 use crate::utils::tx_queue::TxOutput;
 use std::fmt::Debug;
 use std::sync::Arc;
-use types::substrate_interface::api::edge_connect::Error as EdgeConnectError;
-use types::substrate_interface::api::task_management::Error as TaskManagementError;
 use subxt_signer::sr25519::Keypair;
+use types::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
+use types::substrate_interface::api::edge_connect::Error as EdgeConnectError;
+use types::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
+use types::substrate_interface::api::task_management::Error as TaskManagementError;
+use types::substrate_interface::{self, api::runtime_types::cyborg_primitives::miner::MinerType};
+use types::MinerIdentity;
+use types::TaskPreparationStatus;
 
 /// Registers the miner on the blockchain.
 ///
@@ -35,7 +35,7 @@ pub async fn register(
         .register_miner(
             miner_type.as_ref().clone(),
             miner_uuid.clone(),
-            BoundedVec::from(BoundedVec(worker_specs.domain.clone().as_bytes().to_vec())),
+            BoundedVec(worker_specs.domain.clone().as_bytes().to_vec()),
             worker_specs.latitude,
             worker_specs.longitude,
             worker_specs.ram,
@@ -52,9 +52,8 @@ pub async fn register(
         .tx()
         .sign_and_submit_then_watch_default(&tx, keypair.as_ref())
         .await
-        .map(|e| {
+        .inspect(|_e| {
             println!("Miner registration submitted, waiting for transaction to be finalized...");
-            e
         })?
         .wait_for_finalized_success()
         .await;
@@ -67,20 +66,20 @@ pub async fn register(
             if let Some(event) = tx_event {
                 println!("Miner registered successfully: {event:?}");
 
-                return Ok(MinerIdentity {
+                Ok(MinerIdentity {
                     miner_owner: event.miner.0.clone(),
                     miner_id: miner_uuid.0.clone(),
                     miner_type: miner_type.as_ref().clone(),
-                });
+                })
             } else {
-                return Err(Error::Custom(
+                Err(Error::Custom(
                     "Miner registration event not found, cannot bootstrap miner".to_string(),
-                ));
+                ))
             }
         }
         Err(e) => {
-            if let Err(e) = check_for_acceptable_error(&[EdgeConnectError::MinerExists, EdgeConnectError::CanOnlyRegisterOneMinerPerAccount], e) {
-                return Err(Error::Custom(e.to_string()));
+            if let Err(e) = check_for_acceptable_error(&[EdgeConnectError::MinerExists], e) {
+                Err(Error::Custom(e.to_string()))
             } else {
                 match get_miner_by_id(client, miner_uuid.clone(), miner_type).await {
                     Ok(miner_identity) => {
@@ -89,15 +88,13 @@ pub async fn register(
                             miner_identity.miner_id, miner_identity.miner_owner
                         );
 
-                        return Ok(miner_identity);
+                        Ok(miner_identity)
                     }
-                    Err(e) => {
-                        return Err(Error::Custom(format!(
-                            "UNRECOVERABLE ERROR: Cannot bootstrap miner: {e}"
-                        )));
-                    }
+                    Err(e) => Err(Error::Custom(format!(
+                        "UNRECOVERABLE ERROR: Cannot bootstrap miner: {e}"
+                    ))),
                 }
-            };
+            }
         }
     }
 }
@@ -129,9 +126,15 @@ pub async fn pub_register(
     }
 }
 
-async fn confirm_task_reception(keypair: Arc<Keypair>, current_task: &u64, task_status: TaskPreparationStatus) -> Result<()> {
+async fn confirm_task_reception(
+    keypair: Arc<Keypair>,
+    current_task: &u64,
+    task_status: TaskPreparationStatus,
+) -> Result<()> {
     let has_failed = match task_status {
-        TaskPreparationStatus::Preparing => return Err("Cannot confirm task reception, task is still preparing!".into()),
+        TaskPreparationStatus::Preparing => {
+            return Err("Cannot confirm task reception, task is still preparing!".into())
+        }
         TaskPreparationStatus::Ready => false,
         TaskPreparationStatus::Failed(reason) => {
             println!("Task deployment failed: {}", reason);
@@ -154,11 +157,10 @@ async fn confirm_task_reception(keypair: Arc<Keypair>, current_task: &u64, task_
         .tx()
         .sign_and_submit_then_watch_default(&tx, keypair.as_ref())
         .await
-        .map(|e| {
+        .inspect(|_e| {
             println!(
                 "Task reception confirmation submitted, waiting for transaction to be finalized..."
             );
-            e
         })?
         .wait_for_finalized_success()
         .await;
@@ -202,7 +204,7 @@ pub async fn pub_confirm_task_reception(
             let keypair = Arc::clone(&keypair);
             let task_status = task_status.clone();
             async move {
-                let _ = confirm_task_reception(keypair, &current_task_id_copy, task_status).await?;
+                confirm_task_reception(keypair, &current_task_id_copy, task_status).await?;
                 Ok(TxOutput::Success)
             }
         })
@@ -241,11 +243,10 @@ pub async fn confirm_miner_vacation(
         .tx()
         .sign_and_submit_then_watch_default(&tx, keypair.as_ref())
         .await
-        .map(|e| {
+        .inspect(|_e| {
             println!(
                 "Miner vacation confirmation submitted, waiting for transaction to be finalized..."
             );
-            e
         })?
         .wait_for_finalized_success()
         .await;
@@ -276,37 +277,35 @@ pub async fn confirm_miner_vacation(
 /// causing the transaction queue to not re-queue the transaction.
 fn check_for_acceptable_error<T: Debug>(expected_errors: &[T], e: subxt::Error) -> Result<()> {
     match e {
-        subxt::Error::Runtime(err) => {
-            match err {
-                subxt::error::DispatchError::Module(returned_error) => {
-                    let returned_error_details = returned_error
-                        .details()
-                        .map_err(|err| Error::Custom(err.to_string()))?;
+        subxt::Error::Runtime(err) => match err {
+            subxt::error::DispatchError::Module(returned_error) => {
+                let returned_error_details = returned_error
+                    .details()
+                    .map_err(|err| Error::Custom(err.to_string()))?;
 
-                    let returned_error_string = returned_error_details.variant.name.to_string();
+                let returned_error_string = returned_error_details.variant.name.to_string();
 
+                println!(
+                    "Error details - returned error: {:?}",
+                    returned_error_string
+                );
+
+                for expected_error in expected_errors {
+                    let expected_error_string = format!("{:?}", expected_error);
                     println!(
-                        "Error details - returned error: {:?}",
-                        returned_error_string
+                        "Error details - expected error: {:?}",
+                        expected_error_string
                     );
 
-                    for expected_error in expected_errors {
-                        let expected_error_string = format!("{:?}", expected_error);
-                        println!(
-                            "Error details - expected error: {:?}",
-                            expected_error_string
-                        );
-
-                        if returned_error_string == expected_error_string {
-                            return Ok(());
-                        }
+                    if returned_error_string == expected_error_string {
+                        return Ok(());
                     }
-
-                    return Err(Error::Custom(returned_error.to_string()));
                 }
-                _ => return Err(Error::Custom(err.to_string())),
-            };
-        }
-        _ => return Err(e.into()),
+
+                Err(Error::Custom(returned_error.to_string()))
+            }
+            _ => Err(Error::Custom(err.to_string())),
+        },
+        _ => Err(e.into()),
     }
 }

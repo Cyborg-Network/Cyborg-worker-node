@@ -4,13 +4,14 @@ use anyhow::Result;
 use tokio::sync::RwLock;
 
 mod api;
+mod auth;
 mod client;
 mod config;
-mod formats;
 mod crypto;
-mod auth;
 mod error_handling;
-use types::{CurrentTask as RawCurrentTask};
+mod formats;
+mod tests;
+use types::CurrentTask as RawCurrentTask;
 
 pub type TaskOwner = String;
 pub type CurrentTask = Arc<RwLock<Option<RawCurrentTask>>>;
@@ -21,7 +22,7 @@ pub struct AgentConfig {
     pub container_prefix: &'static str,
 }
 
-pub async fn run_agent(config: Arc<AgentConfig>) ->Result<()> {
+pub async fn run_agent(config: Arc<AgentConfig>) -> Result<()> {
     // initialize logger
     //let old_config_str = include_str!("log.yml");
 

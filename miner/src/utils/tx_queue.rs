@@ -1,5 +1,4 @@
 use crate::error::Result;
-use types::MinerIdentity;
 use once_cell::sync::OnceCell;
 use std::{
     collections::VecDeque,
@@ -12,6 +11,7 @@ use std::{
 };
 use tokio::sync::{oneshot, Mutex};
 use tokio::time::{sleep, Duration};
+use types::MinerIdentity;
 
 const MAX_RETRIES: u32 = 500;
 

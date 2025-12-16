@@ -1,11 +1,11 @@
 use anyhow::{Context, Result};
 use pkg_version::{pkg_version_major, pkg_version_minor, pkg_version_patch};
+use reqwest::Client;
 use serde::Serialize;
 use sysinfo::{CpuExt, NetworksExt, System, SystemExt};
-use reqwest::Client;
 
-mod storage;
 mod memory;
+mod storage;
 
 #[derive(Serialize)]
 pub struct Specs {
@@ -67,25 +67,23 @@ impl Specs {
             .await
             .context("Failed to get public IP address as string")?;
 
-        Ok(
-            Specs {
-                cpus,
-                memory: total_memory,
-                disk: total_storage,
-                networks,
-                os,
-                linux_version,
-                kernel,
-                serverhostname,
-                csc_connected: true,
-                csc_version: format!(
-                    "{}.{}.{}",
-                    pkg_version_major!(),
-                    pkg_version_minor!(),
-                    pkg_version_patch!()
-                ),
-                ip,
-            }
-        )
+        Ok(Specs {
+            cpus,
+            memory: total_memory,
+            disk: total_storage,
+            networks,
+            os,
+            linux_version,
+            kernel,
+            serverhostname,
+            csc_connected: true,
+            csc_version: format!(
+                "{}.{}.{}",
+                pkg_version_major!(),
+                pkg_version_minor!(),
+                pkg_version_patch!()
+            ),
+            ip,
+        })
     }
 }
