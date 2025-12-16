@@ -1,15 +1,15 @@
-use serde_json::Value;
-use std::{
-    fs, 
-    process::{Command, Stdio}, 
-    sync::Arc, 
-    path::PathBuf, 
-    io::{BufRead, BufReader}
-};
-use tokio::sync::Mutex;
 use anyhow::{Context, Result};
+use serde_json::Value;
 use std::fs::File;
 use std::io::Read;
+use std::{
+    fs,
+    io::{BufRead, BufReader},
+    path::PathBuf,
+    process::{Command, Stdio},
+    sync::Arc,
+};
+use tokio::sync::Mutex;
 
 pub type LogsStorage = Arc<Mutex<Vec<String>>>;
 
@@ -17,10 +17,10 @@ pub type LogsStorage = Arc<Mutex<Vec<String>>>;
 fn read_json_map(file_path: PathBuf) -> Result<Value> {
     let data = fs::read_to_string(&file_path)
         .with_context(|| format!("Failed to read file: {:?}", file_path))?;
-    
-    let json_map: Value = serde_json::from_str(&data)
-        .with_context(|| "Failed to parse JSON data")?;
-    
+
+    let json_map: Value =
+        serde_json::from_str(&data).with_context(|| "Failed to parse JSON data")?;
+
     Ok(json_map)
 }
 
@@ -44,26 +44,29 @@ fn get_deployment_name_from_json_map(task_id: &str, json_map: &Value) -> Option<
 }
 
 pub fn read_logs(log_path: &PathBuf) -> Result<String> {
-    let mut file = File::open(&log_path)?;
-    
+    let mut file = File::open(log_path)?;
+
     file.lock_shared()?;
-    
+
     let mut content = String::new();
     file.read_to_string(&mut content)?;
-    
+
     file.unlock()?;
     Ok(content)
 }
 
-pub async fn aggregate_new_logs(logs_storage: LogsStorage, task_id: u64) -> Result<(), Box<dyn std::error::Error>> {
-
+pub async fn aggregate_new_logs(
+    logs_storage: LogsStorage,
+    task_id: u64,
+) -> Result<(), Box<dyn std::error::Error>> {
     //let home_path = home_dir().context("Failed to get home directory")?;
     let file_path = PathBuf::from("/home/azureuser/Worker/deploymentsMap.json");
-    let json_map = read_json_map(file_path)
-        .context("Failed to read or parse the deploymentsMap.json file")?;
-    
-    let deployment_name = get_deployment_name_from_json_map(task_id.to_string().as_str(), &json_map)
-        .context("Failed to get deployment name from JSON map")?;
+    let json_map =
+        read_json_map(file_path).context("Failed to read or parse the deploymentsMap.json file")?;
+
+    let deployment_name =
+        get_deployment_name_from_json_map(task_id.to_string().as_str(), &json_map)
+            .context("Failed to get deployment name from JSON map")?;
 
     let mut process = Command::new("sudo")
         .arg("kubectl")
@@ -71,26 +74,28 @@ pub async fn aggregate_new_logs(logs_storage: LogsStorage, task_id: u64) -> Resu
         .arg("-l")
         .arg(format!("app={}", deployment_name))
         .arg("--all-containers=true")
-        .arg("--follow") 
+        .arg("--follow")
         .stdout(Stdio::piped())
         .spawn()
-        .with_context(|| format!("Failed to execute `kubectl logs -f` for deployment: {}", deployment_name))?;
-
-
+        .with_context(|| {
+            format!(
+                "Failed to execute `kubectl logs -f` for deployment: {}",
+                deployment_name
+            )
+        })?;
 
     let stdout = process.stdout.take().expect("Failed to capture stdout");
     let reader = BufReader::new(stdout);
 
-    for line in reader.lines() {
-        if let Ok(log_line) = line {
-            let mut logs = logs_storage.lock().await;
-            logs.push(log_line);
-        }
+    for log_line in reader.lines().map_while(Result::ok) {
+        let mut logs = logs_storage.lock().await;
+        logs.push(log_line);
     }
 
     Ok(())
 }
 
+#[allow(dead_code)]
 pub async fn retrieve_new_logs(logs_storage: LogsStorage) -> Vec<String> {
     let mut logs = logs_storage.lock().await;
 

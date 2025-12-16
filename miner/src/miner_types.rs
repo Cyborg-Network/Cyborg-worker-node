@@ -4,22 +4,19 @@ use subxt_signer::sr25519::Keypair;
 use tokio::sync::RwLock;
 
 use types::{
-    substrate_interface::api::{
-        runtime_types::cyborg_primitives::{
-            miner::MinerType
-        }
-    },
-    CurrentTask,
-    MinerIdentity
+    substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType, CurrentTask,
+    MinerIdentity,
 };
 
 use crate::error::Result;
 
 #[derive(Serialize, Deserialize, Debug)]
+#[allow(dead_code)]
 pub struct TaskOwner {
     pub task_owner: String,
 }
 
+#[allow(dead_code)]
 pub struct MinerConfig {
     pub domain: String,
     pub latitude: i32,
@@ -59,6 +56,7 @@ impl Miner {
     }
 
     /// Returns true if the miner has an active task
+    #[allow(dead_code)]
     pub async fn is_active(&self) -> bool {
         self.current_task.read().await.is_some()
     }

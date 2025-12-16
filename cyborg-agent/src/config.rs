@@ -9,9 +9,11 @@ mod migrations;
 /// the specific current version of the *config*. this may not necessarily match the crate version.
 /// this version number should be changed after any change to the structure of the configuration storage.
 /// defining migrations from previous config versions is also required for backwards compatibility
+#[allow(dead_code)]
 const CURRENT_VERSION: &str = "v0.1.0";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[allow(dead_code)]
 pub struct Configuration {
     pub version: String,
     /// basic configuration
@@ -21,6 +23,7 @@ pub struct Configuration {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[allow(dead_code)]
 /// basic configuration fields
 pub struct BaseConfig {
     /// to accept connections from the frontend to connect to
@@ -34,13 +37,15 @@ pub struct BaseConfig {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[allow(dead_code)]
 pub struct RuntimeConfig {
     /// the timeout in milliseconds
     pub timeout: u64,
 }
 
+#[allow(dead_code)]
 impl Configuration {
-    fn new(user_token: String) -> Self {
+    pub fn new(user_token: String) -> Self {
         Configuration {
             version: CURRENT_VERSION.to_string(),
             base: BaseConfig {
@@ -56,6 +61,7 @@ impl Configuration {
 }
 
 /// creating a new default configuration with options
+#[allow(dead_code)]
 pub fn create_config(config_path: &PathBuf, force: bool, token: String) -> Result<()> {
     if config_path.exists() && !force {
         bail!("Configuration file already exists. Use --force to overwrite.");
@@ -71,6 +77,7 @@ pub fn create_config(config_path: &PathBuf, force: bool, token: String) -> Resul
 }
 
 /// tries to load a configuration. may require a migration to up-to-date config version.
+#[allow(dead_code)]
 pub fn load_config(config_path: &PathBuf) -> Result<Configuration> {
     let config_str = std::fs::read_to_string(config_path).context("Failed to read config")?;
     let value = toml::Value::from_str(&config_str).context("Failed to parse config as TOML")?;

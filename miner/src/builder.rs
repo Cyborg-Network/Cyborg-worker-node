@@ -1,25 +1,25 @@
 use crate::{
     error::{Error, Result},
-    parachain_interactor::registration::retrieve_identity,
     miner_types::{Miner, ParentRuntime},
+    parachain_interactor::registration::retrieve_identity,
 };
 
 use types::substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType;
 
 use std::{str::FromStr, sync::Arc};
-use types::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
 use subxt_signer::{sr25519::Keypair as SR25519Keypair, SecretUri};
 use tokio::sync::RwLock;
+use types::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
 
 pub struct MinerBuilder {
-    miner_type: Option<MinerType>,
-    parachain_url: Option<String>,
+    pub miner_type: Option<MinerType>,
+    pub parachain_url: Option<String>,
 }
 
 pub struct MinerBuilderStage2 {
-    miner_type: MinerType,
-    keypair: SR25519Keypair,
-    miner_uuid: MinerId,
+    pub miner_type: MinerType,
+    pub keypair: SR25519Keypair,
+    pub miner_uuid: MinerId,
 }
 
 pub fn validate_miner_type(miner_type: &str) -> Result<MinerType> {

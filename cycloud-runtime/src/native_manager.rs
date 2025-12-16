@@ -1,7 +1,7 @@
-use std::path::PathBuf;
 use std::fs;
-use std::process::Command;
 use std::os::unix::fs::PermissionsExt;
+use std::path::PathBuf;
+use std::process::Command;
 
 use crate::TaskStatus;
 
@@ -14,7 +14,6 @@ pub struct NativeManager {
 
 impl NativeManager {
     pub async fn new(username: String) -> Result<Self, Box<dyn std::error::Error>> {
-
         Ok(Self {
             active_user: username,
         })
@@ -28,22 +27,15 @@ impl NativeManager {
     }
 
     fn create_user(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let check_user = Command::new("id")
-            .arg(&self.active_user)
-            .output()?;
+        let check_user = Command::new("id").arg(&self.active_user).output()?;
 
         if check_user.status.success() {
             println!("User {} already exists!", self.active_user);
-            return Ok(())
+            return Ok(());
         }
 
         let create_user = Command::new("useradd")
-            .args([
-                "-m",
-                "-s", 
-                "/bin/bash",
-                &self.active_user
-            ])
+            .args(["-m", "-s", "/bin/bash", &self.active_user])
             .output()?;
 
         if !create_user.status.success() {
@@ -55,7 +47,7 @@ impl NativeManager {
 
         Ok(())
     }
-    
+
     pub fn cleanup_impl(&self) -> Result<(), Box<dyn std::error::Error>> {
         let user_home = self.get_user_home()?;
 
@@ -65,9 +57,11 @@ impl NativeManager {
 
         if let Some(code) = kill_status.code() {
             if code > 1 {
-                return Err(
-                    format!("pkill failed for user {} with exit code {}", &self.active_user, code).into()
-                );
+                return Err(format!(
+                    "pkill failed for user {} with exit code {}",
+                    &self.active_user, code
+                )
+                .into());
             }
         }
 
@@ -83,9 +77,14 @@ impl NativeManager {
         //TODO remove potential cronjobs / processes that are not removed by this
 
         if PathBuf::from(&user_home).exists() {
-            return Err("Removing the user from the miner failed: User home directory still exists!".into());
+            return Err(
+                "Removing the user from the miner failed: User home directory still exists!".into(),
+            );
         } else {
-            println!("User {} and respective home directory deleted!", self.active_user);
+            println!(
+                "User {} and respective home directory deleted!",
+                self.active_user
+            );
         }
 
         Ok(())
@@ -103,20 +102,22 @@ impl NativeManager {
         let passwd_entry = String::from_utf8_lossy(&output.stdout);
         // Format: username:x:uid:gid:gecos:home:shell
         let parts: Vec<&str> = passwd_entry.trim().split(':').collect();
-        
+
         if parts.len() >= 6 {
             Ok(parts[5].to_string())
         } else {
-            Err(format!("Could not parse home directory for user {}", &self.active_user).into())
+            Err(format!(
+                "Could not parse home directory for user {}",
+                &self.active_user
+            )
+            .into())
         }
     }
 
     pub fn check_sshd(&self) -> Result<(), Box<dyn std::error::Error>> {
         let user_home = self.get_user_home()?;
 
-        let sshd_installed = Command::new("sshd")
-            .arg("-V")
-            .output();
+        let sshd_installed = Command::new("sshd").arg("-V").output();
 
         match sshd_installed {
             Ok(_) => {}
@@ -131,7 +132,7 @@ impl NativeManager {
             Ok(output) => {
                 let stdout = String::from_utf8_lossy(&output.stdout);
                 if stdout.trim() != "active" {
-                    return Err("sshd is installed but not running.".into())
+                    return Err("sshd is installed but not running.".into());
                 }
             }
             Err(_) => return Err("Could not check sshd service status.".into()),
@@ -153,7 +154,11 @@ impl NativeManager {
         let auth_keys = ssh_dir.join("authorized_keys");
 
         if auth_keys.exists() {
-            if fs::OpenOptions::new().append(true).open(&auth_keys).is_err() {
+            if fs::OpenOptions::new()
+                .append(true)
+                .open(&auth_keys)
+                .is_err()
+            {
                 return Err(format!("Cannot write to {}", auth_keys.display()).into());
             }
         } else {
@@ -182,7 +187,7 @@ impl NativeManager {
             Ok(output) => {
                 let stdout = String::from_utf8_lossy(&output.stdout);
                 if stdout.trim() != "active" {
-                    return Ok(false)
+                    return Ok(false);
                 }
             }
             Err(_) => return Err("Could not check sshd service status.".into()),
@@ -199,7 +204,6 @@ impl NativeManager {
 
         let stdout = String::from_utf8_lossy(&output.stdout);
 
-
         // TODO this should probably be verified better (eg. does the username itself contain "L"?)
         Ok(stdout.contains(" L "))
     }
@@ -211,12 +215,10 @@ impl NativeManager {
     }
 
     fn user_exists(&self) -> Result<bool, Box<dyn std::error::Error>> {
-        let status = Command::new("id")
-            .arg(&self.active_user)
-            .status()?;
+        let status = Command::new("id").arg(&self.active_user).status()?;
 
         if !status.success() {
-            return Ok(false)
+            return Ok(false);
         }
 
         Ok(true)
@@ -245,7 +247,11 @@ impl NativeManager {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(format!("WARNING: Failed to lock user, task still running: {}", stderr).into())
+            return Err(format!(
+                "WARNING: Failed to lock user, task still running: {}",
+                stderr
+            )
+            .into());
         }
 
         Ok(())
@@ -259,11 +265,12 @@ impl NativeManager {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(format!("CRITICAL: Failed to unlock user, task blocked: {}", stderr).into())
+            return Err(
+                format!("CRITICAL: Failed to unlock user, task blocked: {}", stderr).into(),
+            );
         }
 
         Ok(())
-
     }
 
     #[allow(dead_code)]

@@ -1,21 +1,21 @@
+use crate::api::logs;
+use crate::crypto::encrypt_message;
+use crate::error_handling::ClientError;
 use anyhow::Result;
 use futures::stream::SplitSink;
+use futures::SinkExt;
 use serde::Serialize;
-use sysinfo::{CpuExt, CpuRefreshKind, RefreshKind, System, SystemExt, DiskExt};
-use tokio::{net::TcpStream, sync::Mutex};
-use tokio_tungstenite::tungstenite::Message;
-use tokio_tungstenite::WebSocketStream;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
+use sysinfo::{CpuExt, CpuRefreshKind, DiskExt, RefreshKind, System, SystemExt};
+use tokio::{net::TcpStream, sync::Mutex};
 use tokio::{
-    time::{self, sleep},
     sync::RwLock,
+    time::{self, sleep},
 };
-use crate::api::logs;
-use crate::error_handling::ClientError;
-use crate::crypto::encrypt_message;
-use futures::SinkExt;
+use tokio_tungstenite::tungstenite::Message;
+use tokio_tungstenite::WebSocketStream;
 
 #[derive(Serialize, Debug)]
 pub struct Usage {
@@ -33,8 +33,8 @@ use std::str;
 // this is here for the same reason mentioned in storage.rs
 pub fn return_disk_usage() -> u64 {
     let output = Command::new("df")
-        .arg("--block-size=1") 
-        .arg("-B1")  
+        .arg("--block-size=1")
+        .arg("-B1")
         .output()
         .expect("Failed to execute df command");
 
@@ -45,9 +45,10 @@ pub fn return_disk_usage() -> u64 {
     for line in stdout.lines().skip(1) {
         let parts: Vec<&str> = line.split_whitespace().collect();
 
-        if let Some(filesystem) = parts.get(0) {
+        if let Some(filesystem) = parts.first() {
             if filesystem.starts_with("/dev/") {
-                if let Some(used_space) = parts.get(2) {  // Get the used space (3rd column)
+                if let Some(used_space) = parts.get(2) {
+                    // Get the used space (3rd column)
                     total_used_space += used_space.parse::<u64>().unwrap_or(0);
                 }
             }
@@ -58,7 +59,11 @@ pub fn return_disk_usage() -> u64 {
 }
 
 impl Usage {
-    pub async fn get_usage_snapshot(log_storage: logs::LogsStorage, zk_stage: Arc<Mutex<u8>>, log_path: &PathBuf) -> Result<Usage> {
+    pub async fn get_usage_snapshot(
+        _log_storage: logs::LogsStorage,
+        zk_stage: Arc<Mutex<u8>>,
+        log_path: &PathBuf,
+    ) -> Result<Usage> {
         let mut system = System::new_with_specifics(
             RefreshKind::new()
                 .with_cpu(CpuRefreshKind::everything())
@@ -77,21 +82,20 @@ impl Usage {
 
         let zk_stage = *zk_stage.lock().await;
 
-        let _ = system.disks().iter()
-                .map(|disk| {
-                    let total_space = disk.total_space();
-                    let available_space = disk.available_space();
-                    total_space - available_space // Calculate used space
-                });
+        let _ = system.disks().iter().map(|disk| {
+            let total_space = disk.total_space();
+            let available_space = disk.available_space();
+            total_space - available_space // Calculate used space
+        });
 
         let logs: String;
 
-        if let Ok(log_result) = logs::read_logs(log_path){
+        if let Ok(log_result) = logs::read_logs(log_path) {
             logs = log_result;
         } else {
             logs = String::from("");
         }
-        
+
         let metric_item = Usage {
             title: "Usage",
             cpu_usage: system.cpus().iter().map(|cpu| cpu.cpu_usage()).sum::<f32>()
@@ -99,9 +103,9 @@ impl Usage {
             mem_usage: system.used_memory() * 1024,
             disk_usage: return_disk_usage(),
             recent_logs: logs,
-            zk_stage
+            zk_stage,
         };
-        
+
         //println!("{:#?}", metric_item);
 
         Ok(metric_item)
@@ -116,35 +120,40 @@ impl Usage {
     ) -> Result<(), ClientError> {
         let diffie_hellman_key_copy = {
             let diffie_hellman_key_guard = diffie_hellman_key.read().await;
-         
+
             if let Some(key) = *diffie_hellman_key_guard {
                 key
             } else {
-                return Err(ClientError::AuthError("No diffie hellman key found".to_string()));
+                return Err(ClientError::AuthError(
+                    "No diffie hellman key found".to_string(),
+                ));
             }
         };
-    
+
         let mut query_interval = time::interval(Duration::from_secs(2));
-    
+
         loop {
             query_interval.tick().await;
 
             let log_storage_clone = Arc::clone(&log_storage);
-    
-            let usage_snapshot = Usage::get_usage_snapshot(log_storage_clone, Arc::clone(&zk_stage), log_path).await
-                .map_err(|e| ClientError::UsageError(e.to_string()))?;
-    
+
+            let usage_snapshot =
+                Usage::get_usage_snapshot(log_storage_clone, Arc::clone(&zk_stage), log_path)
+                    .await
+                    .map_err(|e| ClientError::UsageError(e.to_string()))?;
+
             let usage_snapshot = serde_json::to_string(&usage_snapshot)
                 .map_err(|e| ClientError::UsageError(e.to_string()))?;
-    
-            let encrypted_message = encrypt_message("Usage", &diffie_hellman_key_copy, usage_snapshot)
-                .map_err(|e| ClientError::UsageError(e.to_string()))?;
-    
+
+            let encrypted_message =
+                encrypt_message("Usage", &diffie_hellman_key_copy, usage_snapshot)
+                    .map_err(|e| ClientError::UsageError(e.to_string()))?;
+
             let encrypted_message = serde_json::to_string(&encrypted_message)
                 .map_err(|e| ClientError::UsageError(e.to_string()))?;
-    
+
             let mut stream_guard = stream.lock().await;
-    
+
             if let Err(e) = stream_guard.send(Message::Text(encrypted_message)).await {
                 return Err(ClientError::UsageError(e.to_string())); // Return the error
             }

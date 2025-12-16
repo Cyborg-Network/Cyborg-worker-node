@@ -1,11 +1,5 @@
-use crate::global_config::{FLASH_INFER_PORT, PATHS, TAILSCALE_NET};
-use futures::TryFutureExt;
-use types::{
-    substrate_interface::api::runtime_types::cyborg_primitives::task::{
-        FlashInferTask, TaskKind,
-    },
-    CurrentTask, TaskPreparationStatus
-};
+use crate::global_config::{FLASH_INFER_PORT, PATHS /*TAILSCALE_NET*/};
+// use futures::TryFutureExt;
 use crate::error::{Error, Result};
 use axum::{
     extract::{
@@ -33,6 +27,10 @@ use tokio::{
     time::timeout,
 };
 use tokio_stream::wrappers::ReceiverStream;
+use types::{
+    substrate_interface::api::runtime_types::cyborg_primitives::task::{FlashInferTask, TaskKind},
+    CurrentTask, TaskPreparationStatus,
+};
 
 #[derive(Clone)]
 pub enum InferenceEngine {
@@ -65,16 +63,23 @@ impl InferenceEngine {
 
                 Ok(())
             }
+
             InferenceEngine::FlashInference(engine) => {
-                engine.lock().await.kill_engine().await.map_err(|e| {
-                    Error::Custom(format!("Failed to kill engine: {}", e.to_string()))
-                })?;
+                engine
+                    .lock()
+                    .await
+                    .kill_engine()
+                    .await
+                    .map_err(|e| Error::Custom(format!("Failed to kill engine: {}", e)))?;
                 Ok(())
             }
             InferenceEngine::CyCloud(engine) => {
-                engine.lock().await.kill_engine().await.map_err(|e| {
-                    Error::Custom(format!("Failed to kill engine: {}", e.to_string()))
-                })?;
+                engine
+                    .lock()
+                    .await
+                    .kill_engine()
+                    .await
+                    .map_err(|e| Error::Custom(format!("Failed to kill engine: {}", e)))?;
                 Ok(())
             }
         }
@@ -82,6 +87,7 @@ impl InferenceEngine {
 }
 
 #[derive(Clone)]
+#[allow(dead_code)]
 struct AppState {
     task: Arc<RwLock<CurrentTask>>,
     engine: InferenceEngine,
@@ -97,6 +103,7 @@ enum EngineStatus {
     Failed(String),
 }
 
+#[allow(dead_code)]
 pub struct RunningInferenceServer {
     pub handle: tokio::task::JoinHandle<()>,
     pub shutdown_sender: watch::Sender<bool>,
@@ -141,10 +148,7 @@ pub async fn spawn_inference_server(
 
     let (status_tx, status_rx) = watch::channel(EngineStatus::Idle);
 
-    let miner_ip = reqwest::get("https://api.ipify.org")
-        .await?
-        .text()
-        .await?;
+    let miner_ip = reqwest::get("https://api.ipify.org").await?.text().await?;
 
     let engine = match &task.read().await.task_type {
         TaskKind::OpenInference(_) => {
@@ -153,9 +157,7 @@ pub async fn spawn_inference_server(
                 PathBuf::from(&PATHS.task_dir_path),
             )
             .await
-            .map_err(|e| {
-                Error::Custom(format!("Failed to create Triton client: {}", e.to_string()))
-            })?;
+            .map_err(|e| Error::Custom(format!("Failed to create Triton client: {}", e)))?;
             InferenceEngine::OpenInference(Arc::new(Mutex::new(triton_client)))
         }
         TaskKind::FlashInfer(fi) => match fi {
@@ -166,16 +168,14 @@ pub async fn spawn_inference_server(
                     *FLASH_INFER_PORT,
                     &task.read().await.container_name,
                 )
-                .map_err(|e| {
-                    Error::Custom(format!("Failed to create engine: {}", e.to_string()))
-                })?;
+                .map_err(|e| Error::Custom(format!("Failed to create engine: {}", e)))?;
                 InferenceEngine::FlashInference(Arc::new(Mutex::new(fi_engine)))
             }
-        }
+        },
         TaskKind::CyCloud(_) => {
-            let cl_engine = CyCloudEngine::new(&task.read().await.task_type).await.map_err(|e| {
-                Error::Custom(format!("Failed to create engine: {}", e.to_string()))
-            })?;
+            let cl_engine = CyCloudEngine::new(&task.read().await.task_type)
+                .await
+                .map_err(|e| Error::Custom(format!("Failed to create engine: {}", e)))?;
             InferenceEngine::CyCloud(Arc::new(Mutex::new(cl_engine)))
         }
     };
@@ -188,7 +188,6 @@ pub async fn spawn_inference_server(
         let _ = status_tx.send(EngineStatus::Initializing);
 
         match &engine_clone {
-
             InferenceEngine::OpenInference(_) => {
                 let _ = status_tx.send(EngineStatus::Ready);
                 let _ = task_status_sender_clone.send(TaskPreparationStatus::Ready);
@@ -219,7 +218,6 @@ pub async fn spawn_inference_server(
                     }
                 }
             }
-
         }
     });
 
@@ -291,7 +289,7 @@ pub async fn spawn_inference_server(
     *CURRENT_SERVER.lock().await = Some(RunningInferenceServer {
         handle,
         shutdown_sender: shutdown_tx,
-        shutdown_done_rx: shutdown_done_rx,
+        shutdown_done_rx,
         engine: engine.clone(),
         model_name: "model".to_string().clone(),
     });
@@ -377,9 +375,7 @@ async fn handle_socket(socket: WebSocket, state: AppState) -> Result<()> {
                         tracing::error!("Error running FlashInfer engine: {}", e);
                     }
                 }
-                InferenceEngine::CyCloud(ref _engine) => {
-                    return;
-                }
+                InferenceEngine::CyCloud(ref _engine) => {}
             }
         })
     };

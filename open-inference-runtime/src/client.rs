@@ -73,7 +73,7 @@ impl TritonClient {
         let models: Vec<serde_json::Value> = repo_resp.json().await?;
 
         let model_name = models
-            .get(0)
+            .first()
             .and_then(|m| m.get("name"))
             .and_then(|v| v.as_str())
             .ok_or("No model found in repository")?
@@ -372,8 +372,8 @@ impl TritonClient {
                     let inputs = map.get("inputs").cloned();
                     (cmd, inputs)
                 } else {
-                    let parts: Vec<&str> = request.trim().split_whitespace().collect();
-                    let cmd = parts.get(0).unwrap_or(&"").to_string();
+                    let parts: Vec<&str> = request.split_whitespace().collect();
+                    let cmd = parts.first().unwrap_or(&"").to_string();
                     (cmd, None)
                 };
 
@@ -518,7 +518,7 @@ impl TritonClient {
                     // -------- Helpers: logits & past extraction --------
                     fn extract_last_logits(raw_out: &serde_json::Value) -> Option<Vec<f32>> {
                         // Expect outputs[0] to be the logits tensor
-                        let first = raw_out.get("outputs")?.as_array()?.get(0)?;
+                        let first = raw_out.get("outputs")?.as_array()?.first()?;
                         let shape = first.get("shape")?.as_array()?;
 
                         // Accept common shapes: [B, S, V], [S, V], or [V]
@@ -529,12 +529,12 @@ impl TritonClient {
                                 (s, v)
                             }
                             2 => {
-                                let s = shape.get(0)?.as_u64()? as usize;
+                                let s = shape.first()?.as_u64()? as usize;
                                 let v = shape.get(1)?.as_u64()? as usize;
                                 (s, v)
                             }
                             1 => {
-                                let v = shape.get(0)?.as_u64()? as usize;
+                                let v = shape.first()?.as_u64()? as usize;
                                 (1, v)
                             }
                             _ => return None,
@@ -576,7 +576,7 @@ impl TritonClient {
                                                 .filter_map(|v| v.as_u64().map(|x| x as usize))
                                                 .collect()
                                         })
-                                        .unwrap_or_else(|| vec![]);
+                                        .unwrap_or_else(Vec::new);
                                     new_past.insert(
                                         format!("past_key_values.{i}.key"),
                                         (TensorData::F32(f32_data), shape),
@@ -597,7 +597,7 @@ impl TritonClient {
                                                 .filter_map(|v| v.as_u64().map(|x| x as usize))
                                                 .collect()
                                         })
-                                        .unwrap_or_else(|| vec![]);
+                                        .unwrap_or_else(Vec::new);
                                     new_past.insert(
                                         format!("past_key_values.{i}.value"),
                                         (TensorData::F32(f32_data), shape),
@@ -637,7 +637,7 @@ impl TritonClient {
                     if let Some(arr) = prefill_out
                         .get("outputs")
                         .and_then(|o| o.as_array())
-                        .and_then(|a| a.get(0))
+                        .and_then(|a| a.first())
                     {
                         let shp = arr.get("shape").unwrap_or(&serde_json::Value::Null);
                         eprintln!("[prefill] logits shape = {shp}");
@@ -770,7 +770,7 @@ impl TritonClient {
     }
 }
 
-fn get_help_message() -> &'static str {
+pub fn get_help_message() -> &'static str {
     r#"Available commands:
     infer                    - Run inference. Requires 'inputs' field in JSON format.
     infertext                - Run inference. Example :  
@@ -790,8 +790,8 @@ fn get_help_message() -> &'static str {
     "#
 }
 
-fn sample_from_logits(logits: &[f32], temperature: f32) -> i64 {
-    let  scaled: Vec<f32> = logits.iter().map(|&x| x / temperature).collect();
+pub fn sample_from_logits(logits: &[f32], temperature: f32) -> i64 {
+    let scaled: Vec<f32> = logits.iter().map(|&x| x / temperature).collect();
     let max = scaled.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
     let exp: Vec<f32> = scaled.iter().map(|&x| (x - max).exp()).collect();
     let sum: f32 = exp.iter().sum();

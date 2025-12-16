@@ -2,25 +2,21 @@ use std::sync::Arc;
 
 use tokio::sync::RwLock;
 
-use crate::{
-    error::Result,
-    parent_runtime::storage_interactor,
-};
+use crate::{error::Result, parent_runtime::storage_interactor};
 use types::{
     substrate_interface::api::{
+        runtime_types::cyborg_primitives::task::FlashInferTask,
         runtime_types::cyborg_primitives::task::OpenInferenceTask,
         task_management::events::task_scheduled::TaskKind,
-        runtime_types::cyborg_primitives::task::FlashInferTask,
     },
-    CurrentTask
+    CurrentTask,
 };
-
 
 pub async fn process_task(task: Arc<RwLock<CurrentTask>>) -> Result<()> {
     match &task.read().await.task_type {
         TaskKind::OpenInference(oi_task) => match oi_task {
             OpenInferenceTask::Onnx(onnx_task) => {
-                let _ = storage_interactor::onnx::download_onnx_model(onnx_task).await?;
+                storage_interactor::onnx::download_onnx_model(onnx_task).await?;
                 Ok(())
             }
         },

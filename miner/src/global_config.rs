@@ -23,7 +23,9 @@ pub struct Paths {
 // We're setting a few global variables here for easy access throughout. If editing, make sure to add appropriate Lazy::force to `run_global_config` - THIS IS NOT COMPILE-TIME ENFORCED
 // Paths required throughout
 pub static PATHS: Lazy<Paths> = Lazy::new(|| Paths {
-    log_path: env::var("LOG_FILE_PATH").expect("LOG_PATH must be set").into(),
+    log_path: env::var("LOG_FILE_PATH")
+        .expect("LOG_PATH must be set")
+        .into(),
     task_file_name: env::var("TASK_FILE_NAME").expect("TASK_FILE_NAME must be set"),
     task_dir_path: env::var("TASK_DIR_PATH").expect("TASK_DIR_PATH must be set"),
     task_owner_path: env::var("TASK_OWNER_FILE_PATH").expect("TASK_OWNER_PATH must be set"),
@@ -37,12 +39,16 @@ pub static TAILSCALE_NET: Lazy<String> =
 
 // The port reserved for the FlashInfer service
 pub static FLASH_INFER_PORT: Lazy<u16> = Lazy::new(|| {
-    env::var("FLASH_INFER_PORT").expect("FLASH_INFER_PORT must be set").parse().expect("Failed to parse FLASH_INFER_PORT")
+    env::var("FLASH_INFER_PORT")
+        .expect("FLASH_INFER_PORT must be set")
+        .parse()
+        .expect("Failed to parse FLASH_INFER_PORT")
 });
 
 // The where the miner is reachable after installation
-pub static CYBORG_MINER_DOMAIN_NAME: Lazy<String> = 
-    Lazy::new(|| env::var("CYBORG_MINER_DOMAIN_NAME").expect("CYBORG_MINER_DOMAIN_NAME must be set"));
+pub static CYBORG_MINER_DOMAIN_NAME: Lazy<String> = Lazy::new(|| {
+    env::var("CYBORG_MINER_DOMAIN_NAME").expect("CYBORG_MINER_DOMAIN_NAME must be set")
+});
 
 /// The metadata for the current task in case the miner shuts down unexpectedly and has to restart a running task
 pub static CURRENT_TASK_PATH: Lazy<PathBuf> = Lazy::new(|| {
@@ -55,9 +61,8 @@ pub static CURRENT_TASK_PATH: Lazy<PathBuf> = Lazy::new(|| {
 pub static PARACHAIN_CLIENT: OnceCell<OnlineClient<PolkadotConfig>> = OnceCell::new();
 
 /// Prefix used for container names so that all containers with this prefix can be managed at once by the miner
-pub static CONTAINER_PREFIX: Lazy<String> = Lazy::new(|| {
-    env::var("TASK_CONTAINER_PREFIX").expect("TASK_CONTAINER_PREFIX must be set").into()
-});
+pub static CONTAINER_PREFIX: Lazy<String> =
+    Lazy::new(|| env::var("TASK_CONTAINER_PREFIX").expect("TASK_CONTAINER_PREFIX must be set"));
 
 /// Runs the configuration for the miner, everything in this function will fail fast to ensure correct setup when starting the miner
 ///
@@ -80,10 +85,9 @@ pub async fn run_global_config(parachain_url: &str) -> Result<()> {
     Lazy::force(&CYBORG_MINER_DOMAIN_NAME);
 
     // Set the transaction queue
-    if let Err(_) = TRANSACTION_QUEUE.set(TransactionQueue::new()) {
+    if TRANSACTION_QUEUE.set(TransactionQueue::new()).is_err() {
         panic!("Failed to set transaction queue.");
     }
-
 
     // Create a parachain client
     let client = OnlineClient::<PolkadotConfig>::from_url(parachain_url)

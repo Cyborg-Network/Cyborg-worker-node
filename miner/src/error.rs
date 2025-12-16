@@ -22,11 +22,11 @@ pub enum Error {
 
     #[from]
     #[allow(dead_code)]
-    Reqwest(reqwest::Error),
+    Reqwest(Box<reqwest::Error>),
 
     #[from]
     #[allow(dead_code)]
-    Subxt(subxt::Error),
+    Subxt(Box<subxt::Error>),
 
     #[from]
     #[allow(dead_code)]
@@ -34,7 +34,7 @@ pub enum Error {
 
     #[from]
     #[allow(dead_code)]
-    Cess(cess_rust_sdk::core::Error),
+    Cess(Box<cess_rust_sdk::core::Error>),
 
     #[from]
     ReqwestToStr(reqwest::header::ToStrError),
@@ -45,7 +45,7 @@ pub enum Error {
 
     #[from]
     #[allow(dead_code)]
-    Bollard(bollard::errors::Error),
+    Bollard(Box<bollard::errors::Error>),
 }
 
 impl Error {
@@ -61,6 +61,30 @@ impl Error {
 impl From<&str> for Error {
     fn from(val: &str) -> Self {
         Self::Custom(val.to_string())
+    }
+}
+
+impl From<reqwest::Error> for Error {
+    fn from(err: reqwest::Error) -> Self {
+        Self::Reqwest(Box::new(err))
+    }
+}
+
+impl From<subxt::Error> for Error {
+    fn from(err: subxt::Error) -> Self {
+        Self::Subxt(Box::new(err))
+    }
+}
+
+impl From<cess_rust_sdk::core::Error> for Error {
+    fn from(err: cess_rust_sdk::core::Error) -> Self {
+        Self::Cess(Box::new(err))
+    }
+}
+
+impl From<bollard::errors::Error> for Error {
+    fn from(err: bollard::errors::Error) -> Self {
+        Self::Bollard(Box::new(err))
     }
 }
 

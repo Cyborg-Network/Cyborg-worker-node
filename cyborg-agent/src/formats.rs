@@ -17,8 +17,10 @@ impl From<SerdeUuid> for uuid::Uuid {
     }
 }
 
+#[allow(dead_code)]
 pub struct OptionalUuid(pub Option<uuid::Uuid>);
 
+#[allow(dead_code)]
 struct UuidVisitor;
 
 impl<'de> Visitor<'de> for UuidVisitor {
@@ -32,10 +34,10 @@ impl<'de> Visitor<'de> for UuidVisitor {
     where
         E: de::Error,
     {
-        if v == "" {
+        if v.is_empty() {
             Ok(OptionalUuid(None))
         } else {
-            uuid::Uuid::parse_str(&v)
+            uuid::Uuid::parse_str(v)
                 .map(|uuid| OptionalUuid(Some(uuid)))
                 .map_err(E::custom)
         }
@@ -64,8 +66,10 @@ impl Serialize for OptionalUuid {
     }
 }
 
+#[allow(dead_code)]
 pub struct OptionalStatusCode(pub Option<http::StatusCode>);
 
+#[allow(dead_code)]
 struct StatusCodeVisitor;
 
 impl<'de> Visitor<'de> for StatusCodeVisitor {
@@ -79,10 +83,10 @@ impl<'de> Visitor<'de> for StatusCodeVisitor {
     where
         E: de::Error,
     {
-        if v == "" {
+        if v.is_empty() {
             Ok(OptionalStatusCode(None))
         } else {
-            http::StatusCode::from_str(&v)
+            http::StatusCode::from_str(v)
                 .map(|status_code| OptionalStatusCode(Some(status_code)))
                 .map_err(E::custom)
         }
@@ -104,7 +108,7 @@ impl Serialize for OptionalStatusCode {
         S: Serializer,
     {
         if let OptionalStatusCode(Some(status_code)) = self {
-            serializer.serialize_str(&status_code.as_str())
+            serializer.serialize_str(status_code.as_str())
         } else {
             serializer.serialize_str("")
         }

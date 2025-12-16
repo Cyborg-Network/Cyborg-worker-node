@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::process::{Command, Stdio};
-use std::sync::Arc;
 use std::str;
+use std::sync::Arc;
 use sysinfo::{MemoryRefreshKind, RefreshKind, System};
 
 use reqwest::Client;
@@ -10,18 +10,18 @@ use reqwest::Client;
 use types::substrate_interface::api::runtime_types::cyborg_primitives::miner::MinerType;
 use types::MinerConfig;
 
+use crate::error::Result;
 use crate::global_config::CYBORG_MINER_DOMAIN_NAME;
-use crate::{
-    error::Result,
-};
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct GoogleGeoResponse {
     location: GoogleLocation,
     accuracy: f64,
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct GoogleLocation {
     lat: f64,
     lng: f64,
@@ -72,7 +72,7 @@ pub async fn gather_worker_spec(_miner_type: Arc<MinerType>) -> Result<MinerConf
     let storage = return_total_storage();
 
     Ok(MinerConfig {
-        domain: domain.to_string(), 
+        domain: domain.to_string(),
         latitude: location.coordinates.0,
         longitude: location.coordinates.1,
         ram,
@@ -109,16 +109,16 @@ impl Location {
             Ok((lat, lon)) => {
                 println!("Failed to get GPS location. Falling back to Wifi based geolocation.");
                 println!("Longitude and Latitude are {} {}", lat, lon);
-                return Location {
+                Location {
                     coordinates: f64_to_i32_coordinates(lat, lon),
-                };
+                }
             }
             Err(e) => {
                 println!("Error getting WiFi based location: {}", e);
                 if let Ok((lat, lon)) = get_ip_location().await {
-                    return Location {
+                    Location {
                         coordinates: f64_to_i32_coordinates(lat, lon),
-                    };
+                    }
                 } else {
                     panic!("Failed to get the location: {}", e);
                 }
@@ -164,7 +164,7 @@ fn get_gps_location() -> Result<(f64, f64)> {
 
 async fn get_geo_location() -> Result<(f64, f64)> {
     let output = Command::new("nmcli")
-        .args(&["-t", "-f", "SSID,BSSID,SIGNAL", "dev", "wifi"])
+        .args(["-t", "-f", "SSID,BSSID,SIGNAL", "dev", "wifi"])
         .output()?;
     let stdout = String::from_utf8_lossy(&output.stdout);
 
@@ -236,9 +236,7 @@ async fn get_ip_location() -> Result<(f64, f64)> {
     if response.status().is_success() {
         let ip_info: IpLocation = response.json().await?;
 
-        let loc = ip_info
-            .loc
-            .ok_or_else(|| "Failed to get location via IP.")?;
+        let loc = ip_info.loc.ok_or("Failed to get location via IP.")?;
 
         let loc_parts: Vec<&str> = loc.split(',').collect();
 
@@ -261,24 +259,27 @@ async fn get_ip_location() -> Result<(f64, f64)> {
 
 #[allow(dead_code)]
 pub async fn get_memory() -> Result<String> {
-    let ps_child = Command::new("free") // `ps` command...
+    let output = Command::new("free") // `ps` command...
         .arg("-h") // with argument `axww`...
         .stdout(Stdio::piped()) // of which we will pipe the output.
-        .spawn() // Once configured, we actually spawn the command...
+        .output() // Use output() instead of spawn() to automatically wait for the process
         .unwrap(); // and assert everything went right.
-    let grep_child_one = Command::new("grep")
-        .arg("-i")
-        .arg("Mem")
-        .stdin(Stdio::from(ps_child.stdout.unwrap())) // Pipe through.
-        .stdout(Stdio::piped())
-        .spawn()
-        .unwrap();
-    let output = grep_child_one.wait_with_output().unwrap();
+
     let result = str::from_utf8(&output.stdout).unwrap();
 
-    let res = &result.to_string()[14..19];
+    // Process the output to extract the memory information
+    let lines: Vec<&str> = result.lines().collect();
+    for line in lines {
+        if line.to_lowercase().contains("mem") {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if parts.len() > 1 {
+                let res = parts[1]; // Get the total memory value
+                return Ok(res.to_string());
+            }
+        }
+    }
 
-    Ok(res.to_string())
+    Err("Failed to extract memory information".into())
 }
 
 pub fn return_total_memory() -> u64 {
@@ -315,7 +316,7 @@ pub fn return_total_storage() -> u64 {
         let parts: Vec<&str> = line.split_whitespace().collect();
 
         // Check if the first column (filesystem) starts with "/dev/"
-        if let Some(filesystem) = parts.get(0) {
+        if let Some(filesystem) = parts.first() {
             if filesystem.starts_with("/dev/") {
                 if let Some(space) = parts.get(1) {
                     total_space += space.parse::<u64>().unwrap_or(0);

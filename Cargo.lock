@@ -3604,7 +3604,10 @@ dependencies = [
  "reqwest 0.12.24",
  "serde",
  "serde_json",
+ "sha2 0.10.9",
  "tokio",
+ "tokio-stream",
+ "zstd 0.13.3",
 ]
 
 [[package]]

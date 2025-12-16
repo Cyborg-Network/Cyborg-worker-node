@@ -1,59 +1,48 @@
-use std::{process::Stdio, sync::Arc};
-use tempfile::TempDir;
-use tokio::{fs, process::Command, sync::RwLock};
-use types::{substrate_interface::api::runtime_types::cyborg_primitives::task::{CyCloudTask, TaskKind}, CurrentTask};
 use crate::{
-    api::{
-        dbus::watch_for_zk_stage_update, 
-        logs, 
-        HealthStatus, 
-        Init, 
-        Usage
-    }, 
-    auth::{
-        self, 
-        WsAuthRequest
-    }, 
-    crypto::{
-        decode_polkadot_address, 
-        encrypt_message
-    }, 
-    error_handling::{
-        construct_client_error_message, 
-        ClientError
-    }, 
-    formats::{
-        self, 
-        OptionalStatusCode, 
-        OptionalUuid
-    }, 
-    AgentConfig
+    api::{dbus::watch_for_zk_stage_update, logs, HealthStatus, Init, Usage},
+    auth::{self, WsAuthRequest},
+    crypto::{decode_polkadot_address, encrypt_message},
+    error_handling::{construct_client_error_message, ClientError},
+    formats::{self, OptionalStatusCode, OptionalUuid},
+    AgentConfig,
 };
 use anyhow::{anyhow, Result};
 use futures::stream::SplitSink;
 use futures_util::{SinkExt, StreamExt};
+use http::{Response, StatusCode};
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str, Value};
+use std::{process::Stdio, sync::Arc};
+use tempfile::TempDir;
+use tokio::{fs, process::Command, sync::RwLock};
 use tokio::{
-    task::JoinHandle,
+    io::{AsyncReadExt, AsyncWriteExt},
+    net::{TcpListener, TcpStream},
+    select,
     sync::Mutex,
-    io::{AsyncReadExt, AsyncWriteExt}, 
-    select, 
-    net::{TcpListener, TcpStream}
+    task::JoinHandle,
 };
-use tokio_tungstenite::{
-    WebSocketStream, accept_async, tungstenite::Message
+use tokio_tungstenite::{accept_async, tungstenite::Message, WebSocketStream};
+use types::{
+    substrate_interface::api::runtime_types::cyborg_primitives::task::{CyCloudTask, TaskKind},
+    CurrentTask,
 };
 use uuid::Uuid;
-use http::{Response, StatusCode};
 
 const HTTP_ADDR: &str = "0.0.0.0:8080";
 const WS_ADDR: &str = "0.0.0.0:8081";
 
-const DEPOSIT_CONTAINER_KEYS_SCRIPT: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/scripts/deposit_container_key.sh"));
-const DEPOSIT_NATIVE_KEYS_SCRIPT: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/scripts/deposit_native_key.sh"));
+const DEPOSIT_CONTAINER_KEYS_SCRIPT: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/scripts/deposit_container_key.sh"
+));
+const DEPOSIT_NATIVE_KEYS_SCRIPT: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/scripts/deposit_native_key.sh"
+));
 
 #[derive(Deserialize, Serialize)]
+#[allow(dead_code)]
 /// the required format for messages within text websocket frames
 struct Messages {
     #[serde(rename = "type")]
@@ -75,6 +64,7 @@ struct Messages {
 }
 
 #[derive(Deserialize, Serialize)]
+#[allow(dead_code)]
 pub enum RequestType {
     /// a new request
     #[serde(rename = "syn")]
@@ -113,6 +103,7 @@ struct DepositContainerKeyRequest {
 }
 
 #[derive(Deserialize, Serialize)]
+#[allow(dead_code)]
 struct DepositContainerKeyResponse {
     success: bool,
 }
@@ -125,11 +116,12 @@ struct CreateContainerKeyRequest {
 #[derive(Deserialize, Serialize)]
 struct CreateContainerKeyResponse {
     pub_key: String,
-    priv_key: String
+    priv_key: String,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-struct WsAuthResponse{
+#[allow(dead_code)]
+struct WsAuthResponse {
     response_type: String,
     node_public_key: String,
 }
@@ -140,6 +132,7 @@ struct WsTestRequest {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 enum TaskIdentifier<'a> {
     Container(&'a str),
     Native(&'a str),
@@ -172,7 +165,6 @@ async fn handle_http_request(mut stream: TcpStream) -> Result<()> {
                 let is_healthy = HealthStatus::get_health_status().await.ok();
 
                 if let Some(is_healthy) = is_healthy {
-
                     let response = if is_healthy {
                         Response::builder()
                             .status(StatusCode::OK)
@@ -190,14 +182,18 @@ async fn handle_http_request(mut stream: TcpStream) -> Result<()> {
                         response.status().as_u16(),
                         response.status().canonical_reason().unwrap_or(""),
                         response.body().len(),
-                        response.headers().get("Content-Type").ok_or(anyhow!("Failed getting the header"))?.to_str()?,
+                        response
+                            .headers()
+                            .get("Content-Type")
+                            .ok_or(anyhow!("Failed getting the header"))?
+                            .to_str()?,
                         response.body(),
                     );
 
                     stream.write_all(response_str.as_bytes()).await?;
                     stream.flush().await?;
                     return Ok(());
-                } else{
+                } else {
                     return Ok(());
                 }
             } else {
@@ -242,112 +238,155 @@ async fn handle_ws_connections(stream: TcpStream, config: Arc<AgentConfig>) -> R
         let mut streaming_task: Option<JoinHandle<()>> = None;
 
         while let Some(msg) = ws_receiver.next().await {
-            match msg {
-                Ok(Message::Text(message)) => {
-                    println!("Message received: {}", message);
-                    match from_str::<WsMessageFormat>(&message) {
-                        Ok(msg) => match msg {
-                            WsMessageFormat::Request(request) => {
-                                match request.request_type {
+            if let Ok(Message::Text(message)) = msg {
+                println!("Message received: {}", message);
+                match from_str::<WsMessageFormat>(&message) {
+                    Ok(msg) => match msg {
+                        WsMessageFormat::Request(request) => match request.request_type {
+                            WsApiRequestType::Usage => {
+                                if streaming_task.is_none() {
+                                    let stream_usage_diffie_hellman_key =
+                                        Arc::clone(&diffie_hellman_key);
+                                    let stream_usage_log_storage = Arc::clone(&log_storage);
+                                    let stream_usage_ws_sender = Arc::clone(&ws_sender);
+                                    let stream_usage_zk_stage = Arc::clone(&zk_stage);
+                                    let stream_usage_config = Arc::clone(&config);
 
-                                    WsApiRequestType::Usage => {
-                                        if streaming_task.is_none() {
-                                            let stream_usage_diffie_hellman_key = Arc::clone(&diffie_hellman_key);
-                                            let stream_usage_log_storage = Arc::clone(&log_storage);
-                                            let stream_usage_ws_sender = Arc::clone(&ws_sender);
-                                            let stream_usage_zk_stage = Arc::clone(&zk_stage);
-                                            let stream_usage_config = Arc::clone(&config);
+                                    streaming_task = Some(tokio::spawn(async move {
+                                        let sender = stream_usage_ws_sender;
 
-                                            streaming_task = Some(tokio::spawn(async move {
-                                               let sender = stream_usage_ws_sender; 
+                                        if let Err(e) = Usage::stream_usage(
+                                            &sender,
+                                            stream_usage_diffie_hellman_key,
+                                            stream_usage_log_storage,
+                                            stream_usage_zk_stage,
+                                            stream_usage_config.log_file_path,
+                                        )
+                                        .await
+                                        {
+                                            let mut sender_guard = sender.lock().await;
+                                            let _ = sender_guard
+                                                .send(Message::Text(
+                                                    construct_client_error_message(e),
+                                                ))
+                                                .await;
+                                        }
+                                    }));
+                                }
+                            }
 
-                                               if let Err(e) = Usage::stream_usage( 
-                                                    &sender, 
-                                                    stream_usage_diffie_hellman_key, 
-                                                    stream_usage_log_storage,
-                                                    stream_usage_zk_stage,
-                                                    &stream_usage_config.log_file_path,
-                                                ).await {
-                                                    let mut sender_guard = sender.lock().await;
-                                                    let _ =sender_guard.send(
-                                                       Message::Text(construct_client_error_message(e))).await;
-                                                }
-                                            }));
+                            WsApiRequestType::Init => {
+                                let init_res = Init::return_init_message(&diffie_hellman_key).await;
+
+                                match init_res {
+                                    Ok(init_message) => {
+                                        let mut sender_guard = ws_sender.lock().await;
+                                        if let Err(e) =
+                                            sender_guard.send(Message::Text(init_message)).await
+                                        {
+                                            println!("Failed to send init message: {}", e);
                                         }
                                     }
-
-                                    WsApiRequestType::Init => {
-                                        let init_res = Init::return_init_message(&diffie_hellman_key).await;
-                                        
-                                        match init_res {
-                                            Ok(init_message) => {
-                                                let mut sender_guard = ws_sender.lock().await;
-                                                if let Err(e) = sender_guard.send(Message::Text(init_message)).await {
-                                                    println!("Failed to send init message: {}", e);
-                                                }
-                                            }
-                                            Err(e) => {
-                                                let mut sender_guard = ws_sender.lock().await;
-                                                if let Err(e) = sender_guard.send(Message::Text(construct_client_error_message(e))).await {
-                                                    println!("Failed to send init message: {}", e);
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    WsApiRequestType::CreateContainerKey(request) => {
-                                            if let Err(e) = handle_create_user_ssh_key(request.task_id, Arc::clone(&config.current_task), config.container_prefix, &diffie_hellman_key, &ws_sender).await {
-                                            println!("Failed to send request key response message, sending client error.");
-                                            let mut sender_guard = ws_sender.lock().await;
-                                            sender_guard.send(Message::Text(construct_client_error_message(e))).await?;
-                                        }
-                                    }
-
-                                    WsApiRequestType::DepositContainerKey(request) => {
-                                        if let Err(e) = handle_deposit_user_ssh_key(request.task_id, Arc::clone(&config.current_task), config.container_prefix, &diffie_hellman_key, request.key, &ws_sender).await {
-                                            println!("Failed to send request key response message, sending client error.");
-                                            let mut sender_guard = ws_sender.lock().await;
-                                            sender_guard.send(Message::Text(construct_client_error_message(e))).await?;
+                                    Err(e) => {
+                                        let mut sender_guard = ws_sender.lock().await;
+                                        if let Err(e) = sender_guard
+                                            .send(Message::Text(construct_client_error_message(e)))
+                                            .await
+                                        {
+                                            println!("Failed to send init message: {}", e);
                                         }
                                     }
                                 }
                             }
 
-                            WsMessageFormat::Auth(request) => {
-                              let auth_res = auth::construct_auth_response(request, &diffie_hellman_key, &log_storage, public_key_bytes).await;
+                            WsApiRequestType::CreateContainerKey(request) => {
+                                if let Err(e) = handle_create_user_ssh_key(
+                                    request.task_id,
+                                    Arc::clone(&config.current_task),
+                                    config.container_prefix,
+                                    &diffie_hellman_key,
+                                    &ws_sender,
+                                )
+                                .await
+                                {
+                                    println!("Failed to send request key response message, sending client error.");
+                                    let mut sender_guard = ws_sender.lock().await;
+                                    sender_guard
+                                        .send(Message::Text(construct_client_error_message(e)))
+                                        .await?;
+                                }
+                            }
 
-                              match auth_res {
+                            WsApiRequestType::DepositContainerKey(request) => {
+                                if let Err(e) = handle_deposit_user_ssh_key(
+                                    request.task_id,
+                                    Arc::clone(&config.current_task),
+                                    config.container_prefix,
+                                    &diffie_hellman_key,
+                                    request.key,
+                                    &ws_sender,
+                                )
+                                .await
+                                {
+                                    println!("Failed to send request key response message, sending client error.");
+                                    let mut sender_guard = ws_sender.lock().await;
+                                    sender_guard
+                                        .send(Message::Text(construct_client_error_message(e)))
+                                        .await?;
+                                }
+                            }
+                        },
+
+                        WsMessageFormat::Auth(request) => {
+                            let auth_res = auth::construct_auth_response(
+                                request,
+                                &diffie_hellman_key,
+                                &log_storage,
+                                public_key_bytes,
+                            )
+                            .await;
+
+                            match auth_res {
                                 Ok(response) => {
                                     let mut sender_guard = ws_sender.lock().await;
-                                    if let Err(e) = sender_guard.send(Message::Text(response)).await {
+                                    if let Err(e) = sender_guard.send(Message::Text(response)).await
+                                    {
                                         println!("Failed to send auth message: {}", e);
                                     }
                                 }
                                 Err(e) => {
                                     let mut sender_guard = ws_sender.lock().await;
-                                    if let Err(e) = sender_guard.send(Message::Text(construct_client_error_message(e))).await {
+                                    if let Err(e) = sender_guard
+                                        .send(Message::Text(construct_client_error_message(e)))
+                                        .await
+                                    {
                                         println!("Failed to send auth message: {}", e);
+                                    }
                                 }
-                                }
-                              }
-                            }
-
-                            WsMessageFormat::Test(_) => {
-                               let mut sender_guard = ws_sender.lock().await;
-                                if let Err(e) = sender_guard.send(Message::Text("Test".to_string())).await {
-                                    println!("Failed to send auth message: {}", e);
-                                } 
                             }
                         }
-                        _ => { 
+
+                        WsMessageFormat::Test(_) => {
                             let mut sender_guard = ws_sender.lock().await;
-                            if let Err(e) = sender_guard.send(Message::Text(construct_client_error_message(ClientError::InvalidRequestError))).await {
+                            if let Err(e) =
+                                sender_guard.send(Message::Text("Test".to_string())).await
+                            {
                                 println!("Failed to send auth message: {}", e);
-                            } 
+                            }
+                        }
+                    },
+                    _ => {
+                        let mut sender_guard = ws_sender.lock().await;
+                        if let Err(e) = sender_guard
+                            .send(Message::Text(construct_client_error_message(
+                                ClientError::InvalidRequestError,
+                            )))
+                            .await
+                        {
+                            println!("Failed to send auth message: {}", e);
                         }
                     }
                 }
-                _ => {}
             }
         }
     }
@@ -420,18 +459,21 @@ fn construct_container_name(prefix: &str, task_id: String) -> String {
 }
 
 async fn generate_ssh_keypair() -> Result<CreateContainerKeyResponse, ClientError> {
-    let temp_dir = TempDir::new()
-        .map_err(|e| ClientError::CreateContainerKeyError(e.to_string()))?; 
+    let temp_dir =
+        TempDir::new().map_err(|e| ClientError::CreateContainerKeyError(e.to_string()))?;
 
     let key_path = temp_dir.path().join("id_ed25519");
     let key_path_str = key_path.to_string_lossy().to_string();
     let pub_key_path = format!("{}.pub", key_path_str);
 
     let output = Command::new("ssh-keygen")
-        .arg("-t").arg("ed25519")
-        .arg("-f").arg(&key_path)
-        .arg("-N").arg("")  // No passphrase
-        .arg("-q")  // Quiet
+        .arg("-t")
+        .arg("ed25519")
+        .arg("-f")
+        .arg(&key_path)
+        .arg("-N")
+        .arg("") // No passphrase
+        .arg("-q") // Quiet
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .output()
@@ -450,10 +492,12 @@ async fn generate_ssh_keypair() -> Result<CreateContainerKeyResponse, ClientErro
         )));
     }
 
-    let priv_key = fs::read_to_string(&key_path).await
+    let priv_key = fs::read_to_string(&key_path)
+        .await
         .map_err(|e| ClientError::CreateContainerKeyError(e.to_string()))?;
-    
-    let pub_key = fs::read_to_string(&pub_key_path).await
+
+    let pub_key = fs::read_to_string(&pub_key_path)
+        .await
         .map_err(|e| ClientError::CreateContainerKeyError(e.to_string()))?;
 
     let _ = fs::remove_file(&pub_key_path).await;
@@ -464,48 +508,48 @@ async fn generate_ssh_keypair() -> Result<CreateContainerKeyResponse, ClientErro
     })
 }
 
-async fn deposit_public_key<'a>(
+async fn deposit_public_key(
     current_task: Arc<RwLock<Option<CurrentTask>>>,
     container_name: &str,
     public_key: &str,
 ) -> Result<(), ClientError> {
     let task_guard = current_task.read().await;
 
-    let task = task_guard
-        .as_ref()
-        .ok_or_else(|| {
-            ClientError::DepositContainerKeyError("Cannot deposit key - there is no active task!".to_string())
-        })?;
+    let task = task_guard.as_ref().ok_or_else(|| {
+        ClientError::DepositContainerKeyError(
+            "Cannot deposit key - there is no active task!".to_string(),
+        )
+    })?;
 
     let task = match &task.task_type {
         TaskKind::CyCloud(task_type) => task_type,
         _ => {
-            return Err(ClientError::DepositContainerKeyError("Cannot deposit key - the task has the wrong type!".to_string()));
+            return Err(ClientError::DepositContainerKeyError(
+                "Cannot deposit key - the task has the wrong type!".to_string(),
+            ));
         }
     };
 
     let args = match task {
-        CyCloudTask::Container(_) => { 
-            DepositPublicKeyArgs {
-                identifier: container_name,
-                script: &DEPOSIT_CONTAINER_KEYS_SCRIPT
-            }
+        CyCloudTask::Container(_) => DepositPublicKeyArgs {
+            identifier: container_name,
+            script: DEPOSIT_CONTAINER_KEYS_SCRIPT,
         },
-        CyCloudTask::Native(native_task) => {
-            DepositPublicKeyArgs {
-                identifier: &String::from_utf8_lossy(&native_task.user_name.0),
-                script: &DEPOSIT_NATIVE_KEYS_SCRIPT
-            }
+        CyCloudTask::Native(native_task) => DepositPublicKeyArgs {
+            identifier: &String::from_utf8_lossy(&native_task.user_name.0),
+            script: DEPOSIT_NATIVE_KEYS_SCRIPT,
         },
         CyCloudTask::Vm(_vm_task) => {
-            return Err(ClientError::DepositContainerKeyError("Cannot deposit key - VM is not supported yet!".to_string()));
+            return Err(ClientError::DepositContainerKeyError(
+                "Cannot deposit key - VM is not supported yet!".to_string(),
+            ));
             /*
             DepositPublicKeyArgs {
                 identifier: &String::from_utf8_lossy(&vm_task.user_name.0),
                 script: &DEPOSIT_VM_KEYS_SCRIPT
             }
             */
-        },
+        }
     };
 
     let mut child = Command::new("bash")
@@ -520,37 +564,44 @@ async fn deposit_public_key<'a>(
         .map_err(|e| ClientError::CreateContainerKeyError(e.to_string()))?;
 
     if let Some(mut stdin) = child.stdin.take() {
-        stdin.write_all(args.script.as_bytes()).await
+        stdin
+            .write_all(args.script.as_bytes())
+            .await
             .map_err(|e| ClientError::CreateContainerKeyError(e.to_string()))?;
     }
 
-    let output = child.wait_with_output().await
+    let output = child
+        .wait_with_output()
+        .await
         .map_err(|e| ClientError::CreateContainerKeyError(e.to_string()))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(ClientError::CreateContainerKeyError(
-            format!("Script failed: {}", stderr)
-        ));
+        return Err(ClientError::CreateContainerKeyError(format!(
+            "Script failed: {}",
+            stderr
+        )));
     }
 
     Ok(())
 }
 
 async fn handle_create_user_ssh_key(
-    task_id: String, 
+    task_id: String,
     current_task: Arc<RwLock<Option<CurrentTask>>>,
     container_prefix: &str,
     diffie_hellman_key: &Arc<RwLock<Option<[u8; 32]>>>,
-    sender: &Arc<Mutex<SplitSink<WebSocketStream<TcpStream>, Message>>>
+    sender: &Arc<Mutex<SplitSink<WebSocketStream<TcpStream>, Message>>>,
 ) -> Result<(), ClientError> {
     let diffie_hellman_key_copy = {
         let diffie_hellman_key_guard = diffie_hellman_key.read().await;
-        
+
         if let Some(key) = *diffie_hellman_key_guard {
             key
         } else {
-            return Err(ClientError::AuthError("No diffie hellman key found".to_string()));
+            return Err(ClientError::AuthError(
+                "No diffie hellman key found".to_string(),
+            ));
         }
     };
 
@@ -558,53 +609,63 @@ async fn handle_create_user_ssh_key(
 
     let container_name = construct_container_name(container_prefix, task_id);
     deposit_public_key(current_task, &container_name, &keypair.pub_key).await?;
-    
+
     let data_string = serde_json::to_string(&keypair)
         .map_err(|e| ClientError::CreateContainerKeyError(e.to_string()))?;
 
-    let encrypted_message = encrypt_message("KeyPairReturned", &diffie_hellman_key_copy, data_string)
-        .map_err(|e| ClientError::CreateContainerKeyError(e.to_string()))?;
-    
+    let encrypted_message =
+        encrypt_message("KeyPairReturned", &diffie_hellman_key_copy, data_string)
+            .map_err(|e| ClientError::CreateContainerKeyError(e.to_string()))?;
+
     let encrypted_message_str = serde_json::to_string(&encrypted_message)
         .map_err(|e| ClientError::CreateContainerKeyError(e.to_string()))?;
 
     let mut sender_guard = sender.lock().await;
-    sender_guard.send(Message::Text(encrypted_message_str)).await
+    sender_guard
+        .send(Message::Text(encrypted_message_str))
+        .await
         .map_err(|e| ClientError::CreateContainerKeyError(e.to_string()))?;
 
     Ok(())
 }
 
 async fn handle_deposit_user_ssh_key(
-    task_id: String, 
+    task_id: String,
     current_task: Arc<RwLock<Option<CurrentTask>>>,
     container_prefix: &str,
     diffie_hellman_key: &Arc<RwLock<Option<[u8; 32]>>>,
-    key: String, 
-    sender: &Arc<Mutex<SplitSink<WebSocketStream<TcpStream>, 
-    Message>>>
+    key: String,
+    sender: &Arc<Mutex<SplitSink<WebSocketStream<TcpStream>, Message>>>,
 ) -> Result<(), ClientError> {
     let diffie_hellman_key_copy = {
         let diffie_hellman_key_guard = diffie_hellman_key.read().await;
-        
+
         if let Some(key) = *diffie_hellman_key_guard {
             key
         } else {
-            return Err(ClientError::AuthError("No diffie hellman key found".to_string()));
+            return Err(ClientError::AuthError(
+                "No diffie hellman key found".to_string(),
+            ));
         }
     };
 
     let container_name = construct_container_name(container_prefix, task_id);
     deposit_public_key(current_task, &container_name, &key).await?;
 
-    let encrypted_message = encrypt_message("PubKeyDeposited", &diffie_hellman_key_copy, "Keypair successfully deposited".to_string())
-        .map_err(|e| ClientError::DepositContainerKeyError(e.to_string()))?;
-    
+    let encrypted_message = encrypt_message(
+        "PubKeyDeposited",
+        &diffie_hellman_key_copy,
+        "Keypair successfully deposited".to_string(),
+    )
+    .map_err(|e| ClientError::DepositContainerKeyError(e.to_string()))?;
+
     let encrypted_message_str = serde_json::to_string(&encrypted_message)
         .map_err(|e| ClientError::DepositContainerKeyError(e.to_string()))?;
 
     let mut sender_guard = sender.lock().await;
-    sender_guard.send(Message::Text(encrypted_message_str)).await
+    sender_guard
+        .send(Message::Text(encrypted_message_str))
+        .await
         .map_err(|e| ClientError::DepositContainerKeyError(e.to_string()))?;
 
     Ok(())

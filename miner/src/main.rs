@@ -14,28 +14,29 @@
 /// Run the executable with appropriate arguments to start mining.
 mod builder;
 mod cli;
-mod global_config;
 mod error;
+mod global_config;
 mod log;
+mod miner_types;
 mod parachain_interactor;
 mod parent_runtime;
-mod specs;
-mod traits;
-mod miner_types;
 mod self_management;
+mod specs;
+mod tests;
+mod traits;
 mod utils;
 
-use std::{process::Command, sync::Arc};
 use builder::MinerBuilder;
 use clap::Parser;
 use cli::{Cli, Commands};
+use cyborg_agent::{run_agent, AgentConfig};
 use error::Result;
 use global_config::run_global_config;
+use std::{process::Command, sync::Arc};
+use tokio::time::{sleep, Duration};
 use traits::ParachainInteractor;
-use cyborg_agent::{run_agent, AgentConfig};
 use types::substrate_interface::api::edge_connect::calls::types::remove_miner::MinerId;
 use types::substrate_interface::api::runtime_types::bounded_collections::bounded_vec::BoundedVec;
-use tokio::time::{sleep, Duration};
 
 #[derive(serde::Deserialize)]
 pub struct IpResponse {
@@ -99,8 +100,14 @@ async fn main() -> Result<()> {
             miner_uuid,
         }) => {
             if let Some(domain_name) = domain_name {
-                self_management::install_self(parachain_url, miner_type, account_seed, domain_name, miner_uuid)
-                    .expect("Failed to install");
+                self_management::install_self(
+                    parachain_url,
+                    miner_type,
+                    account_seed,
+                    domain_name,
+                    miner_uuid,
+                )
+                .expect("Failed to install");
 
                 return Ok(());
             }
@@ -118,20 +125,34 @@ async fn main() -> Result<()> {
 
                 let domain_name = format!("https://{hostname}.{}", tailscale_network);
 
-                 self_management::install_self(parachain_url, miner_type, account_seed, &domain_name, miner_uuid)
-                    .expect("Failed to install");
+                self_management::install_self(
+                    parachain_url,
+                    miner_type,
+                    account_seed,
+                    &domain_name,
+                    miner_uuid,
+                )
+                .expect("Failed to install");
 
                 return Ok(());
             }
 
             let domain_name = reqwest::get("https://api.ipify.org?format=json")
-                .await.expect("Failed to get IP address")
+                .await
+                .expect("Failed to get IP address")
                 .json::<IpResponse>()
-                .await.expect("Failed to get IP adress")
+                .await
+                .expect("Failed to get IP adress")
                 .ip;
 
-            self_management::install_self(parachain_url, miner_type, account_seed, &domain_name, miner_uuid)
-                .expect("Failed to install");
+            self_management::install_self(
+                parachain_url,
+                miner_type,
+                account_seed,
+                &domain_name,
+                miner_uuid,
+            )
+            .expect("Failed to install");
 
             return Ok(());
         }

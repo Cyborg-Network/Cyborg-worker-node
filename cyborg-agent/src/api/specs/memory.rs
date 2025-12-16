@@ -1,7 +1,7 @@
+use anyhow::{anyhow, Result};
 use std::process::{Command, Stdio};
 use std::str;
-use sysinfo::{System, RefreshKind, SystemExt};
-use anyhow::{anyhow, Result};
+use sysinfo::{RefreshKind, System, SystemExt};
 
 pub async fn get_memory() -> Result<String> {
     let ps_child = Command::new("free") // `ps` command...
@@ -12,7 +12,11 @@ pub async fn get_memory() -> Result<String> {
     let grep_child_one = Command::new("grep")
         .arg("-i")
         .arg("Mem")
-        .stdin(Stdio::from(ps_child.stdout.ok_or(anyhow!("Failed to get memory from stdout"))?)) // Pipe through.
+        .stdin(Stdio::from(
+            ps_child
+                .stdout
+                .ok_or(anyhow!("Failed to get memory from stdout"))?,
+        )) // Pipe through.
         .stdout(Stdio::piped())
         .spawn()?;
 
@@ -25,10 +29,7 @@ pub async fn get_memory() -> Result<String> {
 }
 
 pub fn return_total_memory() -> u64 {
-     let system = System::new_with_specifics(
-        RefreshKind::new()
-            .with_memory()
-    );
+    let system = System::new_with_specifics(RefreshKind::new().with_memory());
 
     system.total_memory() * 1024
 }

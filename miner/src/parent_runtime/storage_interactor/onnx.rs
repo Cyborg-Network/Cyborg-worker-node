@@ -62,6 +62,7 @@ pub async fn download_onnx_model(onnx_task: &OnnxTask) -> Result<()> {
         .create(true)
         .write(true)
         .read(true)
+        .truncate(true)
         .open(path)?;
 
     file.seek(SeekFrom::Start(downloaded))?;
@@ -88,10 +89,7 @@ pub async fn download_onnx_model(onnx_task: &OnnxTask) -> Result<()> {
         tracing::info!("Downloaded {} / {} bytes", downloaded, total_size);
     }
 
-    extract_triton_model(
-        &path,
-        path.parent().ok_or("Failed to get parent directory")?,
-    )?;
+    extract_triton_model(path, path.parent().ok_or("Failed to get parent directory")?)?;
 
     tracing::info!("Download complete! Total size: {} bytes.", total_size);
     Ok(())
@@ -102,6 +100,7 @@ pub fn extract_triton_model(archive_path: &Path, output_dir: &Path) -> Result<()
     let version_dir = model_dir.join("1");
     create_dir_all(&version_dir)?;
 
+    let name_regex = Regex::new(r#"(?m)^name\s*:\s*".*""#).unwrap();
     let file = File::open(archive_path)?;
     let decoder = zstd::stream::read::Decoder::new(file)?;
     let mut archive = tar::Archive::new(decoder);
@@ -125,10 +124,8 @@ pub fn extract_triton_model(archive_path: &Path, output_dir: &Path) -> Result<()
         } else if file_name == "config.pbtxt" {
             let mut content = String::new();
             entry.read_to_string(&mut content)?;
-            content = Regex::new(r#"(?m)^name\s*:\s*".*""#)
-                .unwrap()
-                .replace(&content, r#"name: "model""#)
-                .to_string();
+            content = name_regex.replace(&content, r#"name: "model""#).to_string();
+
             std::fs::write(model_dir.join("config.pbtxt"), content)?;
         }
     }

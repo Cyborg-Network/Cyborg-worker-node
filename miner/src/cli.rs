@@ -6,7 +6,6 @@ use clap::{ArgGroup, Parser, Subcommand};
     about = "A ZK ready AI inference miner for the Cyborg Network", // Description shown in the CLI help.
     version = "1.0"                          // Version number of the CLI tool.
 )]
-
 /// `Cli` struct defines the command-line interface for the Cyborg miner.
 /// This struct uses the `clap` crate to parse command-line arguments.
 /// It contains a single field `command` which specifies the subcommand to be executed.
@@ -76,7 +75,7 @@ pub enum Commands {
         tailscale_network: Option<String>,
     },
 
-    Version
+    Version,
 }
 
 /*
